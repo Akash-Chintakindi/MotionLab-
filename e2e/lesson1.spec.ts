@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLesson, openQuiz, finishQuiz, backToCourse } from "./helpers";
 
 function uniqueEmail() {
   return `bob_${Date.now()}_${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -103,6 +104,20 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
     "href",
     "/lesson/lesson-1-position-velocity/practice",
   );
+
+  // Completing Learn no longer unlocks Lesson 2 — it's still locked until the
+  // quiz is finished.
+  await backToCourse(page);
+  await expect(page.getByText("Locked").first()).toBeVisible();
+
+  // Finish Lesson 1's quiz (any answers), which unlocks Lesson 2.
+  await openQuiz(page, /Position, Velocity, and Slope/);
+  await finishQuiz(page);
+  await backToCourse(page);
+
+  // Lesson 2 is now unlocked and openable.
+  await openLesson(page, /Velocity, Acceleration, and Changing Motion/);
+  await expect(page.getByTestId("step-counter")).toContainText("Step 1");
 });
 
 test("Bob can resume a lesson after a reload", async ({ page }) => {

@@ -64,10 +64,8 @@ function Hero() {
           <span className="text-brand-600">actually feel.</span>
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
-          Most courses ask you to memorize that velocity is the slope of a
-          position graph. MotionLab lets you drag the graph and watch the slope
-          change. You learn kinematics by doing it — one interactive step at a
-          time, with feedback the moment you answer.
+          Master AP Physics C kinematics with interactive graphs, simulations,
+          and instant feedback.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link

@@ -154,6 +154,66 @@ export const COMEBACK: Milestone = {
   description: "Replay a finished lesson and beat your old score",
 };
 
+// ---- Quiz badges --------------------------------------------------------
+
+/** Default score (0–100) that counts as a high-accuracy quiz pass. */
+export const QUIZ_PASS_THRESHOLD = 80;
+
+export const QUIZ_SHARP: Milestone = {
+  id: "quiz-sharp",
+  label: "Sharp Mind",
+  emoji: "🧠",
+  description: "Score 80% or higher on any quiz",
+};
+export const QUIZ_ACE: Milestone = {
+  id: "quiz-ace",
+  label: "Quiz Ace",
+  emoji: "🎓",
+  description: "Score 100% on any quiz",
+  rarity: "rare",
+};
+export const QUIZ_HAT_TRICK: Milestone = {
+  id: "quiz-hat-trick",
+  label: "Hat Trick",
+  emoji: "🎩",
+  description: "Score 100% on three different quizzes",
+};
+export const QUIZ_HONOR_ROLL: Milestone = {
+  id: "quiz-honor-roll",
+  label: "Quiz Honor Roll",
+  emoji: "📚",
+  description: "Score 80%+ on every quiz",
+};
+export const QUIZ_CHAMPION: Milestone = {
+  id: "quiz-champion",
+  label: "Quiz Champion",
+  emoji: "✅",
+  description: "Finish all 7 quizzes",
+};
+export const QUIZ_PERFECTIONIST: Milestone = {
+  id: "quiz-perfectionist",
+  label: "Quiz Perfectionist",
+  emoji: "💯",
+  description: "Score 100% on all 7 quizzes",
+  rarity: "legendary",
+};
+
+const QUIZ_MILESTONES: Milestone[] = [
+  QUIZ_SHARP,
+  QUIZ_ACE,
+  QUIZ_HAT_TRICK,
+  QUIZ_HONOR_ROLL,
+  QUIZ_CHAMPION,
+  QUIZ_PERFECTIONIST,
+];
+
+export const TRIPLE_THREAT: Milestone = {
+  id: "triple-threat",
+  label: "Triple Threat",
+  emoji: "🔱",
+  description: "Finish Learn, Practice, and Quiz of one lesson",
+};
+
 const ACCURACY_MILESTONES: Milestone[] = [
   ...MASTERY_TIERS.map((t) => t.milestone),
   TRIPLE_ACE,
@@ -166,7 +226,9 @@ const BY_ID: Record<string, Milestone> = Object.fromEntries(
     ...STREAK_TIERS.map((t) => t.milestone),
     ...COURSE_TIERS.map((t) => t.milestone),
     ...ACCURACY_MILESTONES,
+    ...QUIZ_MILESTONES,
     COMEBACK,
+    TRIPLE_THREAT,
   ].map((m) => [m.id, m]),
 );
 
@@ -222,6 +284,52 @@ export function accuracyMilestonesFor(
   return Array.from(ids);
 }
 
+/**
+ * Quiz badges from the learner's best quiz scores (0–100 per lesson). A lesson
+ * having an entry in the map means its quiz was finished at least once.
+ */
+export function quizMilestonesFor(
+  quizScores: Record<string, number>,
+  totalLessons: number,
+  threshold: number = QUIZ_PASS_THRESHOLD,
+): string[] {
+  const vals = Object.values(quizScores);
+  if (vals.length === 0) return [];
+  const ids = new Set<string>();
+
+  const best = Math.max(...vals);
+  if (best >= threshold) ids.add(QUIZ_SHARP.id);
+  if (best >= 100) ids.add(QUIZ_ACE.id);
+
+  if (vals.filter((v) => v >= 100).length >= 3) ids.add(QUIZ_HAT_TRICK.id);
+
+  // Course-wide quiz goals require every quiz to have been finished.
+  if (totalLessons > 0 && vals.length >= totalLessons) {
+    ids.add(QUIZ_CHAMPION.id);
+    if (vals.every((v) => v >= threshold)) ids.add(QUIZ_HONOR_ROLL.id);
+    if (vals.every((v) => v >= 100)) ids.add(QUIZ_PERFECTIONIST.id);
+  }
+
+  return Array.from(ids);
+}
+
+/**
+ * Triple Threat: earned once any single lesson has its Learn completed AND a
+ * recorded practice score AND a recorded quiz score.
+ */
+export function tripleThreatMilestonesFor(
+  completedLessonIds: string[],
+  practiceScores: Record<string, number>,
+  quizScores: Record<string, number>,
+): string[] {
+  const did = (m: Record<string, number>, id: string) =>
+    Object.prototype.hasOwnProperty.call(m, id);
+  const earned = completedLessonIds.some(
+    (id) => did(practiceScores, id) && did(quizScores, id),
+  );
+  return earned ? [TRIPLE_THREAT.id] : [];
+}
+
 export interface MilestoneGroup {
   title: string;
   milestones: Milestone[];
@@ -231,8 +339,9 @@ export interface MilestoneGroup {
 export function milestoneCatalog(): MilestoneGroup[] {
   return [
     { title: "Accuracy", milestones: ACCURACY_MILESTONES },
+    { title: "Quizzes", milestones: QUIZ_MILESTONES },
     { title: "Course progress", milestones: COURSE_TIERS.map((t) => t.milestone) },
     { title: "Streaks", milestones: STREAK_TIERS.map((t) => t.milestone) },
-    { title: "Challenges", milestones: [COMEBACK] },
+    { title: "Challenges", milestones: [COMEBACK, TRIPLE_THREAT] },
   ];
 }

@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   signUp,
   openLesson,
+  openQuiz,
+  finishQuiz,
   backToCourse,
   completeLesson1,
   completeLesson2,
@@ -19,27 +21,48 @@ test("a learner can complete the entire 7-lesson course in order", async ({
 
   await signUp(page);
 
+  // Each lesson now unlocks the next only after its quiz is finished, so we
+  // finish the quiz between completing one lesson's Learn step and opening the
+  // next lesson.
   await completeLesson1(page);
+  await backToCourse(page);
+  await openQuiz(page, /Position, Velocity, and Slope/);
+  await finishQuiz(page);
   await backToCourse(page);
 
   await openLesson(page, /Velocity, Acceleration, and Changing Motion/);
   await completeLesson2(page);
   await backToCourse(page);
+  await openQuiz(page, /Velocity, Acceleration, and Changing Motion/);
+  await finishQuiz(page);
+  await backToCourse(page);
 
   await openLesson(page, /Displacement from Area Under Velocity/);
   await completeLesson3(page);
+  await backToCourse(page);
+  await openQuiz(page, /Displacement from Area Under Velocity/);
+  await finishQuiz(page);
   await backToCourse(page);
 
   await openLesson(page, /From Acceleration to Velocity and Position/);
   await completeLesson4(page);
   await backToCourse(page);
+  await openQuiz(page, /From Acceleration to Velocity and Position/);
+  await finishQuiz(page);
+  await backToCourse(page);
 
   await openLesson(page, /Motion in Two Dimensions/);
   await completeLesson5(page);
   await backToCourse(page);
+  await openQuiz(page, /Motion in Two Dimensions/);
+  await finishQuiz(page);
+  await backToCourse(page);
 
   await openLesson(page, /Projectile Motion/);
   await completeLesson6(page);
+  await backToCourse(page);
+  await openQuiz(page, /Projectile Motion/);
+  await finishQuiz(page);
   await backToCourse(page);
 
   await openLesson(page, /Kinematics Mastery Challenge/);

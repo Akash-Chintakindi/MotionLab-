@@ -180,7 +180,7 @@ export function AccelerationPilotGame({
           </span>
           <span data-testid="pilot-score">Score {score}%</span>
         </div>
-        <p className="mb-4 text-sm leading-relaxed text-slate-300">
+        <p className="mb-4 text-base font-medium leading-relaxed text-slate-100">
           {round.instruction}
         </p>
 

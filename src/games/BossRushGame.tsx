@@ -305,7 +305,9 @@ export function BossRushGame({
           </div>
         )}
 
-        <p className="mb-4 text-sm leading-relaxed text-slate-700">{stage.prompt}</p>
+        <p className="mb-4 text-base font-medium leading-relaxed text-slate-800">
+          {stage.prompt}
+        </p>
 
         {stage.ask.kind === "choice" ? (
           <div className="grid gap-2">

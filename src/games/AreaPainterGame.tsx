@@ -159,7 +159,7 @@ export function AreaPainterGame({
           </span>
           <span data-testid="painter-score">Score {score}%</span>
         </div>
-        <p className="mb-4 text-sm leading-relaxed text-slate-600">
+        <p className="mb-4 text-base font-medium leading-relaxed text-slate-800">
           {round.instruction}
         </p>
 

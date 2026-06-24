@@ -51,6 +51,65 @@ export async function openQuiz(page: Page, name: RegExp) {
   await expect(page.getByTestId("quiz-counter")).toBeVisible();
 }
 
+/**
+ * Waits until traffic to the Firestore emulator (port 8080) has been quiet for
+ * `quietMs`. Used to let the quiz's onComplete writes (score, streak, and the
+ * next-lesson unlock) fully commit before the caller navigates away — a reload
+ * or navigation mid-write would abort the in-flight unlock. We track response
+ * events rather than in-flight requests so a long-lived WebChannel (which never
+ * lets the page reach `networkidle`) doesn't keep us waiting forever.
+ */
+async function waitForFirestoreQuiet(page: Page, quietMs = 800, timeoutMs = 15000) {
+  let lastActivity = Date.now();
+  const handler = (resp: { url(): string }) => {
+    if (resp.url().includes(":8080")) lastActivity = Date.now();
+  };
+  page.on("response", handler);
+  try {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      if (Date.now() - lastActivity >= quietMs) return;
+      await page.waitForTimeout(100);
+    }
+  } finally {
+    page.off("response", handler);
+  }
+}
+
+/**
+ * Finishes an OPEN quiz (quiz-counter visible) by answering every question with
+ * any answer and clicking through per-question feedback until the score screen
+ * appears. Unlocking the next lesson only requires finishing the quiz, not a
+ * passing score, so we never bother picking correct answers. Waits for the
+ * resulting progress writes to settle so the unlock is durable before returning.
+ */
+export async function finishQuiz(page: Page) {
+  const counter = page.getByTestId("quiz-counter");
+  await expect(counter).toBeVisible();
+  const counterText = (await counter.textContent()) ?? "";
+  const total = Number(counterText.match(/of\s+(\d+)/)?.[1] ?? 0);
+
+  for (let i = 0; i < total; i++) {
+    const submit = page.getByTestId("quiz-submit");
+    await expect(submit).toBeVisible();
+
+    const radios = page.getByRole("radio");
+    if ((await radios.count()) > 0) {
+      await radios.first().click();
+    } else {
+      await page.getByLabel("Numeric answer").fill("0");
+    }
+    await submit.click();
+
+    // Advance past the per-question feedback to the next question / results.
+    await page.getByTestId("quiz-continue").click();
+  }
+
+  await expect(page.getByTestId("quiz-results")).toBeVisible();
+  // Let the score/streak/unlock writes commit before the caller moves on.
+  await waitForFirestoreQuiet(page);
+}
+
 export async function backToCourse(page: Page) {
   await page.getByRole("link", { name: "Back to course" }).click();
 }

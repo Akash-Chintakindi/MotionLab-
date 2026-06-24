@@ -10,9 +10,18 @@ import {
   type Firestore,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { COURSE_ID, FIRST_LESSON_ID, getNextLessonId } from "../content/course";
+import {
+  COURSE_ID,
+  FIRST_LESSON_ID,
+  course,
+  getNextLessonId,
+} from "../content/course";
 import { computeStreak, EMPTY_STREAK, todayISO } from "../lib/streak";
-import { courseMilestonesFor } from "../lib/milestones";
+import {
+  courseMilestonesFor,
+  quizMilestonesFor,
+  tripleThreatMilestonesFor,
+} from "../lib/milestones";
 import type {
   CourseProgress,
   LessonProgress,
@@ -227,8 +236,10 @@ export async function resetLessonProgress(
 }
 
 /**
- * Marks a lesson complete, unlocks the next lesson, and records mastery.
- * Returns the unlocked lesson id (or null if this was the final lesson).
+ * Marks a lesson complete and records mastery. Completing the Learn step no
+ * longer unlocks the next lesson — that now happens when the lesson's quiz is
+ * finished (see {@link unlockNextLesson}). Always returns a null unlock id so
+ * the completion screen hides its "Unlocked next lesson" text.
  */
 export async function completeLesson(
   uid: string,
@@ -247,18 +258,41 @@ export async function completeLesson(
     { merge: true },
   );
 
-  const nextLessonId = getNextLessonId(lessonId);
-  const courseUpdate: Record<string, unknown> = {
-    completedLessonIds: arrayUnion(lessonId),
-    masteryByLesson: { [lessonId]: mastery },
-    updatedAt: nowMs(),
-  };
-  if (nextLessonId) {
-    courseUpdate.unlockedLessonIds = arrayUnion(nextLessonId);
-    courseUpdate.currentLessonId = nextLessonId;
-  }
-  await setDoc(courseDoc(uid, fdb), courseUpdate, { merge: true });
+  await setDoc(
+    courseDoc(uid, fdb),
+    {
+      completedLessonIds: arrayUnion(lessonId),
+      masteryByLesson: { [lessonId]: mastery },
+      updatedAt: nowMs(),
+    },
+    { merge: true },
+  );
 
+  return { unlockedLessonId: null };
+}
+
+/**
+ * Unlocks the lesson after the given one and makes it the current lesson.
+ * Called when a lesson's quiz is finished (any score). Returns the unlocked
+ * lesson id, or null if this was the final lesson.
+ */
+export async function unlockNextLesson(
+  uid: string,
+  lessonId: string,
+  fdb?: Firestore,
+): Promise<{ unlockedLessonId: string | null }> {
+  const nextLessonId = getNextLessonId(lessonId);
+  if (nextLessonId) {
+    await setDoc(
+      courseDoc(uid, fdb),
+      {
+        unlockedLessonIds: arrayUnion(nextLessonId),
+        currentLessonId: nextLessonId,
+        updatedAt: nowMs(),
+      },
+      { merge: true },
+    );
+  }
   return { unlockedLessonId: nextLessonId };
 }
 
@@ -322,6 +356,29 @@ export async function awardMilestones(
     { merge: true },
   );
   return (await getStreak(uid, fdb))?.milestoneIds ?? ids;
+}
+
+/**
+ * Awards badges that depend on accumulated course progress rather than a
+ * single lesson event: quiz accuracy/completion goals and Triple Threat
+ * (Learn + Practice + Quiz on the same lesson).
+ */
+export async function awardProgressMilestones(
+  uid: string,
+  fdb?: Firestore,
+): Promise<string[]> {
+  const progress = await getCourseProgress(uid, fdb);
+  if (!progress) return (await getStreak(uid, fdb))?.milestoneIds ?? [];
+
+  const ids = [
+    ...quizMilestonesFor(progress.quizScores ?? {}, course.lessons.length),
+    ...tripleThreatMilestonesFor(
+      progress.completedLessonIds,
+      progress.practiceScores ?? {},
+      progress.quizScores ?? {},
+    ),
+  ];
+  return awardMilestones(uid, ids, fdb);
 }
 
 /**

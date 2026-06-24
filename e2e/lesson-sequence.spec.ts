@@ -6,6 +6,9 @@ import {
   mcAnswer,
   completeLesson1,
   openLesson,
+  openQuiz,
+  finishQuiz,
+  backToCourse,
 } from "./helpers";
 
 test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", async ({
@@ -14,8 +17,13 @@ test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", asyn
   await signUp(page);
   await completeLesson1(page);
 
-  // Back to course; Lesson 2 should now be unlocked.
-  await page.getByRole("link", { name: "Back to course" }).click();
+  // Finishing Learn alone no longer unlocks Lesson 2 — its quiz must be done.
+  await backToCourse(page);
+  await openQuiz(page, /Position, Velocity, and Slope/);
+  await finishQuiz(page);
+  await backToCourse(page);
+
+  // Lesson 2 is now unlocked.
   await openLesson(page, /Velocity, Acceleration, and Changing Motion/);
   await expect(page.getByTestId("step-counter")).toContainText("Step 1");
 

@@ -6,6 +6,7 @@ import { getLesson } from "../content/course";
 import { getGame } from "../games/registry";
 import { nextDestination } from "../lib/lessonFlow";
 import {
+  awardProgressMilestones,
   recordDailyActivity,
   recordPracticeScore,
 } from "../services/progressService";
@@ -35,6 +36,7 @@ export default function PracticePage() {
       if (!user) return;
       await recordPracticeScore(user.uid, lessonId, best);
       await recordDailyActivity(user.uid);
+      await awardProgressMilestones(user.uid);
     },
     [user, lessonId],
   );

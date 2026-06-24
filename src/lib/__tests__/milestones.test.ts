@@ -5,7 +5,9 @@ import {
   getMilestone,
   masteryMilestonesFor,
   milestoneCatalog,
+  quizMilestonesFor,
   streakMilestonesFor,
+  tripleThreatMilestonesFor,
 } from "../milestones";
 
 describe("streakMilestonesFor", () => {
@@ -81,11 +83,74 @@ describe("accuracyMilestonesFor", () => {
   });
 });
 
+describe("quizMilestonesFor", () => {
+  it("awards nothing when no quizzes are finished", () => {
+    expect(quizMilestonesFor({}, 7)).toEqual([]);
+  });
+  it("awards Sharp Mind at 80%+ and Quiz Ace at 100% on any quiz", () => {
+    expect(quizMilestonesFor({ a: 80 }, 7)).toEqual(["quiz-sharp"]);
+    expect(quizMilestonesFor({ a: 100, b: 30 }, 7)).toEqual([
+      "quiz-sharp",
+      "quiz-ace",
+    ]);
+    expect(quizMilestonesFor({ a: 79 }, 7)).toEqual([]);
+  });
+  it("awards Hat Trick at three perfect quizzes", () => {
+    expect(quizMilestonesFor({ a: 100, b: 100, c: 100 }, 7)).toContain(
+      "quiz-hat-trick",
+    );
+    expect(quizMilestonesFor({ a: 100, b: 100 }, 7)).not.toContain(
+      "quiz-hat-trick",
+    );
+  });
+  it("awards champion/honor-roll/perfectionist only when all quizzes qualify", () => {
+    const partial = quizMilestonesFor({ a: 100, b: 90 }, 7);
+    expect(partial).not.toContain("quiz-champion");
+
+    const allDone = quizMilestonesFor(
+      { a: 70, b: 90, c: 85, d: 100, e: 80, f: 95, g: 60 },
+      7,
+    );
+    expect(allDone).toContain("quiz-champion");
+    expect(allDone).not.toContain("quiz-honor-roll"); // a 70 & g 60 below 80
+
+    const allEighty = quizMilestonesFor(
+      { a: 80, b: 90, c: 85, d: 100, e: 80, f: 95, g: 82 },
+      7,
+    );
+    expect(allEighty).toContain("quiz-honor-roll");
+    expect(allEighty).not.toContain("quiz-perfectionist");
+
+    const allPerfect = quizMilestonesFor(
+      { a: 100, b: 100, c: 100, d: 100, e: 100, f: 100, g: 100 },
+      7,
+    );
+    expect(allPerfect).toContain("quiz-perfectionist");
+    expect(allPerfect).toContain("quiz-honor-roll");
+  });
+});
+
+describe("tripleThreatMilestonesFor", () => {
+  it("awards nothing until one lesson has Learn + Practice + Quiz", () => {
+    expect(tripleThreatMilestonesFor(["a"], {}, {})).toEqual([]);
+    expect(tripleThreatMilestonesFor(["a"], { a: 50 }, {})).toEqual([]);
+    expect(tripleThreatMilestonesFor([], { a: 50 }, { a: 90 })).toEqual([]);
+  });
+  it("awards when the same lesson clears all three modes", () => {
+    expect(
+      tripleThreatMilestonesFor(["a", "b"], { a: 0 }, { a: 100 }),
+    ).toEqual(["triple-threat"]);
+  });
+});
+
 describe("getMilestone", () => {
   it("resolves known ids and returns undefined otherwise", () => {
     expect(getMilestone("first-lesson")?.label).toMatch(/First lesson/);
     expect(getMilestone("flawless")?.rarity).toBe("rare");
     expect(getMilestone("perfectionist")?.rarity).toBe("legendary");
+    expect(getMilestone("quiz-ace")?.rarity).toBe("rare");
+    expect(getMilestone("quiz-perfectionist")?.rarity).toBe("legendary");
+    expect(getMilestone("triple-threat")?.label).toBe("Triple Threat");
     expect(getMilestone("nope")).toBeUndefined();
   });
 });
@@ -96,10 +161,11 @@ describe("milestoneCatalog", () => {
     const total = groups.reduce((n, g) => n + g.milestones.length, 0);
     expect(groups.map((g) => g.title)).toEqual([
       "Accuracy",
+      "Quizzes",
       "Course progress",
       "Streaks",
       "Challenges",
     ]);
-    expect(total).toBe(14);
+    expect(total).toBe(21);
   });
 });

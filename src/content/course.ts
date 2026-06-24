@@ -11,7 +11,7 @@ export const COURSE_ID = "kinematics";
 
 export const course: Course = {
   id: COURSE_ID,
-  title: "AP Physics C Kinematics: Motion Through Calculus",
+  title: "AP Physics C Kinematics",
   description:
     "Learn position, velocity, acceleration, derivatives, integrals, and 2D motion by doing.",
   lessons: [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7].sort(

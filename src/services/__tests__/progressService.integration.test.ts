@@ -13,17 +13,21 @@ import {
 } from "firebase/firestore";
 import {
   awardCourseMilestones,
+  awardProgressMilestones,
   completeLesson,
   ensureUserBootstrap,
   getCourseProgress,
   getLessonProgress,
   getStreak,
+  recordPracticeScore,
+  recordQuizScore,
   recordDailyActivity,
   recordStepAttempt,
   recordStepResult,
   startLesson,
+  unlockNextLesson,
 } from "../progressService";
-import { FIRST_LESSON_ID, getNextLessonId } from "../../content/course";
+import { course, FIRST_LESSON_ID, getNextLessonId } from "../../content/course";
 
 let fdb: Firestore;
 let auth: Auth;
@@ -72,7 +76,7 @@ describe("progressService (emulator)", () => {
     expect(lp!.currentStepIndex).toBe(1);
   });
 
-  it("completes a lesson and unlocks the next one", async () => {
+  it("completes a lesson and records mastery without unlocking the next one", async () => {
     const uid = await freshUser();
     await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
     const next = getNextLessonId(FIRST_LESSON_ID);
@@ -83,17 +87,52 @@ describe("progressService (emulator)", () => {
       0.9,
       fdb,
     );
-    expect(unlockedLessonId).toBe(next);
+    // Completing Learn no longer unlocks the next lesson.
+    expect(unlockedLessonId).toBeNull();
 
     const cp = await getCourseProgress(uid, fdb);
     expect(cp!.completedLessonIds).toContain(FIRST_LESSON_ID);
-    expect(cp!.unlockedLessonIds).toContain(next!);
-    expect(cp!.currentLessonId).toBe(next);
+    expect(cp!.unlockedLessonIds).not.toContain(next!);
+    expect(cp!.unlockedLessonIds).toEqual([FIRST_LESSON_ID]);
+    expect(cp!.currentLessonId).toBe(FIRST_LESSON_ID);
     expect(cp!.masteryByLesson[FIRST_LESSON_ID]).toBeCloseTo(0.9);
 
     const lp = await getLessonProgress(uid, FIRST_LESSON_ID, fdb);
     expect(lp!.status).toBe("completed");
     expect(lp!.completedAt).toBeTypeOf("number");
+  });
+
+  it("unlocks the next lesson when a quiz is finished", async () => {
+    const uid = await freshUser();
+    await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
+    const next = getNextLessonId(FIRST_LESSON_ID);
+
+    const { unlockedLessonId } = await unlockNextLesson(
+      uid,
+      FIRST_LESSON_ID,
+      fdb,
+    );
+    expect(unlockedLessonId).toBe(next);
+
+    const cp = await getCourseProgress(uid, fdb);
+    expect(cp!.unlockedLessonIds).toContain(next!);
+    expect(cp!.currentLessonId).toBe(next);
+  });
+
+  it("returns null and unlocks nothing for the final lesson", async () => {
+    const uid = await freshUser();
+    await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
+    const lastLessonId = course.lessons[course.lessons.length - 1].id;
+
+    const { unlockedLessonId } = await unlockNextLesson(
+      uid,
+      lastLessonId,
+      fdb,
+    );
+    expect(unlockedLessonId).toBeNull();
+
+    const cp = await getCourseProgress(uid, fdb);
+    expect(cp!.unlockedLessonIds).not.toContain(lastLessonId);
   });
 
   it("awards the first-lesson milestone and records a streak", async () => {
@@ -106,5 +145,21 @@ describe("progressService (emulator)", () => {
     expect(streak.currentStreak).toBe(1);
     const persisted = await getStreak(uid, fdb);
     expect(persisted!.milestoneIds).toContain("first-lesson");
+  });
+
+  it("awards quiz and Triple Threat milestones from saved progress", async () => {
+    const uid = await freshUser();
+    await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
+    await completeLesson(uid, FIRST_LESSON_ID, 1, fdb);
+    await recordPracticeScore(uid, FIRST_LESSON_ID, 72, fdb);
+    await recordQuizScore(uid, FIRST_LESSON_ID, 100, fdb);
+
+    await awardProgressMilestones(uid, fdb);
+
+    const persisted = await getStreak(uid, fdb);
+    expect(persisted!.milestoneIds).toEqual(
+      expect.arrayContaining(["quiz-sharp", "quiz-ace", "triple-threat"]),
+    );
+    expect(persisted!.milestoneIds).not.toContain("quiz-champion");
   });
 });

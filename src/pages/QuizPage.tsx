@@ -6,8 +6,10 @@ import { getLesson } from "../content/course";
 import { getQuiz } from "../content/quizzes";
 import { nextDestination } from "../lib/lessonFlow";
 import {
+  awardProgressMilestones,
   recordDailyActivity,
   recordQuizScore,
+  unlockNextLesson,
 } from "../services/progressService";
 import { AppShell } from "../components/AppShell";
 import { Spinner } from "../components/Spinner";
@@ -26,6 +28,8 @@ export default function QuizPage() {
       if (!user) return;
       await recordQuizScore(user.uid, lessonId, scorePct);
       await recordDailyActivity(user.uid);
+      await unlockNextLesson(user.uid, lessonId);
+      await awardProgressMilestones(user.uid);
     },
     [user, lessonId],
   );

@@ -9,7 +9,6 @@ import {
   distanceToWaypoint,
   scoreRound,
   isDelivered,
-  trajectoryPoints,
   type DroneState,
   type Waypoint,
 } from "./lib/courierScoring";
@@ -157,15 +156,19 @@ export function CoordinateCourierGame({
 
   function fly() {
     cancelAnim(rafRef);
+    // A clean delivery lands exactly at the target time; a miss keeps moving
+    // (and keeps falling under gravity) until it leaves the field, so the drone
+    // visibly overshoots/drops instead of freezing mid-air.
+    const horizon = allDelivered ? round.tMax : flightHorizon(state, round);
     if (reduced) {
-      setFlightT(round.tMax);
+      setFlightT(horizon);
       return;
     }
     const start = performance.now();
-    const duration = 1800;
+    const duration = 1800 * (horizon / round.tMax);
     const tick = (now: number) => {
       const frac = Math.min(1, (now - start) / duration);
-      setFlightT(frac * round.tMax);
+      setFlightT(frac * horizon);
       if (frac < 1) {
         rafRef.current = requestAnimationFrame(tick);
       }
@@ -210,7 +213,7 @@ export function CoordinateCourierGame({
           </span>
           <span data-testid="courier-score">Score {score}%</span>
         </div>
-        <p className="mb-4 text-sm leading-relaxed text-slate-600">
+        <p className="mb-4 text-base font-medium leading-relaxed text-slate-800">
           <RichText>{round.instruction}</RichText>
         </p>
 
@@ -337,6 +340,21 @@ function cancelAnim(ref: React.MutableRefObject<number | null>) {
   }
 }
 
+/**
+ * How long to keep animating a missed flight: continue past the target time
+ * until the drone leaves the visible field (e.g. falls out the bottom under
+ * gravity), capped so the animation always terminates.
+ */
+function flightHorizon(state: DroneState, round: Round): number {
+  const cap = round.tMax + 3;
+  const { xMin, xMax, yMin, yMax } = round.domain;
+  for (let t = round.tMax; t <= cap; t += 0.05) {
+    const p = dronePosition(state, t);
+    if (p.x > xMax || p.x < xMin || p.y < yMin || p.y > yMax) return t;
+  }
+  return cap;
+}
+
 const W = 320;
 const H = 280;
 const PAD = 26;
@@ -356,10 +374,15 @@ function CourierPlane({
   const sx = (x: number) => PAD + ((x - xMin) / (xMax - xMin)) * (W - 2 * PAD);
   const sy = (y: number) => H - PAD - ((y - yMin) / (yMax - yMin)) * (H - 2 * PAD);
 
-  const path = trajectoryPoints(state, round.tMax, 60);
-  const fullPath = path
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${sx(p.x)} ${sy(p.y)}`)
-    .join(" ");
+  // A short dotted "aim" hint: only the first slice of the trajectory, so the
+  // learner sees the launch direction and curvature without the landing spot
+  // being given away.
+  const hintT = Math.min(1.1, round.tMax * 0.4);
+  const hintSteps = 18;
+  const hintPath = Array.from({ length: hintSteps + 1 }, (_, i) => {
+    const p = dronePosition(state, (i / hintSteps) * hintT);
+    return `${i === 0 ? "M" : "L"} ${sx(p.x)} ${sy(p.y)}`;
+  }).join(" ");
 
   // Animated drone position + trail up to flightT.
   let drone: { x: number; y: number } | null = null;
@@ -419,8 +442,18 @@ function CourierPlane({
         launch
       </text>
 
-      {/* planned flight path (live preview as sliders move) */}
-      <path d={fullPath} fill="none" stroke="#0a5fe6" strokeWidth={2} strokeDasharray="4 3" opacity={0.5} />
+      {/* short dotted aim hint — only while idle, only the first slice */}
+      {flightT === null && (
+        <path
+          d={hintPath}
+          fill="none"
+          stroke="#0a5fe6"
+          strokeWidth={2}
+          strokeDasharray="1.5 5"
+          strokeLinecap="round"
+          opacity={0.6}
+        />
+      )}
 
       {/* waypoint rings — light up green when reached */}
       {round.waypoints.map((wp) => {
