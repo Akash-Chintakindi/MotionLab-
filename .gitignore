@@ -1,0 +1,22 @@
+node_modules
+dist
+.tools
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*.log
+
+# Local environment files (keep the *.example templates tracked)
+.env
+.env.local
+.env.production
+
+.DS_Store
+.secrets
+*service-account*.json
+*serviceaccount*.json
+*-adminsdk-*.json
+playwright-report
+test-results
+coverage

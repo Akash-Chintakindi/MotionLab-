@@ -1,0 +1,46 @@
+{
+  "name": "motionlab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "JAVA_HOME=./.tools/jdk-21.0.11+10/Contents/Home firebase emulators:exec --project demo-motionlab \"vitest run -c vitest.integration.config.ts\"",
+    "emulators": "JAVA_HOME=./.tools/jdk-21.0.11+10/Contents/Home firebase emulators:start --project demo-motionlab",
+    "dev:all": "JAVA_HOME=./.tools/jdk-21.0.11+10/Contents/Home concurrently -k -n vite,emu -c blue,yellow \"vite\" \"firebase emulators:start --project demo-motionlab\"",
+    "e2e": "JAVA_HOME=./.tools/jdk-21.0.11+10/Contents/Home firebase emulators:exec --project demo-motionlab \"playwright test\"",
+    "e2e:ui": "playwright test --ui",
+    "smoke": "npm run build && JAVA_HOME=./.tools/jdk-21.0.11+10/Contents/Home firebase emulators:exec --project demo-motionlab \"playwright test -c playwright.preview.config.ts\"",
+    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules,firestore:indexes",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
+  },
+  "dependencies": {
+    "firebase": "^11.10.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.3",
+    "autoprefixer": "^10.5.0",
+    "concurrently": "^10.0.3",
+    "firebase-tools": "^15.22.1",
+    "jsdom": "^29.1.1",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
+  }
+}

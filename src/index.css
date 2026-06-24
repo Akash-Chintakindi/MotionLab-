@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-ink antialiased;
+  margin: 0;
+  /* Respect iOS safe areas for a phone-first layout. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Prevent the browser from hijacking touch gestures on interactive graphs. */
+.touch-none {
+  touch-action: none;
+}
+
+/* Visible keyboard focus for accessibility. */
+:where(button, a, input, [role="button"], [role="radio"], [role="slider"], [tabindex]):focus-visible {
+  outline: 2px solid #1f7aff;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Respect reduced-motion preferences for CSS transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
