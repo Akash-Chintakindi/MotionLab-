@@ -263,6 +263,48 @@ export async function completeLesson(
 }
 
 /**
+ * Records a quiz result, keeping only the learner's best score (0–100) per
+ * lesson. Returns the best score now stored.
+ */
+export async function recordQuizScore(
+  uid: string,
+  lessonId: string,
+  scorePct: number,
+  fdb?: Firestore,
+): Promise<number> {
+  const current = await getCourseProgress(uid, fdb);
+  const prev = current?.quizScores?.[lessonId] ?? 0;
+  const best = Math.max(prev, Math.round(scorePct));
+  await setDoc(
+    courseDoc(uid, fdb),
+    { quizScores: { [lessonId]: best }, updatedAt: nowMs() },
+    { merge: true },
+  );
+  return best;
+}
+
+/**
+ * Records a practice-game result, keeping only the best score (0–100) per
+ * lesson. Returns the best score now stored.
+ */
+export async function recordPracticeScore(
+  uid: string,
+  lessonId: string,
+  scorePct: number,
+  fdb?: Firestore,
+): Promise<number> {
+  const current = await getCourseProgress(uid, fdb);
+  const prev = current?.practiceScores?.[lessonId] ?? 0;
+  const best = Math.max(prev, Math.round(scorePct));
+  await setDoc(
+    courseDoc(uid, fdb),
+    { practiceScores: { [lessonId]: best }, updatedAt: nowMs() },
+    { merge: true },
+  );
+  return best;
+}
+
+/**
  * Merges an arbitrary set of earned milestone ids into the streak document.
  * Used for accuracy and challenge badges computed by the lesson engine.
  */

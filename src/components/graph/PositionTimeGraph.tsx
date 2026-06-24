@@ -290,7 +290,7 @@ export function PositionTimeGraph({
             cx={tToPx(t1)}
             cy={xToPx(curve.x(t1))}
             active={dragging === "m1"}
-            color="#1f7aff"
+            color="#f59e0b"
             onPointerDown={startDrag("m1")}
             label="Marker 1"
           />

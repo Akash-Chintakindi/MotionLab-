@@ -37,9 +37,18 @@ export async function sortPick(
   await row.getByRole("button", { name: bucketLabel }).click();
 }
 
+/** Expands a lesson's dropdown card and opens its "Learn" mode. */
 export async function openLesson(page: Page, name: RegExp) {
-  await page.getByRole("link", { name }).click();
+  await page.getByRole("button", { name }).click();
+  await page.getByRole("link", { name: "Learn" }).click();
   await expect(page.getByTestId("step-counter")).toBeVisible();
+}
+
+/** Expands a lesson's dropdown card and opens its "Quiz" mode. */
+export async function openQuiz(page: Page, name: RegExp) {
+  await page.getByRole("button", { name }).click();
+  await page.getByRole("link", { name: "Quiz" }).click();
+  await expect(page.getByTestId("quiz-counter")).toBeVisible();
 }
 
 export async function backToCourse(page: Page) {
@@ -53,24 +62,25 @@ export async function numericAnswer(page: Page, value: number) {
 
 /** Plays Lesson 1 from the dashboard through to its completion screen. */
 export async function completeLesson1(page: Page) {
-  await page
-    .getByRole("link", { name: /Position, Velocity, and Slope/ })
-    .click();
+  await openLesson(page, /Position, Velocity, and Slope/);
   await mcAnswer(page, /In the middle/);
-  await continueStep(page); // step 1
+  await continueStep(page); // step 1 hook
   await continueStep(page); // step 2 explore
   await page.getByRole("button", { name: "Select Middle region" }).click();
   await continueStep(page); // step 3 predict
   await continueStep(page); // step 4 average
   await continueStep(page); // step 5 instant
   await continueStep(page); // step 6 derivative
+  await continueStep(page); // step 7 calc concept
+  await numericAnswer(page, 4);
+  await continueStep(page); // step 8 calc practice
   await sortPick(page, "Point A", "Positive velocity");
   await sortPick(page, "Point B", "Zero velocity");
   await sortPick(page, "Point C", "Negative velocity");
   await page.getByRole("button", { name: "Check answer" }).click();
-  await continueStep(page); // step 7 sort
+  await continueStep(page); // step 9 sort
   await mcAnswer(page, /Moving backward/);
-  await continueStep(page); // step 8 application -> finish
+  await continueStep(page); // step 10 application -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 

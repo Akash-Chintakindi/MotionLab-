@@ -45,7 +45,11 @@ test("a learner can complete the entire 7-lesson course in order", async ({
   await openLesson(page, /Kinematics Mastery Challenge/);
   await completeLesson7(page);
 
-  // Final lesson: completion shows, but there is no next lesson to unlock.
+  // Final lesson: completion chains into Lesson 7's own Practice game (the last
+  // lesson now has practice + quiz; there is no further lesson after those).
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
-  await expect(page.getByTestId("unlock-next")).toHaveCount(0);
+  await expect(page.getByTestId("next-step")).toHaveAttribute(
+    "href",
+    "/lesson/lesson-7-mastery-challenge/practice",
+  );
 });

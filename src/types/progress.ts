@@ -25,6 +25,10 @@ export interface CourseProgress {
   completedLessonIds: string[];
   currentLessonId: string | null;
   masteryByLesson: Record<string, number>;
+  /** Best quiz score (0–100) per lessonId. */
+  quizScores?: Record<string, number>;
+  /** Best practice-game score (0–100) per lessonId. */
+  practiceScores?: Record<string, number>;
   updatedAt: number;
 }
 

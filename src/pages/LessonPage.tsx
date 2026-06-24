@@ -9,6 +9,7 @@ import { StepRenderer } from "../components/steps/StepRenderer";
 import { Feedback } from "../components/feedback/Feedback";
 import { RichText } from "../components/RichText";
 import { getMilestone } from "../lib/milestones";
+import { nextDestination } from "../lib/lessonFlow";
 
 export default function LessonPage() {
   const { lessonId = "" } = useParams();
@@ -76,6 +77,7 @@ export default function LessonPage() {
     return (
       <AppShell streak={engine.completion.streak}>
         <CompletionScreen
+          lessonId={lessonId}
           lessonTitle={lesson.title}
           result={engine.completion}
         />
@@ -366,15 +368,18 @@ function MasteryDial({ pct, colorClass }: { pct: number; colorClass: string }) {
 }
 
 function CompletionScreen({
+  lessonId,
   lessonTitle,
   result,
 }: {
+  lessonId: string;
   lessonTitle: string;
   result: CompletionResult;
 }) {
   const nextTitle = result.unlockedLessonId
     ? getLesson(result.unlockedLessonId)?.title
     : null;
+  const destination = nextDestination(lessonId, "learn");
   return (
     <div
       data-testid="lesson-complete"
@@ -417,18 +422,19 @@ function CompletionScreen({
         </div>
       )}
 
-      {nextTitle && result.unlockedLessonId && (
-        <div
-          data-testid="unlock-next"
-          className="mt-8 w-full max-w-sm rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-200"
-        >
-          <p className="text-sm text-brand-800">Unlocked next lesson</p>
-          <p className="mb-3 font-semibold text-ink">{nextTitle}</p>
+      {destination && (
+        <div className="mt-8 w-full max-w-sm">
+          {nextTitle && result.unlockedLessonId && (
+            <p className="mb-3 text-sm text-brand-800">
+              Unlocked next lesson: <span className="font-semibold">{nextTitle}</span>
+            </p>
+          )}
           <Link
-            to={`/lesson/${result.unlockedLessonId}`}
+            to={destination.href}
+            data-testid="next-step"
             className="block w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700"
           >
-            Start next lesson
+            {destination.label}
           </Link>
         </div>
       )}

@@ -102,6 +102,8 @@ export default function DashboardPage() {
               status={statusOf(lesson.id)}
               unlocked={isUnlocked(lesson.id)}
               mastery={courseProgress?.masteryByLesson[lesson.id]}
+              quizBest={courseProgress?.quizScores?.[lesson.id]}
+              practiceBest={courseProgress?.practiceScores?.[lesson.id]}
               prerequisiteTitle={prereq?.title}
             />
           );

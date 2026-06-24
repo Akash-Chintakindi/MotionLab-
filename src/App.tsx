@@ -8,6 +8,8 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AuthPage = lazy(() => import("./auth/AuthPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const LessonPage = lazy(() => import("./pages/LessonPage"));
+const PracticePage = lazy(() => import("./pages/PracticePage"));
+const QuizPage = lazy(() => import("./pages/QuizPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 
 function PageFallback() {
@@ -49,6 +51,22 @@ export default function App() {
               element={
                 <RequireAuth>
                   <LessonPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/lesson/:lessonId/practice"
+              element={
+                <RequireAuth>
+                  <PracticePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/lesson/:lessonId/quiz"
+              element={
+                <RequireAuth>
+                  <QuizPage />
                 </RequireAuth>
               }
             />

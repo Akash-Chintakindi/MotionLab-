@@ -178,3 +178,34 @@ export interface Course {
   description: string;
   lessons: Lesson[];
 }
+
+// ---- Quizzes -------------------------------------------------------------
+
+export type QuizQuestionType = "multipleChoice" | "numeric";
+export type QuizCategory = "conceptual" | "calculation";
+
+export interface QuizQuestion {
+  id: string;
+  type: QuizQuestionType;
+  /** Whether this item tests understanding or a computation (for the mix UI). */
+  category: QuizCategory;
+  prompt: string;
+  /** Optional read-only visuals, reused from the lesson primitives. */
+  graph?: GraphConfig;
+  plot?: PlotConfig;
+  /** multipleChoice fields */
+  options?: { id: string; label: string }[];
+  correctOptionId?: string;
+  /** numeric fields */
+  value?: number;
+  tolerance?: number;
+  unit?: string;
+  placeholder?: string;
+  /** Always shown after answering, whether right or wrong. */
+  explanation: string;
+}
+
+export interface Quiz {
+  lessonId: string;
+  questions: QuizQuestion[];
+}

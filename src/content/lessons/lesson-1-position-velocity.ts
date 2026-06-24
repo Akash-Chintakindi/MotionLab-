@@ -173,6 +173,43 @@ export const lesson1: Lesson = {
       },
     },
     {
+      id: "l1-calc-concept",
+      type: "concept",
+      prompt: "Calculating velocity from a formula",
+      interactionConfig: {
+        formula: "average v = Δx / Δt     and     v(t) = dx/dt",
+        body: [
+          "Average velocity over an interval is the change in position divided by the change in time: Δx / Δt. Graphically, that's the slope of the secant line.",
+          "For a position formula, the instantaneous velocity is the derivative dx/dt. For a polynomial, use the power rule: the term t^n becomes n·t^(n−1).",
+          "Example: if x(t) = t², then v(t) = 2t. If x(t) = 6t − t², then v(t) = 6 − 2t.",
+        ],
+      },
+      correctAnswer: null,
+      feedback: {
+        correct: "",
+        incorrect: "",
+      },
+    },
+    {
+      id: "l1-calc-practice",
+      type: "numeric",
+      prompt:
+        "Try it: for x(t) = 6t − t² (meters), what is the AVERAGE velocity between t = 0 s and t = 2 s?",
+      interactionConfig: {
+        tolerance: 0.1,
+        unit: "m/s",
+        placeholder: "m/s",
+      },
+      correctAnswer: { value: 4 },
+      feedback: {
+        correct:
+          "Right. x(0) = 0 and x(2) = 8, so average v = Δx/Δt = (8 − 0)/(2 − 0) = 4 m/s.",
+        incorrect:
+          "Average velocity is Δx/Δt. Find x at t = 0 and t = 2, subtract, then divide by the 2 s elapsed.",
+        hint: "x(2) = 6(2) − 2² = 8 and x(0) = 0. Now divide the change in position by 2 s.",
+      },
+    },
+    {
       id: "l1-sort",
       type: "sort",
       prompt:

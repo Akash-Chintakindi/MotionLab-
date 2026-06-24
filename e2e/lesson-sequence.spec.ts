@@ -5,6 +5,7 @@ import {
   sortPick,
   mcAnswer,
   completeLesson1,
+  openLesson,
 } from "./helpers";
 
 test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", async ({
@@ -15,9 +16,7 @@ test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", asyn
 
   // Back to course; Lesson 2 should now be unlocked.
   await page.getByRole("link", { name: "Back to course" }).click();
-  await page
-    .getByRole("link", { name: /Velocity, Acceleration, and Changing Motion/ })
-    .click();
+  await openLesson(page, /Velocity, Acceleration, and Changing Motion/);
   await expect(page.getByTestId("step-counter")).toContainText("Step 1");
 
   // Step 1: read acceleration sign from velocity graph.
@@ -46,7 +45,11 @@ test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", asyn
   await mcAnswer(page, /1\.5 m\/s/);
   await continueStep(page);
 
-  // Completion unlocks Lesson 3.
+  // Completion chains onward. Lesson 2 now has a practice game, so the next
+  // step is Lesson 2's Practice.
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
-  await expect(page.getByTestId("unlock-next")).toContainText("Displacement");
+  await expect(page.getByTestId("next-step")).toHaveAttribute(
+    "href",
+    "/lesson/lesson-2-velocity-acceleration/practice",
+  );
 });

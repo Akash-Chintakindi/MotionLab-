@@ -19,6 +19,12 @@ async function continueStep(page: Page) {
   await page.getByTestId("continue-button").click();
 }
 
+/** Expands the lesson's dropdown card and opens its "Learn" mode. */
+async function openLearn(page: Page, name: RegExp) {
+  await page.getByRole("button", { name }).click();
+  await page.getByRole("link", { name: "Learn" }).click();
+}
+
 test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   page,
 }) => {
@@ -27,10 +33,8 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   // Lesson 2 should be locked on the dashboard.
   await expect(page.getByText("Locked").first()).toBeVisible();
 
-  // Open Lesson 1.
-  await page
-    .getByRole("link", { name: /Position, Velocity, and Slope/ })
-    .click();
+  // Open Lesson 1 (Learn mode).
+  await openLearn(page, /Position, Velocity, and Slope/);
   await expect(page.getByTestId("step-counter")).toContainText("Step 1");
 
   // Step 1: hook (multiple choice) — wrong then right. Grading only on submit.
@@ -65,8 +69,19 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await expect(page.getByTestId("step-counter")).toContainText("Step 6");
   await continueStep(page);
 
-  // Step 7: sort points by velocity sign.
+  // Step 7: calculating velocity from a formula (concept, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 7");
+  await continueStep(page);
+
+  // Step 8: average-velocity calculation (numeric).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 8");
+  await page.getByLabel("Numeric answer").fill("4");
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await expect(page.getByText("Correct")).toBeVisible();
+  await continueStep(page);
+
+  // Step 9: sort points by velocity sign.
+  await expect(page.getByTestId("step-counter")).toContainText("Step 9");
   await sortPick(page, "Point A", "Positive velocity");
   await sortPick(page, "Point B", "Zero velocity");
   await sortPick(page, "Point C", "Negative velocity");
@@ -74,25 +89,25 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Step 8: application (multiple choice).
-  await expect(page.getByTestId("step-counter")).toContainText("Step 8");
+  // Step 10: application (multiple choice).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 10");
   await page.getByRole("radio", { name: /Moving backward/ }).click();
   await page.getByRole("button", { name: /Submit/ }).click();
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Completion + unlock.
+  // Completion + chained next step (Practice for lesson 1).
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
-  await expect(page.getByTestId("unlock-next")).toContainText(
-    "Velocity, Acceleration",
+  await expect(page.getByTestId("next-step")).toBeVisible();
+  await expect(page.getByTestId("next-step")).toHaveAttribute(
+    "href",
+    "/lesson/lesson-1-position-velocity/practice",
   );
 });
 
 test("Bob can resume a lesson after a reload", async ({ page }) => {
   await signUp(page);
-  await page
-    .getByRole("link", { name: /Position, Velocity, and Slope/ })
-    .click();
+  await openLearn(page, /Position, Velocity, and Slope/);
 
   // Solve step 1 so progress advances to step 2.
   await page.getByRole("radio", { name: /In the middle/ }).click();

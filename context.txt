@@ -1,0 +1,406 @@
+## Project Overview
+
+**MotionLab** is a Brilliant-inspired interactive web app for teaching AP Physics C kinematics to high school students. The core philosophy: learn by doing — students are dropped into problems, graphs, and simulations before any explanation. All lesson content is hand-authored (no AI features in the MVP).
+
+- **Tech Stack:** React 18 + Vite 8 + TypeScript + Tailwind CSS v3
+- **Backend:** Firebase Auth (email/password) + Cloud Firestore
+- **Dev Environment:** Firebase Emulator Suite with `demo-motionlab` project ID; portable Temurin JDK 21 (arm64) stored in `.tools/` (gitignored), JAVA_HOME wired into npm scripts
+- **Testing:** Vitest (unit + integration), Playwright (e2e); 86 unit tests + 8 e2e specs passing (Lesson 1 Learn/Practice/Quiz complete; Lessons 2–7 Practice/Quiz in progress)
+- **Routing:** React Router v6; `react-router-dom`
+- **Firebase project:** `motionlab-3e44a` (production config wired, deployment via `npm run deploy`)
+- **Fonts:** Space Grotesk (display) + Inter (body), loaded via Google Fonts
+- **Skills:** `frontend-design` symlinked to `~/.claude/skills/frontend-design` → auto-loaded by Cursor
+
+---
+
+## Target Persona
+
+**Bob** — 11th grade AP Physics C student struggling with kinematics. Needs short, visual, interactive lessons with instant feedback and progress tracking.
+
+---
+
+## Course Structure: AP Physics C — Motion Through Calculus (7 lessons)
+
+### Lesson 1: Position, Velocity, and Slope
+- **Core idea:** Velocity = derivative of position; v = dx/dt
+- **Covers:** Position-time graphs, slope as average velocity, tangent slope as instantaneous velocity, positive/negative/zero velocity, v(t) = dx/dt
+- **Interactive elements:** Drag point along x(t) curve; live tangent line; velocity readout; secant/instantaneous mode; region prediction (positive/negative/zero velocity); velocity sign sort
+- **Lesson 1 detailed 10-step flow:**
+  1. Hook: "A cart moves along a track. Where is it moving fastest?"
+  2. Explore: drag a point on the x(t) curve; tangent appears live
+  3. Predict: tap the steepest region (wrong answer feedback: "Look for steepest slope, not highest position")
+  4. Average velocity: drag two time markers; see secant slope
+  5. Instantaneous velocity: markers shrink; tangent limit appears
+  6. Derivative reveal: introduces v(t) = dx/dt
+  7. Concept screen: derivative notation
+  8. Sort: classify labeled points as positive/zero/negative velocity
+  9. Application: predict motion from a new position-time graph
+  10. Completion: mastery result, streak update, Lesson 2 unlock
+
+### Lesson 2: Velocity, Acceleration, and Changing Motion
+- **Core idea:** Acceleration = derivative of velocity; a(t) = dv/dt
+- **Covers:** v(t) graphs, slope as acceleration, speeding up vs. slowing down
+- **Interactive:** Adjust velocity graph segments; motion animation responds; identify when object speeds up/slows down
+
+### Lesson 3: Displacement from Area Under Velocity
+- **Core idea:** Displacement = integral of velocity; Δx = ∫v(t)dt
+- **Covers:** Area under v(t) graph, positive/negative area, net displacement vs. total distance
+- **Interactive:** Shade graph regions; drag interval endpoints; compare net displacement and total distance
+
+### Lesson 4: From Acceleration to Velocity and Position
+- **Core idea:** Integration builds position from velocity and velocity from acceleration
+- **Covers:** v(t) = v₀ + ∫a(t)dt; x(t) = x₀ + ∫v(t)dt; constant acceleration equations; initial conditions
+- **Interactive:** Slider for constant acceleration; live a(t)/v(t)/x(t) graph updates; predict final velocity and displacement
+
+### Lesson 5: Motion in Two Dimensions
+- **Core idea:** 2D motion = two linked 1D motions
+- **Covers:** Position vector r(t); velocity vector v(t) = dr/dt; acceleration vector; components and vector arrows
+- **Interactive:** Move object on 2D plane; display x/y position, velocity, and acceleration components; match vector arrows to motion
+- **Note:** All subscript notation (v_x, v_y, a_x, a_y) uses the `RichText` renderer for proper `<sub>` tags
+
+### Lesson 6: Projectile Motion
+- **Core idea:** Horizontal and vertical motion are independent
+- **Covers:** Constant horizontal velocity; vertical acceleration due to gravity; parametric equations; time of flight, peak height, range
+- **Interactive:** Launch angle + speed sliders; projectile path updates continuously/live (no launch button); ball animates in loop; stats (peak, range, time of flight) shown live
+
+### Lesson 7: Kinematics Mastery Challenge
+- **Core idea:** Combine graphs, equations, derivatives, integrals, and 2D reasoning
+- **Covers:** Mixed graph interpretation; translating between x(t), v(t), a(t); AP-style conceptual problems; multi-step reasoning
+- **Interactive:** Build missing graph from a given graph; multi-step motion scenario; review weak areas
+
+---
+
+## Content Model (TypeScript, version-controlled — never in Firestore)
+
+```ts
+Course {
+  id: string
+  title: string
+  lessons: Lesson[]
+}
+
+Lesson {
+  id: string
+  title: string
+  order: number
+  estimatedMinutes: number
+  steps: LessonStep[]
+}
+
+LessonStep {
+  id: string
+  type: "concept" | "multipleChoice" | "graphDrag" | "sliderSimulation" | "sort" | "numeric"
+  prompt: string
+  interactionConfig: object  // curve key, options, tolerance, etc.
+  correctAnswer: object
+  feedback: {
+    correct: string
+    incorrect: string
+    hint?: string
+  }
+}
+```
+
+- Lesson content is canonical in code; Firestore stores **only user progress**
+- Stable deterministic IDs required: e.g. `lesson-1-position-velocity`
+- Curve registry (`src/lib/curves.ts`): step configs reference curves by string key (e.g. `"parabola_down"`, `"smooth_increasing"`)
+- `RichText` component (`src/components/RichText.tsx`): parses `v_x`, `v_y`, `a_y` → `<sub>` tags; applied to all prompts and feedback text
+
+---
+
+## Firestore Data Model
+
+```
+users/{userId}
+  displayName, email, createdAt, lastActiveAt
+
+users/{userId}/lessonProgress/{lessonId}
+  status: "not_started" | "in_progress" | "completed"
+  currentStepIndex
+  completedStepIds
+  attemptsByStep       // Map<stepId, number>
+  correctByStep        // Map<stepId, boolean>
+  lastUpdatedAt
+  completedAt
+
+users/{userId}/courseProgress/kinematics
+  unlockedLessonIds
+  completedLessonIds   // Source of truth for "Completed" badge; never removed on restart
+  currentLessonId
+  masteryByLesson      // Map<lessonId, number 0–1>
+  updatedAt
+
+users/{userId}/streaks/current
+  currentStreak
+  longestStreak
+  lastActivityDate
+  milestoneIds         // Array of earned milestone IDs
+```
+
+### Data Flow
+1. User signs in via Firebase Auth
+2. React loads local course content from TypeScript files
+3. App reads Firestore progress for authenticated user
+4. Lesson renderer combines local content + user progress
+5. On every step completion, React writes progress to Firestore
+6. On lesson completion: Firestore updates completedLessonIds, unlocks next lesson, updates streak + mastery
+7. On return: app restores user to saved lesson and step
+
+---
+
+## Key Architectural Decisions
+
+- **Content canonical in code; only progress in Firestore** — keeps lesson definitions version-controlled, fast to render, AI-generatable later
+- **Completion badge based on `completedLessonIds`** — never removed when restarting a lesson; replays don't break the "Completed" indicator
+- **Restart clears lessonProgress doc** (resets step tracking) but does NOT modify `completedLessonIds` or unlock logic
+- **Lesson engine phases:** `play` → `summary` → `review`; completed lessons open to summary screen instead of auto-restarting
+- **`answered` Set replaces `locked` boolean** — tracks which steps have been correctly answered; enables back-navigation with prefilled correct answers
+- **MCQ requires Submit button** — selecting an option doesn't auto-grade; user must click Submit (re-submit after wrong answer); prevents spam-clicking
+- **Back button in lesson** — "← Previous step" button visible at step > 0; revisiting shows the step in its solved, locked state with correct answer prefilled
+- **Lazy route loading** — all page components are `React.lazy()`; Firebase and vendor chunks split manually for <2s first load
+
+---
+
+## Implemented Features (current state)
+
+### Authentication
+- Email/password sign-up with display name
+- `AuthProvider` with `signUp`, `signIn`, `signOut`
+- `RequireAuth` route guard
+- Auth page toggles between sign in / sign up
+
+### Lesson Engine (`useLessonEngine` hook)
+- Step-by-step progression with auto steps (concept, explore, sims) and graded steps (MCQ, numeric, sort, graphDrag)
+- `onAnswer` / `onContinue` / `onBack` callbacks
+- `prefillCorrect` flag passed to graded step components when reviewing
+- Feedback stored per-step in Firestore (`attemptsByStep`, `correctByStep`)
+- Resume mid-lesson: returns to exact saved step
+- Lesson completion: awards milestones, records daily streak activity
+- Phase management: `play` | `summary` | `review`
+
+### Step Components
+- **MultipleChoiceStep** — selection + Submit button flow; wrong answer shows hint/feedback + Resubmit; correct locks and shows Continue
+- **NumericStep** — numeric input with tolerance; Check Answer button
+- **SortStep** — drag-to-reorder with locked review state
+- **GraphDragStep / PositionTimeGraph** — explore mode (free drag), secant mode (two markers), predict mode (tap region); tangent line live; supports `prefillCorrect`
+- **ProjectileSim** — continuous animation, sliders always enabled, ball loops along trajectory; stats (peak, range, time-of-flight) update live
+
+### Summary / Review Flow
+- Clicking a completed lesson opens summary screen (not auto-restart)
+- Summary shows: mastery %, first-attempt vs. retried breakdown, per-step outcome chips
+- Two options: **Review** (read-only walk-through, all steps prefilled with correct answers) or **Restart** (fresh attempt, lesson card stays "Completed")
+- Review mode shows "← Previous step" / "Next" / "Back to summary" (at last step)
+- "Reviewing" badge displayed in progress header during review
+
+### Home Screen / Landing Page
+- Blueprint/engineering aesthetic; dark "oscilloscope" hero panel
+- Animated SVG motion demo: particle traces a position-time curve with a fading trail and live tangent showing velocity = slope; powered by `requestAnimationFrame`
+- Space Grotesk + Inter font pairing
+- 7-lesson sequence shown as a real ordered progression
+- "Why it works" section with monospace styling
+- Dark CTA footer
+- Responsive; `usePrefersReducedMotion` hook disables animation if needed
+
+### Badge / Milestone System (14 badges, 4 groups)
+
+**Accuracy:**
+- 🎖️ **Sharp Shooter** — score 80%+ on any lesson
+- 💎 **Flawless** *(Rare, cyan ring)* — 100% mastery on a lesson
+- 🥇 **Triple Ace** — 100% on three different lessons
+- 📜 **Honor Roll** — 80%+ on every completed lesson
+- 👑 **Perfectionist** *(Legendary, gold gradient)* — 100% mastery on all 7 lessons
+
+**Course Progress:**
+- 🎯 **First Lesson Complete** — complete lesson 1
+- ⛰️ **Halfway There** — complete 4 lessons
+- 🏆 **Course Complete** — finish all 7
+
+**Streaks:**
+- 🔥 3-day streak
+- 🔥 7-day streak
+- ⚡ 2-week streak
+- 🌟 30-day streak
+- 🏅 **Marathoner** *(Legendary)* — 60-day streak
+
+**Challenges:**
+- 💪 **Comeback Kid** — replay a finished lesson and beat your previous mastery score
+
+Rarity tiers: `rare` (cyan frame + "Rare" label), `legendary` (gold gradient + "Legendary" label). Awarded automatically on lesson completion; surfaced on the celebration screen.
+
+### Profile Page (`/profile`)
+- Accessible via circular avatar button (user initial) in AppShell header, visible on all signed-in pages
+- Shows: avatar, display name, email
+- Stats: lessons completed, average mastery, day streak, badges earned
+- Full grouped badge gallery — earned badges in color, locked badges greyed with 🔒 and unlock requirement
+
+### Dashboard
+- MiniStat strip: current streak, longest streak
+- Milestone badge chips for earned milestones
+- Lesson cards with completion status from `completedLessonIds`
+
+### Infrastructure
+- `.gitignore` properly ignores `.env`, `.env.local`, `.env.production`; template `.env.example` files remain tracked
+- 86 unit + integration tests passing; 8 Playwright e2e specs passing
+- Smoke test (`npm run smoke`): builds `dist/` and runs Playwright against `vite preview`
+- `npm run deploy` / `npm run deploy:rules` for Firebase Hosting + Firestore rules
+- `frontend-design` skill symlinked to `~/.claude/skills/frontend-design`
+
+---
+
+## MVP Non-Functional Requirements
+
+- Answer feedback: **< 100ms**
+- Interactive graph/visual updates: **60 FPS target**
+- First interaction load: **< 2 seconds** (achieved via lazy route splitting + Firebase/vendor chunking)
+- Mobile touch: first-class; responsive on phone-sized screens
+- Progress persists after refresh, logout, or device switch
+- Multiple concurrent users: no performance impact (content is local; only progress writes hit Firestore)
+
+---
+
+## Explicitly Out of MVP Scope
+
+AI tutor, generated content, chatbot, video lessons, teacher/admin dashboard, payments/subscriptions, social features
+
+---
+
+## Lesson Modes (Learn / Practice / Quiz)
+
+Each dashboard lesson card is an **expandable dropdown** (`src/components/LessonCard.tsx`) with three modes. Locked lessons are not expandable. The card surfaces best Quiz % and best Practice % per lesson.
+
+### Routes
+- `/lesson/:id` — Learn (existing lesson engine)
+- `/lesson/:id/practice` — Practice game (`src/pages/PracticePage.tsx`)
+- `/lesson/:id/quiz` — Quiz (`src/pages/QuizPage.tsx`)
+
+### Completion chaining: Learn → Practice → Quiz → next lesson
+- `src/lib/lessonFlow.ts` `nextDestination(lessonId, mode)` computes the next CTA, gracefully **skipping modes a lesson doesn't have** (uses `hasGame`/`hasQuiz`). learn→practice→quiz→next-lesson; missing modes are skipped; last lesson with nothing after → null (Back to course only).
+- Every "next" CTA (Learn completion screen, game result screen, quiz result screen) uses `data-testid="next-step"`.
+- The 🎉 celebration completion screen and all "Back to course" links are preserved.
+
+### Practice games — registry + contract
+- Registered in `src/games/registry.ts` keyed by lessonId via `lazy(() => import("./XGame").then(m => ({ default: m.XGame })))`. Helpers `getGame(lessonId)` / `hasGame(lessonId)`.
+- **GameProps** (registry.ts): `{ onScore?: (bestOverall: number) => void; next?: { href: string; label: string } }`.
+- A game MUST: be self-contained & presentational (no Firebase imports); call `onScore(best, 0–100)` exactly once when the player finishes; render a result screen with a primary `data-testid="next-step"` react-router `Link` when `next` is provided, plus a "Play again" control and a "Back to course" `Link` to `/`; respect `usePrefersReducedMotion` (skip animation, no infinite rAF) ; be mobile-first; use `requestAnimationFrame` for animation (not CSS transitions) for 60fps.
+- Persistence handled by `PracticePage` (`recordPracticeScore` keeps best; counts as daily streak activity). Best score appears on the dashboard dropdown.
+- Pure scoring lives in `src/games/lib/*Scoring.ts` with Vitest unit tests.
+- **Reference implementation:** `src/games/DriveTheCartGame.tsx` + `src/games/lib/driveScoring.ts` (Lesson 1).
+
+### Drive the Cart (Lesson 1) — current design
+- Set a per-second velocity profile (sliders, t=0..6, dt=1) to reproduce a target position-time path across 3 rounds (constant → stop-and-hold → over-the-hill).
+- **Difficulty design (important pattern):** NO full target line is drawn — only a few **checkpoint rings** (at t=3 and t=6) are shown, and they turn green when the path passes through them. Scoring still grades the WHOLE curve (RMS error → 0–100), so sparse anchors make it harder, not just leniently scored. New games should follow this "few visible anchors, full-curve scoring" idea where applicable.
+- Live score; Play animates the cart (skipped under reduced motion); overall best = average of per-round best scores.
+
+### Quizzes — registry + contract
+- Registered in `src/content/quizzes/index.ts`: `getQuiz(lessonId)` / `hasQuiz(lessonId)`.
+- **Types** (`src/types/content.ts`): `QuizQuestion { id; type: "multipleChoice"|"numeric"; category: "conceptual"|"calculation"; prompt; graph?; plot?; options?; correctOptionId?; value?; tolerance?; unit?; placeholder?; explanation }`; `Quiz { lessonId; questions }`.
+- 8–10 ORIGINAL questions per lesson, mixing conceptual + calculation; every question has a non-empty `explanation`. Must be fully answerable from that lesson's Learn content. May reuse `graph` (GraphConfig) / `plot` (PlotConfig) visuals.
+- Engine: `src/hooks/useQuiz.ts` + presentational `src/components/quiz/QuizRunner.tsx` (immediate per-question feedback → final score + per-question review with retry). `QuizPage` wires persistence (`recordQuizScore` best; daily streak) + the `next` CTA.
+- Pure grading: `src/lib/quiz.ts` (`gradeQuestion`, `quizScorePct`). **Reference:** `src/content/quizzes/quiz-1-position-velocity.ts` + `src/content/quizzes/__tests__/` / `src/content/__tests__/quiz-content.test.ts`.
+
+### Practice games by lesson (names + concept)
+- L1 **Drive the Cart** — build a velocity profile to hit position checkpoints (DONE)
+- L2 **Acceleration Pilot** — set an acceleration profile to match a target velocity curve (a = dv/dt)
+- L3 **Area Painter** — choose/shade the area under v(t) to hit a target displacement (signed area; net vs total)
+- L4 **Integral Stack** — integrate a(t) → v(t) → x(t); tune acceleration (+ v₀/x₀) to hit position targets
+- L5 **Coordinate Courier** — set v_x, v_y (and/or a_x, a_y) to route to 2D waypoints (independent components)
+- L6 **Cannon Range** — pick launch angle + speed to hit targets at varied range/height (projectile independence)
+- L7 **Boss Rush** — a fast scored gauntlet of mixed mini-challenges across all prior topics
+
+### Progress fields
+- `CourseProgress.quizScores` and `CourseProgress.practiceScores` (Map<lessonId, best 0–100>) in `src/types/progress.ts`; writers `recordQuizScore` / `recordPracticeScore` in `progressService.ts`; surfaced via `useProgress` on the dashboard dropdown.
+
+### Reusable building blocks for games/quizzes
+- Graphs: `PositionTimeGraph` (modes static/explore/secant/predict), `PlotGraph` + `StaticPlot` (generic f(t) plots with regions/area shading).
+- Math: `src/lib/functions.ts` (`integrate`, `totalDistance`, plot presets), `src/lib/curves.ts` (`niceTicks`, curve registry, `averageVelocity`).
+- Existing sims (patterns to adapt): `MotionSim`/`AccelerationSim` (L2), `AreaSim` (L3), `KinematicsSim` (L4), `Vector2DSim` (L5), `ProjectileSim` (L6).
+- `Slider` (supports `disabled`), `Feedback`, `RichText` (`v_x`→subscript), `usePrefersReducedMotion`.
+
+### Adding a game / quiz — file conventions
+- Game: `src/games/<Name>Game.tsx` (named export `<Name>Game`); scoring `src/games/lib/<name>Scoring.ts`; tests under `src/games/lib/__tests__/` (+ optional component test). Then register in `src/games/registry.ts`.
+- Quiz: `src/content/quizzes/quiz-<n>-<slug>.ts` (export `quiz<n>`); test `src/content/quizzes/__tests__/quiz-<n>.test.ts`. Then register in `src/content/quizzes/index.ts`.
+- If you add/alter Learn steps, ALSO update the matching `completeLessonN` walkthrough in `e2e/helpers.ts` (step counts/answers) or the e2e suite breaks.
+- `motion-graphics` skill (`~/.agents/skills/motion-graphics`) is **not used** — it renders MP4 videos, not interactive games.
+
+---
+
+## File Structure Highlights
+
+```
+src/
+  auth/           AuthProvider, RequireAuth
+  components/
+    steps/        MultipleChoiceStep, NumericStep, SortStep, GraphDragStep
+    steps/sims/   ProjectileSim, Vector2DSim (L5), KinematicsSim (L4), AreaSim (L3), MotionSim (L2)
+    quiz/         QuizRunner.tsx (presentational quiz flow + score/review)
+    graph/        PositionTimeGraph, PlotGraph, StaticPlot
+    feedback/     Feedback.tsx
+    LessonCard.tsx  Expandable Learn/Practice/Quiz dropdown
+    RichText.tsx  Subscript renderer (_x, _y → <sub>)
+    Slider.tsx    Supports `disabled` prop
+  content/
+    lessons/      lesson-1.ts through lesson-7.ts
+    quizzes/      quiz-1.. + index.ts (getQuiz/hasQuiz)
+    course.ts     Course registry (getLesson, getNextLessonId)
+  games/          Practice games: DriveTheCartGame.tsx, registry.ts (getGame/hasGame), lib/*Scoring.ts
+  hooks/
+    useLessonEngine.ts   Core lesson state machine
+    useQuiz.ts           Quiz state machine
+    useProgress.ts       Firestore progress reads + statusOf
+    usePrefersReducedMotion.ts
+  lib/
+    curves.ts     Curve registry + derivative utilities (niceTicks, averageVelocity)
+    functions.ts  integrate, totalDistance, plot presets
+    quiz.ts       gradeQuestion, quizScorePct
+    lessonFlow.ts nextDestination(lessonId, mode) — Learn→Practice→Quiz→next chaining
+    lessonEngine.ts  computeResumeIndex, buildLessonSummary, masteryMilestonesFor, accuracyMilestonesFor
+    milestones.ts    Milestone catalog (14 badges, 4 groups, rarity tiers)
+    streak.ts     computeStreak + milestone wiring
+  pages/
+    LandingPage.tsx    Home screen with animated motion demo
+    DashboardPage.tsx  Lesson cards + stats strip
+    LessonPage.tsx     Lesson renderer + SummaryScreen + CompletionScreen
+    PracticePage.tsx   /lesson/:id/practice — loads game from registry, persists score
+    QuizPage.tsx       /lesson/:id/quiz — renders QuizRunner, persists score
+    ProfilePage.tsx    /profile route
+    AuthPage.tsx
+  services/
+    progressService.ts  Firestore read/write; completeLesson, resetLessonProgress,
+                        awardMilestones, recordQuizScore, recordPracticeScore
+  firebase.ts     Firebase init with emulator auto-connect
+e2e/            Playwright specs (lesson1, lesson-sequence, full-course, streak, quiz1, practice1)
+e2e-smoke/      Smoke spec for production bundle
+
+Lesson IDs: lesson-1-position-velocity, lesson-2-velocity-acceleration,
+lesson-3-displacement-area, lesson-4-acceleration-to-position,
+lesson-5-two-dimensions, lesson-6-projectile-motion, lesson-7-mastery-challenge
+```
+
+---
+
+## npm Scripts
+
+```bash
+npm run dev          # Vite dev server + Firebase emulators (concurrent)
+npm run test         # Vitest unit tests (86 passing)
+npm run test:integration  # Emulator-backed integration tests
+npm run e2e          # Playwright e2e tests
+npm run smoke        # Build dist/ then Playwright against vite preview
+npm run build        # tsc --noEmit + vite build
+npm run deploy       # Firebase Hosting deploy
+npm run deploy:rules # Firestore security rules deploy
+```
+
+---
+
+## Key Decisions & Constraints to Preserve
+
+1. **Lesson content stays in TypeScript files** — never move to Firestore
+2. **`completedLessonIds` is the permanent completion source of truth** — restart does not remove from this list
+3. **No AI in MVP** — no model calls, generated content, or chatbot
+4. **MCQ requires Submit** — do not revert to instant-grade-on-selection
+5. **Back button restores solved state** — prefillCorrect must work for all graded step types
+6. **60 FPS on graphs/sims** — use requestAnimationFrame, not CSS transitions
+7. **All content must have stable IDs** — never change existing step/lesson IDs (breaks progress data)
+8. **Firestore security rules** — all progress writes scoped to authenticated `userId`
+9. **Test-driven** — every new feature needs unit tests + e2e coverage before marking done
