@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { openLesson, openQuiz, finishQuiz, backToCourse } from "./helpers";
+import { openLesson, openQuiz, passQuiz, backToCourse } from "./helpers";
 
 function uniqueEmail() {
   return `bob_${Date.now()}_${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -110,9 +110,9 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await backToCourse(page);
   await expect(page.getByText("Locked").first()).toBeVisible();
 
-  // Finish Lesson 1's quiz (any answers), which unlocks Lesson 2.
+  // Pass Lesson 1's quiz (>= 70%), which unlocks Lesson 2.
   await openQuiz(page, /Position, Velocity, and Slope/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-1-position-velocity");
   await backToCourse(page);
 
   // Lesson 2 is now unlocked and openable.

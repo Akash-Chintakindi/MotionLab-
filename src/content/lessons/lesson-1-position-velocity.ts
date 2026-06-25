@@ -40,6 +40,12 @@ export const lesson1: Lesson = {
           "Right. The cart covers the most distance per second where the graph is steepest — the middle.",
         incorrect:
           "Look for where the graph is steepest, not where the position is highest.",
+        incorrectByOption: {
+          early:
+            "Near the start the curve is still shallow, so the cart is barely moving. Fastest means steepest slope — that's the middle.",
+          late:
+            "Late is where the cart is highest, but the curve has flattened out there. Height isn't speed; the steepest climb is in the middle.",
+        },
         hint: "Fastest means the biggest change in position each second. Which part of the curve climbs most steeply?",
       },
     },
@@ -276,6 +282,12 @@ export const lesson1: Lesson = {
           "Yes — after the peak the curve falls, so the slope (velocity) is negative: the cart moves backward.",
         incorrect:
           "After t = 3 s the curve slopes downward. A downward slope means negative velocity.",
+        incorrectByOption: {
+          forward:
+            "Forward needs a rising curve, but after the peak at t = 3 s the curve falls — a downward slope is negative velocity, so it's moving backward.",
+          rest:
+            "Staying at rest needs a flat curve (zero slope). Here the curve is clearly falling after t = 3 s, so velocity is negative, not zero.",
+        },
         hint: "Is the position increasing or decreasing between t = 4 s and t = 6 s?",
       },
     },

@@ -102,6 +102,12 @@ export const lesson3: Lesson = {
           "Right — after t = 4 s the velocity is negative, so that area subtracts from the net but still adds to the distance.",
         incorrect:
           "The negative (red) area cancels part of the net displacement but still counts as distance traveled.",
+        incorrectByOption: {
+          equal:
+            "They'd only match if the object never reversed. After t = 4 s the velocity goes negative, so the backward area shrinks the net but not the distance.",
+          netmore:
+            "Net can't exceed total distance — the negative area subtracts from the net while still adding to distance, so net comes out less, not more.",
+        },
         hint: "When the object moves backward, net and total disagree.",
       },
     },
@@ -149,6 +155,12 @@ export const lesson3: Lesson = {
         correct: "Yes — negative velocity over time means displacement in the negative direction.",
         incorrect:
           "Below the axis velocity is negative, so position decreases: the object moves backward.",
+        incorrectByOption: {
+          stopped:
+            "Below the axis the velocity is negative, not zero — a nonzero velocity means the object is still moving, just backward.",
+          speed:
+            "Speeding up is about the slope of v(t), not its sign. Area below the axis is negative velocity, which means moving backward.",
+        },
         hint: "Negative velocity × time = negative displacement.",
       },
     },

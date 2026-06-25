@@ -99,4 +99,51 @@ describe("QuizRunner", () => {
       "Question 1 of 2",
     );
   });
+
+  it("hides the next CTA and asks to retake below the pass threshold", async () => {
+    render(
+      <MemoryRouter>
+        <QuizRunner
+          quiz={quiz}
+          next={{ href: "/next", label: "Next lesson" }}
+          passThreshold={70}
+        />
+      </MemoryRouter>,
+    );
+    // Fail both questions (0%).
+    await userEvent.click(screen.getByText("acceleration"));
+    await userEvent.click(screen.getByTestId("quiz-submit"));
+    await userEvent.click(screen.getByTestId("quiz-continue"));
+    await userEvent.type(screen.getByLabelText("Numeric answer"), "0");
+    await userEvent.click(screen.getByTestId("quiz-submit"));
+    await userEvent.click(screen.getByTestId("quiz-continue"));
+
+    expect(screen.getByTestId("quiz-results")).toHaveTextContent("0%");
+    expect(screen.queryByTestId("next-step")).toBeNull();
+    expect(screen.getByTestId("quiz-retry-notice")).toBeInTheDocument();
+    expect(screen.getByTestId("quiz-retry")).toHaveTextContent("Retake quiz");
+  });
+
+  it("shows the next CTA when the pass threshold is met", async () => {
+    render(
+      <MemoryRouter>
+        <QuizRunner
+          quiz={quiz}
+          next={{ href: "/next", label: "Next lesson" }}
+          passThreshold={70}
+        />
+      </MemoryRouter>,
+    );
+    // Pass both questions (100%).
+    await userEvent.click(screen.getByText("velocity"));
+    await userEvent.click(screen.getByTestId("quiz-submit"));
+    await userEvent.click(screen.getByTestId("quiz-continue"));
+    await userEvent.type(screen.getByLabelText("Numeric answer"), "4");
+    await userEvent.click(screen.getByTestId("quiz-submit"));
+    await userEvent.click(screen.getByTestId("quiz-continue"));
+
+    expect(screen.getByTestId("quiz-results")).toHaveTextContent("100%");
+    expect(screen.getByTestId("next-step")).toHaveAttribute("href", "/next");
+    expect(screen.queryByTestId("quiz-retry-notice")).toBeNull();
+  });
 });

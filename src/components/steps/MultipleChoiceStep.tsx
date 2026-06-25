@@ -29,7 +29,7 @@ export function MultipleChoiceStep({
     if (locked || selected === null) return;
     const correct = selected === correctId;
     setSubmittedWrong(!correct);
-    onAnswer(correct);
+    onAnswer(correct, selected ?? undefined);
   }
 
   return (

@@ -97,6 +97,12 @@ export const lesson4: Lesson = {
           "Right — v₀ sets the starting value (the intercept); the slope is still a.",
         incorrect:
           "v₀ is the value of v at t = 0. The slope of v(t) is the acceleration, which hasn't changed.",
+        incorrectByOption: {
+          steeper:
+            "Steepness is set by the slope, which is the acceleration — and that's unchanged. v₀ only moves the starting value, so the line shifts up.",
+          nochange:
+            "v₀ is the value of v at t = 0, so changing it does move the graph — the whole line shifts up while keeping the same slope.",
+        },
         hint: "Changing the intercept shifts a line; changing the slope tilts it.",
       },
     },
@@ -117,6 +123,12 @@ export const lesson4: Lesson = {
           "Yes — x(t) = x₀ + v₀t + ½at² is quadratic in t, so it's a parabola.",
         incorrect:
           "Integrating a straight-line v(t) gives a t² term, which is a parabola.",
+        incorrectByOption: {
+          line:
+            "A straight-line x(t) would mean constant velocity. With constant acceleration v grows linearly, so x picks up a t² term — a parabola.",
+          flat:
+            "Flat at zero means no motion at all. Under constant acceleration the object moves, and x(t) = x₀ + v₀t + ½at² is a parabola.",
+        },
         hint: "Look at the highest power of t in x(t).",
       },
     },

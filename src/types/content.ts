@@ -142,6 +142,14 @@ export interface StepFeedback {
   correct: string;
   incorrect: string;
   hint?: string;
+  /**
+   * Optional per-option wrong-answer explanations for multipleChoice steps,
+   * keyed by the wrong option's id. When a learner submits a specific wrong
+   * choice, its tailored message is shown instead of the generic `incorrect`
+   * fallback. Backward compatible: omit it and `incorrect` is always used.
+   * Never key the correct option here.
+   */
+  incorrectByOption?: Record<string, string>;
 }
 
 export interface LessonStep {

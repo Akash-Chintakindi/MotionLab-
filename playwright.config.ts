@@ -21,9 +21,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // Force emulator config for e2e. Vite normally lets `.env.local` override
+    // `.env`, and this repo sometimes uses `.env.local` for live Firebase dev.
+    // Inline env vars have higher priority and keep test users out of prod Auth.
+    command:
+      "VITE_FIREBASE_API_KEY=demo-api-key VITE_FIREBASE_AUTH_DOMAIN=demo-motionlab.firebaseapp.com VITE_FIREBASE_PROJECT_ID=demo-motionlab VITE_FIREBASE_STORAGE_BUCKET=demo-motionlab.appspot.com VITE_FIREBASE_MESSAGING_SENDER_ID=000000000000 VITE_FIREBASE_APP_ID=1:000000000000:web:demomotionlab VITE_USE_FIREBASE_EMULATORS=true npm run dev",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

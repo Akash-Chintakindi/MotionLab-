@@ -12,8 +12,9 @@ function renderCard(props: Partial<Parameters<typeof LessonCard>[0]> = {}) {
     <MemoryRouter>
       <LessonCard
         lesson={lesson1}
-        status="not_started"
+        status="completed"
         unlocked
+        mastery={1}
         {...props}
       />
     </MemoryRouter>,
@@ -57,5 +58,18 @@ describe("LessonCard dropdown", () => {
     expect(
       screen.queryByRole("button", { name: /Position, Velocity, and Slope/ }),
     ).toBeNull();
+  });
+
+  it("locks Practice and Quiz until the lesson is mastered (80%)", async () => {
+    renderCard({ status: "in_progress", mastery: 0.6 });
+    await userEvent.click(
+      screen.getByRole("button", { name: /Position, Velocity, and Slope/ }),
+    );
+
+    // Learn stays available; Practice/Quiz are not navigable links yet.
+    expect(screen.getByRole("link", { name: "Learn" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Practice" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Quiz" })).toBeNull();
+    expect(screen.getAllByText("🔒 Master Learn (80%)")).toHaveLength(2);
   });
 });

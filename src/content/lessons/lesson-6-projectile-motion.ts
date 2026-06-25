@@ -57,6 +57,12 @@ export const lesson6: Lesson = {
         correct: "Right — there is no horizontal force, so vx never changes.",
         incorrect:
           "Gravity acts only vertically, so it cannot change the horizontal velocity.",
+        incorrectByOption: {
+          increase:
+            "Nothing pushes the projectile horizontally — gravity acts only downward — so v_x has no way to increase; it stays constant.",
+          decrease:
+            "Horizontal velocity doesn't drop at the top; only the vertical velocity does. With no horizontal force, v_x stays constant throughout.",
+        },
         hint: "Which direction does gravity pull?",
       },
     },
@@ -69,7 +75,8 @@ export const lesson6: Lesson = {
       correctAnswer: { value: 10 },
       feedback: {
         correct: "Correct — vy = v·sinθ = 20·sin30° = 10 m/s.",
-        incorrect: "Use vy = v·sinθ.",
+        incorrect:
+          "Use vy = v·sinθ for the vertical part — sinθ, not cosθ (cosθ gives the horizontal component).",
         hint: "sin30° = 0.5.",
       },
     },
@@ -90,6 +97,12 @@ export const lesson6: Lesson = {
           "Yes — the object stops rising for an instant, so vy = 0 at the peak (horizontal velocity continues).",
         incorrect:
           "At the very top the object is momentarily not moving up or down, so vy = 0.",
+        incorrectByOption: {
+          max:
+            "v_y is largest at launch, not the top. At the peak the object briefly stops rising, so v_y = 0 there.",
+          neg:
+            "v_y only becomes downward (negative) after the peak. At the very top it passes through zero as it switches from rising to falling.",
+        },
         hint: "What must vy be the instant the object switches from rising to falling?",
       },
     },
@@ -110,6 +123,12 @@ export const lesson6: Lesson = {
         correct: "Correct — 45° balances horizontal speed and time of flight.",
         incorrect:
           "Try it in the simulation: range peaks at 45° and is symmetric around it.",
+        incorrectByOption: {
+          thirty:
+            "30° lands shorter than 45°. Range ∝ sin(2θ) is largest at 45°, where 2θ = 90°.",
+          ninety:
+            "Straight up gives maximum height but zero range — it lands back at the start. 45° best balances horizontal speed and time of flight.",
+        },
         hint: "Range ∝ sin(2θ), which is largest when 2θ = 90°.",
       },
     },

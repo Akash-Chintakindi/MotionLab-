@@ -11,6 +11,12 @@ const LessonPage = lazy(() => import("./pages/LessonPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const LabPage = lazy(() => import("./pages/LabPage"));
+const GamesPage = lazy(() => import("./pages/GamesPage"));
+const PoolGamePage = lazy(() => import("./pages/PoolGamePage"));
+const BasketballGamePage = lazy(() => import("./pages/BasketballGamePage"));
+const CannonGamePage = lazy(() => import("./pages/CannonGamePage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 
 function PageFallback() {
   return (
@@ -67,6 +73,63 @@ export default function App() {
               element={
                 <RequireAuth>
                   <QuizPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/lab"
+              element={
+                <RequireAuth>
+                  <LabPage />
+                </RequireAuth>
+              }
+            />
+            {/* Legacy path kept as an alias for the renamed Lab tab. */}
+            <Route
+              path="/practice"
+              element={
+                <RequireAuth>
+                  <LabPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games"
+              element={
+                <RequireAuth>
+                  <GamesPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games/pool"
+              element={
+                <RequireAuth>
+                  <PoolGamePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games/basketball"
+              element={
+                <RequireAuth>
+                  <BasketballGamePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games/cannon"
+              element={
+                <RequireAuth>
+                  <CannonGamePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/leaderboard"
+              element={
+                <RequireAuth>
+                  <LeaderboardPage />
                 </RequireAuth>
               }
             />

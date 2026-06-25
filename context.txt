@@ -1,15 +1,42 @@
 ## Project Overview
 
-**MotionLab** is a Brilliant-inspired interactive web app for teaching AP Physics C kinematics to high school students. The core philosophy: learn by doing — students are dropped into problems, graphs, and simulations before any explanation. All lesson content is hand-authored (no AI features in the MVP).
+**MotionLab** is a Brilliant-inspired interactive web app for teaching AP Physics C kinematics to high school students. The core philosophy: learn by doing — students are dropped into problems, graphs, and simulations before any explanation. The 7 lessons (Learn/Practice/Quiz) are hand-authored; the **AI Practice Hub** (`/practice`) is the one AI-powered surface, generating adaptive problems via Firebase AI Logic (Gemini).
 
 - **Tech Stack:** React 18 + Vite 8 + TypeScript + Tailwind CSS v3
 - **Backend:** Firebase Auth (email/password) + Cloud Firestore
 - **Dev Environment:** Firebase Emulator Suite with `demo-motionlab` project ID; portable Temurin JDK 21 (arm64) stored in `.tools/` (gitignored), JAVA_HOME wired into npm scripts
-- **Testing:** Vitest (unit + integration), Playwright (e2e); 86 unit tests + 8 e2e specs passing (Lesson 1 Learn/Practice/Quiz complete; Lessons 2–7 Practice/Quiz in progress)
+- **Testing:** Vitest (unit + integration), Playwright (e2e). All 7 lessons have Learn + Practice + Quiz.
 - **Routing:** React Router v6; `react-router-dom`
-- **Firebase project:** `motionlab-3e44a` (production config wired, deployment via `npm run deploy`)
+- **Firebase project:** `motionlab-3e44a` — **deployed live at https://motionlab-3e44a.web.app** (`npm run deploy`)
+- **AI:** Firebase AI Logic (Gemini Developer API, free tier) via `firebase/ai`. Requires one-time provisioning: `npx -y firebase-tools@latest init ailogic` (enables the Gemini Developer API). App Check is NOT yet configured — REQUIRED follow-up before heavy production use (protects the AI quota).
 - **Fonts:** Space Grotesk (display) + Inter (body), loaded via Google Fonts
 - **Skills:** `frontend-design` symlinked to `~/.claude/skills/frontend-design` → auto-loaded by Cursor
+
+---
+
+## ⏳ Pending Setup (deferred — do later)
+
+Code is complete and all tests pass; these are operator/account steps, NOT code changes.
+
+1. **Re-authenticate the Firebase CLI** (the local token is expired → both `npm run deploy` AND `npm run deploy:rules` fail with "Your credentials are no longer valid"):
+   ```bash
+   firebase login --reauth        # interactive browser; use the account that owns motionlab-3e44a
+   npm run deploy                 # redeploys hosting + firestore:rules + firestore:indexes
+   ```
+   - No API key needed for deploying — just reauth. The `Assertion failed: resolving hosting target...` error was only a side effect of being logged out.
+   - **⚠️ The cross-user Leaderboard is non-functional on the LIVE site until the new `leaderboards/**` rules are deployed** (reads/writes are denied). `npm run deploy` (or `npm run deploy:rules`) pushes them. Until then it only works against the local emulator.
+
+   Verified after the responsive-layout `/frontend-design` pass landed: `npm run build` (tsc + vite) passes clean and `npx tsc --noEmit` is clean. Still worth a quick in-app visual check of the widened layout + bigger basketball court + leaderboard opt-in before deploying.
+
+2. **Provision the AI Practice Hub** (so `/practice` can call Gemini):
+   ```bash
+   npx -y firebase-tools@latest init ailogic   # auto-enables the Gemini Developer API
+   ```
+   - This does NOT require manually obtaining/pasting a Gemini API key. The app uses the existing Firebase config via `firebase/ai`; `init ailogic` provisions the backend automatically. (A raw self-managed Gemini key is a different setup and is NOT what the current `src/ai/practiceService.ts` expects.)
+   - Until provisioned, `/practice` gracefully shows a "couldn't generate a problem, try again" state. Everything else (lessons, quizzes, games tab, badges, nav) works without it.
+   - AI practice requires the **live** Firebase config (won't work against the demo emulator).
+
+3. **(Recommended) Enable Firebase App Check** before relying on AI in production — protects the Gemini quota from abuse (reCAPTCHA Enterprise setup; not yet wired).
 
 ---
 
@@ -19,7 +46,9 @@
 
 ---
 
-## Course Structure: AP Physics C — Motion Through Calculus (7 lessons)
+## Course Structure: AP Physics C Kinematics (7 lessons)
+
+> App-facing course title is **"AP Physics C Kinematics"** (the "Motion Through Calculus" suffix was removed at the user's request).
 
 ### Lesson 1: Position, Velocity, and Slope
 - **Core idea:** Velocity = derivative of position; v = dx/dt
@@ -143,7 +172,7 @@ users/{userId}/streaks/current
 3. App reads Firestore progress for authenticated user
 4. Lesson renderer combines local content + user progress
 5. On every step completion, React writes progress to Firestore
-6. On lesson completion: Firestore updates completedLessonIds, unlocks next lesson, updates streak + mastery
+6. On lesson completion: Firestore updates completedLessonIds, updates streak + BEST mastery (does NOT unlock the next lesson — that requires passing the quiz at ≥70%; see "Mastery + quiz gating")
 7. On return: app restores user to saved lesson and step
 
 ---
@@ -201,7 +230,7 @@ users/{userId}/streaks/current
 - Dark CTA footer
 - Responsive; `usePrefersReducedMotion` hook disables animation if needed
 
-### Badge / Milestone System (14 badges, 4 groups)
+### Badge / Milestone System (21 badges, 5 groups)
 
 **Accuracy:**
 - 🎖️ **Sharp Shooter** — score 80%+ on any lesson
@@ -222,10 +251,19 @@ users/{userId}/streaks/current
 - 🌟 30-day streak
 - 🏅 **Marathoner** *(Legendary)* — 60-day streak
 
+**Quizzes** (best quiz score per lesson; pass threshold = 80%):
+- 🎯 **Quiz Ace** — 100% on any quiz
+- 🧠 **Sharp Mind** — 80%+ on any quiz
+- 🎩 **Hat Trick** — 100% on 3 different quizzes
+- 📚 **Quiz Honor Roll** — 80%+ on all 7 quizzes
+- 🏆 **Quiz Champion** — finish all 7 quizzes
+- 💯 **Quiz Perfectionist** *(Legendary)* — 100% on all 7 quizzes
+
 **Challenges:**
 - 💪 **Comeback Kid** — replay a finished lesson and beat your previous mastery score
+- 🔱 **Triple Threat** — complete Learn + Practice + Quiz for the same lesson
 
-Rarity tiers: `rare` (cyan frame + "Rare" label), `legendary` (gold gradient + "Legendary" label). Awarded automatically on lesson completion; surfaced on the celebration screen.
+Rarity tiers: `rare` (cyan frame + "Rare" label), `legendary` (gold gradient + "Legendary" label). Quiz/Triple-Threat badges are computed by `quizMilestonesFor` / `tripleThreatMilestonesFor` (`src/lib/milestones.ts`) and awarded by `awardProgressMilestones` (`progressService.ts`), called from `QuizPage`/`PracticePage` after a score is recorded. Lesson accuracy/streak/course badges are still awarded on lesson completion.
 
 ### Profile Page (`/profile`)
 - Accessible via circular avatar button (user initial) in AppShell header, visible on all signed-in pages
@@ -240,7 +278,8 @@ Rarity tiers: `rare` (cyan frame + "Rare" label), `legendary` (gold gradient + "
 
 ### Infrastructure
 - `.gitignore` properly ignores `.env`, `.env.local`, `.env.production`; template `.env.example` files remain tracked
-- 86 unit + integration tests passing; 8 Playwright e2e specs passing
+- **e2e Firebase isolation (IMPORTANT):** `playwright.config.ts` `webServer.command` explicitly injects emulator env (`VITE_USE_FIREBASE_EMULATORS=true`, `VITE_FIREBASE_PROJECT_ID=demo-motionlab`, etc.) and sets `reuseExistingServer:false`, so e2e NEVER hits production Auth. (Earlier, `.env.local` pointing at prod caused stray `bob_*@example.com` users to be created in real Auth.)
+- Unit + integration (Vitest): ~302 tests passing. Playwright e2e: 9 specs passing.
 - Smoke test (`npm run smoke`): builds `dist/` and runs Playwright against `vite preview`
 - `npm run deploy` / `npm run deploy:rules` for Firebase Hosting + Firestore rules
 - `frontend-design` skill symlinked to `~/.claude/skills/frontend-design`
@@ -258,9 +297,9 @@ Rarity tiers: `rare` (cyan frame + "Rare" label), `legendary` (gold gradient + "
 
 ---
 
-## Explicitly Out of MVP Scope
+## Explicitly Out of Scope
 
-AI tutor, generated content, chatbot, video lessons, teacher/admin dashboard, payments/subscriptions, social features
+Chatbot tutor, video lessons, teacher/admin dashboard, payments/subscriptions, social features. (Note: AI-generated *practice problems* are now IN scope via the AI Practice Hub.)
 
 ---
 
@@ -273,10 +312,24 @@ Each dashboard lesson card is an **expandable dropdown** (`src/components/Lesson
 - `/lesson/:id/practice` — Practice game (`src/pages/PracticePage.tsx`)
 - `/lesson/:id/quiz` — Quiz (`src/pages/QuizPage.tsx`)
 
+### Mastery + quiz gating (IMPORTANT — see "Learning Science.txt")
+Two performance thresholds, centralized in `src/lib/gating.ts`:
+- `LESSON_MASTERY_THRESHOLD = 0.8` and `QUIZ_PASS_PERCENT = 70`.
+- Helpers: `modesUnlocked(courseProgress, lessonId)` (best mastery ≥ 80%), `quizPassed(scorePct)` (≥ 70%), `lessonMastery(...)`.
+
+Rules:
+1. **Practice + Quiz of a topic unlock only after Learn is mastered at ≥ 80%.** Below 80%, both modes stay locked on the `LessonCard` (note "🔒 Master Learn (80%)") and their routes (`PracticePage`/`QuizPage`) show a "Master the lesson first" guard. The lesson completion screen branches: ≥80% → 🎉 + next CTA; <80% → 📊 "Almost there!" with **Review answers** (`onReview`) and **Redo lesson** (`onRestart`), no forward CTA.
+2. **The next topic unlocks only when the quiz is passed at ≥ 70%.** `QuizPage.onComplete` always records the score but calls `unlockNextLesson` **only if `quizPassed(scorePct)`**. Below 70%, `QuizRunner`'s score screen hides the next-step CTA, shows a retake notice (`data-testid="quiz-retry-notice"`), and the retry button reads "Retake quiz". `QuizRunner` takes a `passThreshold` prop (QuizPage passes `QUIZ_PASS_PERCENT`; default 0 = no gate).
+- `completeLesson` stores the learner's **BEST** mastery (max of prev and new), so a topic stays unlocked (and accuracy badges stick) even after a weaker replay. `unlockNextLesson(uid, lessonId)` still does the actual unlock.
+- `useLessonEngine` exposes `completion.practiceUnlocked` (best mastery ≥ 80%) and now caches the per-step summary on finish so "Review answers" works straight from the completion screen; `onReview` clears `completion` so review steps render.
+
 ### Completion chaining: Learn → Practice → Quiz → next lesson
-- `src/lib/lessonFlow.ts` `nextDestination(lessonId, mode)` computes the next CTA, gracefully **skipping modes a lesson doesn't have** (uses `hasGame`/`hasQuiz`). learn→practice→quiz→next-lesson; missing modes are skipped; last lesson with nothing after → null (Back to course only).
+- `src/lib/lessonFlow.ts` `nextDestination(lessonId, mode)` computes the next CTA, gracefully **skipping modes a lesson doesn't have** (uses `hasGame`/`hasQuiz`). learn→practice→quiz→next-lesson; missing modes are skipped; last lesson with nothing after → null (Back to course only). NOTE: the forward CTA is gated by the thresholds above (completion screen only shows it at ≥80% mastery; quiz score screen only shows it at ≥70%).
 - Every "next" CTA (Learn completion screen, game result screen, quiz result screen) uses `data-testid="next-step"`.
 - The 🎉 celebration completion screen and all "Back to course" links are preserved.
+
+### e2e note (gating)
+- `e2e/helpers.ts` `passQuiz(page, lessonId)` answers a quiz **correctly** by importing `getQuiz` from `src/content/quizzes` (quiz modules import only types, so this is safe in Playwright). Progression specs (lesson1, lesson-sequence, full-course) use `passQuiz` to clear 70%. `finishQuiz` (arbitrary answers) is kept for fail-path use. quiz1/practice1 specs first `completeLesson1` (90–100% mastery) so the quiz/practice are unlocked.
 
 ### Practice games — registry + contract
 - Registered in `src/games/registry.ts` keyed by lessonId via `lazy(() => import("./XGame").then(m => ({ default: m.XGame })))`. Helpers `getGame(lessonId)` / `hasGame(lessonId)`.
@@ -324,11 +377,72 @@ Each dashboard lesson card is an **expandable dropdown** (`src/components/Lesson
 
 ---
 
+## Top Navigation Tabs (AppShell)
+
+`AppShell` renders a sticky tab row (signed-in only): **Course** (`/`), **Practice** (`/practice`), **Games** (`/games`), **Leaderboard** (`/leaderboard`), using `NavLink` (`TabLink` helper) with active styling. The header wordmark, "Sign out", profile avatar, and streak chip were intentionally enlarged.
+
+- **Container width (responsive)**: the shell is `mx-auto ... w-full max-w-6xl` with responsive horizontal padding (`px-4 sm:px-6 lg:px-8` on header/main, similar on nav) — widened from the old skinny `max-w-2xl` so the app uses more of the screen on desktop while staying full-width/single-column on phones. Individual content pages (Dashboard/Lesson/Practice/Quiz/Profile/Games/Leaderboard) constrain their OWN inner reading width / use multi-column grids so prose stays readable and pages look intentional at the wider shell (this was a `/frontend-design` pass). Game pages self-size their canvas (see basketball sizing) and just center in the wider shell.
+
+- The lesson-card mode links carry `data-testid="lesson-mode-{learn|practice|quiz}"` so the top-nav "Practice" tab doesn't make those e2e selectors ambiguous.
+
+## AI Practice Hub (`/practice`) — adaptive AI problems
+
+A separate surface from the per-lesson Practice **games** (`/lesson/:id/practice`). Student picks a **topic** (any of the 7 lessons) + **difficulty** (easy/medium/hard); an AI generates one problem at a time with immediate feedback (graded client-side like a lesson step). Adaptive nudges: a trailing run of correct answers suggests leveling up (unless on hard); a run of wrong answers suggests leveling down, or — when already on easy — going back to the lesson to review.
+
+- **Shared contract (`src/ai/`):**
+  - `practiceTypes.ts` — `Difficulty`, `DIFFICULTIES`, `AIPracticeQuestion`, `PracticeTopic`, `GenerateParams` (dependency-free).
+  - `topics.ts` — `practiceTopics()` derives topics from `course.lessons` (id, title, blurb=coreIdea).
+  - `adaptive.ts` — pure `adaptiveSuggestion(results, difficulty)` (+ `harderDifficulty`/`easierDifficulty`, `ADAPTIVE_STREAK=3`). Unit-tested in `src/ai/__tests__/adaptive.test.ts`.
+  - `practiceService.ts` — `generatePracticeQuestion(params): Promise<AIPracticeQuestion>` using Firebase AI Logic (`firebase/ai`: `getAI(app,{backend:new GoogleAIBackend()})`, `getGenerativeModel(... model:"gemini-flash-latest")`, structured output via `responseMimeType:"application/json"` + `Schema`). Reuses `app` from `src/lib/firebase.ts`.
+- **UI:** `src/pages/PracticeHubPage.tsx` (+ `src/hooks/useAdaptivePractice.ts`). Picker → runner (loading / question / feedback / adaptive banner / error+retry).
+- **Testability:** AI has no emulator and is live-only (needs the real `motionlab-3e44a` config + `init ailogic` provisioning). Tests **mock** `../ai/practiceService`; e2e does NOT call real Gemini. Service handles failures gracefully (friendly error + retry).
+
+## Games Hub (`/games`) + arcade games
+
+`src/pages/GamesPage.tsx` — a picker (`data-testid="games-page"`) linking to two full arcade games (cards `game-card-pool`, `game-card-basketball`). These are SEPARATE from the per-lesson practice games on lesson cards.
+
+### Shared arcade foundation (`src/games/arcade/`)
+- `audio/audioEngine.ts` — **procedural Web Audio** (no audio files): `resumeAudio()` (call from a user gesture), `setMuted`/`isMuted`, `playSfx(name)`, `startMusic(track)`/`stopMusic()`, and two distinct loops `POOL_TRACK` (cool lounge groove) / `BASKETBALL_TRACK` (energetic). `audio/useArcadeAudio.ts` React wrapper + `MuteButton.tsx`.
+- `useGameLoop.ts` — rAF loop hook `useGameLoop(cb(dt), running)` with clamped dt.
+- `useHighScore.ts` + `services/gameScoreService.ts` — best score per gameId in Firestore (`users/{uid}/gameScores/arcade`) with a localStorage fallback (works logged-out/offline). NOTE: it does NOT auto-post to the public leaderboard anymore — that's an explicit opt-in from the game-over screen (see Leaderboard below).
+- `types.ts` — `ArcadeGameProps { highScore; onGameOver({score}); leaderboard? }`. The optional `leaderboard: ArcadeLeaderboard { playerName; playerId; publish(score); fetchTop(topN?) }` lets a game OFFER to post the score + show the board without importing Firebase (the page injects the Firestore-backed callbacks). Pages (`PoolGamePage`/`BasketballGamePage`) wrap the game in `AppShell` and persist the score via `useHighScore`. Games themselves NEVER import Firebase.
+- Both games are React + **HTML Canvas with custom deterministic physics** (NOT Phaser), built per the `game-designer` + `physics-intuition` skills (juice, readable-at-thumbnail, real arcs/weight), and respect `usePrefersReducedMotion`.
+
+### Physics Pool (`/games/pool`)
+- Authentic cue→object-ball→pocket on a coordinate-plane table. The shot is CALCULATED and entered numerically (angle° + speed); HUD shows cue/object/target-pocket coords, ball radius, and friction `a`; a help panel teaches the **ghost-ball** aim and **v=√(2·a·d)**. After each shot it reveals the ideal angle/speed + the player's angle error.
+- Pure module `pool/poolPhysics.ts` (deterministic sim with sub-stepping, equal-mass elastic collisions, friction, cushions, pockets; `computeIdealShot` ghost-ball; `gradeShot`) — unit-tested incl. an integration test proving the ideal shot actually sinks the ball. Component: `pool/PoolGame.tsx` (+ `poolLevels.ts`, `poolRender.ts`, `PoolHud.tsx`). Root `data-testid="pool-game"`.
+
+### Buzzer Beater basketball (`/games/basketball`)
+- **FRONT-FACING redesign** (GamePigeon-style + Madden-kick aiming). You look straight at a hoop mounted on a brick arena wall: backboard + rim centered up top, net hanging below, the shot **clock floats ABOVE the hoop**, and the ball spawns on a **shooting line near the bottom at a RANDOM x** each shot.
+- Pick a clock (30/60/120s). Per shot, TWO timed inputs (Space/tap/click; button reads "LOCK AIM" → "SHOOT!"):
+  1. **Aim** — a glowing dotted **parabola (the aim arc)** sweeps side to side at a FIXED `trueSpeed` (the speed that scores from the dead-on direction), so the launch DIRECTION is the skill: you time the lock when the arc drops through the hoop. Its angle range ADAPTS to the ball's spawn x (`aimRange`): a centered ball sweeps around straight-up; a far-left ball sweeps through up-and-right directions (mirror for far-right).
+  2. **Power** — a vertical meter whose **green band is the true-aim MAKE window**, computed by sampling speeds with `solveSpeedWindow(centerRad)` and keeping the contiguous range that actually goes in. The band is fixed at shot start (does NOT depend on the locked direction), so "stop it in the green" genuinely corresponds to a make WHEN the aim is true. **The aim arc does NOT oscillate during the power phase** — it freezes at lock (locked dir + `trueSpeed`) and only the meter moves; the arc is green/red per `aimGood = simulateShot(lockedDir, trueSpeed).made`.
+- **Real projectile physics + rim collision + RATTLE** (`simulateShot`, deterministic, no rng): the ball integrates under gravity and each descending rim-plane crossing is classified — center ⇒ **swish**, within the ring ⇒ **rim-in**, far side ⇒ **bank in**. A graze in the clip zone (rimRx…rimRx+ballR) **bounces** (funnels toward center when near the hole, kicks outward at the edge, damped each contact, up to 2 contacts) and may drop in on a later descent or finally clank out — so a slightly-off aim with good power rattles around and OCCASIONALLY goes in (closer aim ⇒ more likely). Outcome drives banners, particles, net swish (`netStretch`), and audio.
+- Every 15s (game clock PAUSES) a question modal appears: pick easy/medium/hard → a question from the practice bank → correct adds time (+2/+5/+10), wrong −5s. Clock to 0 ends it; tracks high score.
+- **Module split (frozen contracts so physics + renderer stay in sync):**
+  - `basketball/basketballLayout.ts` — geometry source of truth: `ASPECT_W/H`, `Layout`, `computeLayout`, `randomSpawnX`. Hoop/rim/board/spawn-line positions, plus `gravity`/`speedMin`/`speedMax` (all scale with canvas height for resolution independence).
+  - `basketball/basketballScene.ts` — the render contract: `BballScene` (incl. `aimPreview`, `aimLocked`/`aimGood`, `power`/`powerGreen`/`powerHalf`, `netSway`/`netStretch`, `ballScale`), `Phase`, `Screen`, `Particle`/`FloatText`/`CrowdSpeck`/`Banner`.
+  - `basketball/basketballPhysics.ts` — pure math (`aimRange`, `aimAngleAt`, `launchVelocity`, `idealSpeed`, `powerToSpeed`/`speedToPower`, `solveSpeedWindow` [the green make-window], `greenBand`/`aimGood` [legacy helpers, still exported], `simulateShot` → `ShotResult`/`ShotSim` [now with up-to-2 rim rattle bounces], `previewArc`, `applyTimeDelta`, pacing helpers, consts `TIME_BONUS`/`WRONG_PENALTY`/`TIME_LIMITS`/`QUESTION_INTERVAL`) — **angles are radians from +x in a y-UP sense (π/2 = straight up); screen y grows downward.** Unit-tested (31 tests: adaptive aim, true-aim make-window scoring across spawns, rim-rattle spectrum swish→rim-in→bounce-out, short/long misses).
+  - `basketball/basketballRender.ts` — pure canvas painter `drawScene(ctx, layout, scene)` (front-facing arena/crowd/spotlight, backboard, two-piece rim with net hanging inside, net swish, ball + trail, the sweeping aim arc, dynamic power meter, clock-above-hoop HUD, particles/banner/flash). Built with the `/game-designer` + `/physics-intuition` skills.
+  - Component `basketball/BasketballGame.tsx` (+ `QuestionModal.tsx`) owns simulation/state; mirrors `phase` into `uiPhase` state for the button label. Root `data-testid="basketball-game"`, controls `bball-start`/`bball-action`.
+  - **Sizing**: the court is no longer pinned at 420px — its wrapper uses `style={{maxWidth:"min(36rem, calc((100svh - 15rem) * 0.8))"}}` so it grows to fill the screen on desktop yet stays capped by viewport HEIGHT (it's a tall 4:5 portrait court) and goes full-width on phones. The end `Overlay` is `overflow-y-auto` so the richer game-over content never clips.
+  - `basketball/EndLeaderboard.tsx` — game-over leaderboard **opt-in** (pure UI; uses the injected `leaderboard` callbacks, no Firebase). Flow: ask ("Add your score? Posting as {name}") → on "Add my score" (`bball-add-leaderboard`) it `publish`es then `fetchTop(8)` and shows a mini board (`bball-end-leaderboard`) with the player's row highlighted alongside other users; "No thanks" dismisses; errors offer retry. Unit-tested `basketball/__tests__/EndLeaderboard.test.tsx` (4 tests).
+
+### Cross-user Leaderboard (`/leaderboard`)
+- Nav tab "Leaderboard" (`AppShell`, after Games) → `src/pages/LeaderboardPage.tsx` (default export, behind `RequireAuth`). A game picker (`lb-game-basketball`/`lb-game-pool`, default basketball) + a top-20 list (`data-testid="leaderboard-page"`/`leaderboard-list`, rows `lb-row-{uid}`), medal-tinted ranks, current user's row highlighted with a "You" badge, loading + empty states.
+- **Separate PUBLIC store** (the per-user `users/{uid}/gameScores/arcade` doc is private-by-rules, so it can't power a cross-user board). `src/services/leaderboardService.ts`: model `leaderboards/{gameId}/entries/{uid}` (doc id = uid) shaped `{ uid, name, score, updatedAt }`. API: `recordLeaderboardScore(uid, name, gameId, score, fdb?)` (upsert, only RAISES the score, name capped 24 chars / "Anonymous"), `getLeaderboard(gameId, topN=20, fdb?)` (subcollection `orderBy(score desc) limit` — single-field auto index, NO composite index needed), `LeaderboardEntry`, `LEADERBOARD_GAMES`.
+- **Posting is OPT-IN** (not silent): after a basketball game ends, `EndLeaderboard` asks the user; only on confirm does it call `recordLeaderboardScore(uid, name, "basketball", score)` and then show the board. `BasketballGamePage` builds the `leaderboard` prop from `useAuth` + `leaderboardService` (`name = displayName || email-prefix || "Anonymous"`). (Pool doesn't wire the opt-in yet — the mechanism is generic, so add the same `leaderboard` prop to `PoolGamePage` to enable it there.)
+- `firestore.rules`: signed-in users may READ any leaderboard entry; a user may create/update ONLY their own entry (`uid == auth.uid`, validates score:number≥0, name:string), never delete. **⚠️ MUST be deployed for the live app to work** — the rules are written but NOT yet deployed (the live leaderboard reads/writes are denied until then). Deploy requires re-auth: `firebase login --reauth` then `npm run deploy:rules` (the Firebase CLI token is currently expired). Works against the local emulator already (it reads the rules file directly). Unit test `src/pages/__tests__/LeaderboardPage.test.tsx`; emulator integration test `src/services/__tests__/leaderboardService.integration.test.ts`.
+
+### Practice question bank (`src/content/practiceBank/`)
+- `types.ts` `BankQuestion extends QuizQuestion { topicId; difficulty: "easy"|"medium"|"hard" }`; `index.ts` `bankQuestions()`, `questionsByDifficulty(d)`, `getRandomQuestion(d, exclude?, rng?)`. ~100 original, self-contained questions across all 7 topics × 3 difficulties (graded by `lib/quiz.gradeQuestion`). Powers the basketball questions now; intended as the AI-practice fallback later. **Easy to extend** — drop more `BankQuestion`s into `BANK` (the user may upload more). e2e: `e2e/games.spec.ts`.
+
 ## File Structure Highlights
 
 ```
 src/
   auth/           AuthProvider, RequireAuth
+  ai/             AI Practice Hub: practiceTypes, topics, adaptive, practiceService (Firebase AI Logic/Gemini)
   components/
     steps/        MultipleChoiceStep, NumericStep, SortStep, GraphDragStep
     steps/sims/   ProjectileSim, Vector2DSim (L5), KinematicsSim (L4), AreaSim (L3), MotionSim (L2)
@@ -341,8 +455,11 @@ src/
   content/
     lessons/      lesson-1.ts through lesson-7.ts
     quizzes/      quiz-1.. + index.ts (getQuiz/hasQuiz)
+    practiceBank/ ~100 tagged standalone questions (getRandomQuestion) — powers basketball + future AI fallback
     course.ts     Course registry (getLesson, getNextLessonId)
-  games/          Practice games: DriveTheCartGame.tsx, registry.ts (getGame/hasGame), lib/*Scoring.ts
+  games/          Per-lesson practice games: DriveTheCartGame.tsx, registry.ts (getGame/hasGame), lib/*Scoring.ts
+    arcade/       Standalone arcade games (Canvas + custom physics): pool/, basketball/, audio/ (procedural),
+                  useGameLoop, useHighScore, MuteButton, types (ArcadeGameProps)
   hooks/
     useLessonEngine.ts   Core lesson state machine
     useQuiz.ts           Quiz state machine
@@ -354,21 +471,26 @@ src/
     quiz.ts       gradeQuestion, quizScorePct
     lessonFlow.ts nextDestination(lessonId, mode) — Learn→Practice→Quiz→next chaining
     lessonEngine.ts  computeResumeIndex, buildLessonSummary, masteryMilestonesFor, accuracyMilestonesFor
-    milestones.ts    Milestone catalog (14 badges, 4 groups, rarity tiers)
+    milestones.ts    Milestone catalog (21 badges, 5 groups incl. Quizzes; rarity tiers)
     streak.ts     computeStreak + milestone wiring
   pages/
     LandingPage.tsx    Home screen with animated motion demo
     DashboardPage.tsx  Lesson cards + stats strip
     LessonPage.tsx     Lesson renderer + SummaryScreen + CompletionScreen
     PracticePage.tsx   /lesson/:id/practice — loads game from registry, persists score
-    QuizPage.tsx       /lesson/:id/quiz — renders QuizRunner, persists score
+    QuizPage.tsx       /lesson/:id/quiz — renders QuizRunner, persists score (unlocks next lesson here)
+    PracticeHubPage.tsx /practice — AI adaptive practice
+    GamesPage.tsx      /games — arcade picker; PoolGamePage /games/pool; BasketballGamePage /games/basketball
+    LeaderboardPage.tsx /leaderboard — cross-user high-score board (game picker)
     ProfilePage.tsx    /profile route
     AuthPage.tsx
   services/
-    progressService.ts  Firestore read/write; completeLesson, resetLessonProgress,
-                        awardMilestones, recordQuizScore, recordPracticeScore
-  firebase.ts     Firebase init with emulator auto-connect
-e2e/            Playwright specs (lesson1, lesson-sequence, full-course, streak, quiz1, practice1)
+    progressService.ts  Firestore read/write; completeLesson, unlockNextLesson, resetLessonProgress,
+                        awardMilestones, awardProgressMilestones, recordQuizScore, recordPracticeScore
+    gameScoreService.ts arcade high scores (users/{uid}/gameScores/arcade)
+    leaderboardService.ts public cross-user board (leaderboards/{gameId}/entries/{uid})
+  lib/firebase.ts  Firebase init (auth+firestore) with emulator auto-connect; exports `app` (used by AI Logic)
+e2e/            Playwright specs (lesson1, lesson-sequence, full-course, streak-milestones, quiz1, practice1, games)
 e2e-smoke/      Smoke spec for production bundle
 
 Lesson IDs: lesson-1-position-velocity, lesson-2-velocity-acceleration,
@@ -382,7 +504,7 @@ lesson-5-two-dimensions, lesson-6-projectile-motion, lesson-7-mastery-challenge
 
 ```bash
 npm run dev          # Vite dev server + Firebase emulators (concurrent)
-npm run test         # Vitest unit tests (86 passing)
+npm run test         # Vitest unit tests (~302 passing)
 npm run test:integration  # Emulator-backed integration tests
 npm run e2e          # Playwright e2e tests
 npm run smoke        # Build dist/ then Playwright against vite preview
@@ -397,7 +519,7 @@ npm run deploy:rules # Firestore security rules deploy
 
 1. **Lesson content stays in TypeScript files** — never move to Firestore
 2. **`completedLessonIds` is the permanent completion source of truth** — restart does not remove from this list
-3. **No AI in MVP** — no model calls, generated content, or chatbot
+3. **AI is confined to the Practice Hub** — lesson/quiz/game content stays hand-authored; only `/practice` calls a model (Firebase AI Logic / Gemini). Set up App Check before relying on it in production.
 4. **MCQ requires Submit** — do not revert to instant-grade-on-selection
 5. **Back button restores solved state** — prefillCorrect must work for all graded step types
 6. **60 FPS on graphs/sims** — use requestAnimationFrame, not CSS transitions

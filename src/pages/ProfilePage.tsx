@@ -44,15 +44,16 @@ export default function ProfilePage() {
 
   return (
     <AppShell streak={streak?.currentStreak ?? 0}>
-      <Link
-        to="/"
-        className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
-      >
-        ← Course
-      </Link>
+      <div className="mx-auto w-full max-w-5xl">
+        <Link
+          to="/"
+          className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+        >
+          ← Course
+        </Link>
 
-      {/* Identity card */}
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
+        {/* Identity card */}
+        <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-600 font-display text-2xl font-bold text-white">
             {initial}
@@ -86,7 +87,7 @@ export default function ProfilePage() {
               <h3 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-slate-400">
                 {group.title}
               </h3>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {group.milestones.map((m) => (
                   <BadgeCard
                     key={m.id}
@@ -99,6 +100,7 @@ export default function ProfilePage() {
           ))}
         </div>
       </section>
+      </div>
     </AppShell>
   );
 }

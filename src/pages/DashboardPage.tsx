@@ -33,11 +33,12 @@ export default function DashboardPage() {
 
   return (
     <AppShell streak={streak?.currentStreak ?? 0}>
-      <section className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Hi {firstName} 👋
-        </h1>
-        <p className="mt-1 text-slate-500">{course.title}</p>
+      <div className="lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <section className="mb-6 lg:mb-0">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Hi {firstName} 👋
+          </h1>
+          <p className="mt-1 text-slate-500">{course.title}</p>
 
         <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
           <div className="mb-2 flex items-center justify-between text-sm">
@@ -90,25 +91,29 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-      </section>
+        </section>
 
-      <section className="space-y-3" aria-label="Lessons">
-        {course.lessons.map((lesson) => {
-          const prereq = getLessonByOrder(lesson.order - 1);
-          return (
-            <LessonCard
-              key={lesson.id}
-              lesson={lesson}
-              status={statusOf(lesson.id)}
-              unlocked={isUnlocked(lesson.id)}
-              mastery={courseProgress?.masteryByLesson[lesson.id]}
-              quizBest={courseProgress?.quizScores?.[lesson.id]}
-              practiceBest={courseProgress?.practiceScores?.[lesson.id]}
-              prerequisiteTitle={prereq?.title}
-            />
-          );
-        })}
-      </section>
+        <section
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+          aria-label="Lessons"
+        >
+          {course.lessons.map((lesson) => {
+            const prereq = getLessonByOrder(lesson.order - 1);
+            return (
+              <LessonCard
+                key={lesson.id}
+                lesson={lesson}
+                status={statusOf(lesson.id)}
+                unlocked={isUnlocked(lesson.id)}
+                mastery={courseProgress?.masteryByLesson[lesson.id]}
+                quizBest={courseProgress?.quizScores?.[lesson.id]}
+                practiceBest={courseProgress?.practiceScores?.[lesson.id]}
+                prerequisiteTitle={prereq?.title}
+              />
+            );
+          })}
+        </section>
+      </div>
     </AppShell>
   );
 }

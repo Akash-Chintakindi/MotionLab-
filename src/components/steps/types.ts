@@ -9,8 +9,12 @@ export interface StepComponentProps {
    * should render pre-filled with the correct answer in its solved state.
    */
   prefillCorrect?: boolean;
-  /** Gradable steps call this once per attempt with the result. */
-  onAnswer: (correct: boolean) => void;
+  /**
+   * Gradable steps call this once per attempt with the result. Multiple-choice
+   * steps also pass the id of the option the learner submitted, so the engine
+   * can surface a per-choice explanation. Other step types omit the second arg.
+   */
+  onAnswer: (correct: boolean, selectedOptionId?: string) => void;
 }
 
 const GRADABLE: Record<string, boolean> = {

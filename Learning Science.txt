@@ -1,0 +1,47 @@
+MotionLab — Learning Science & Progression Rules
+================================================
+
+Core principle
+--------------
+Students advance through the course by demonstrating mastery, not just by
+clicking through content. Each topic has three modes — Learn, Practice, and
+Quiz — and progression is gated by performance.
+
+The two thresholds
+------------------
+1. LESSON MASTERY = 80%+
+   - A topic's Learn section must be completed with at least 80% mastery
+     (i.e. ≥ 80% of the gradable steps answered correctly on the first try).
+   - Reaching 80%+ on Learn UNLOCKS that topic's Practice game and Quiz.
+   - If a student scores below 80% on Learn, Practice and Quiz stay LOCKED.
+     The student can review what they missed and redo the lesson (with fresh
+     practice questions once the AI generator / expanded question bank is wired
+     in) until they reach mastery.
+
+2. QUIZ PASS = 70%+
+   - A student must score at least 70% on a topic's Quiz to move on.
+   - Scoring 70%+ on the Quiz UNLOCKS the next topic/lesson.
+   - Scoring below 70% means the student must redo the quiz; the next topic
+     stays locked until they pass.
+
+Why these numbers
+-----------------
+- 80% on Learn ensures the student genuinely understands the core idea before
+  spending time on the game and the graded quiz — practice is more valuable when
+  the fundamentals are solid.
+- 70% on the Quiz is a standard "passing" bar: it confirms competence without
+  demanding perfection, while still blocking students who haven't yet learned
+  the material from racing ahead and compounding gaps.
+
+Progression flow per topic
+--------------------------
+  Learn  →  (≥80%?) → unlock Practice + Quiz
+                       │
+                       └─ <80% → review answers / redo Learn
+
+  Quiz   →  (≥70%?) → unlock NEXT topic
+                       │
+                       └─ <70% → redo Quiz (next topic stays locked)
+
+Mastery is stored as the student's BEST attempt, so once a topic is unlocked it
+stays unlocked even if a later replay scores lower.

@@ -5,6 +5,7 @@ import { useProgress } from "../hooks/useProgress";
 import { getLesson } from "../content/course";
 import { getGame } from "../games/registry";
 import { nextDestination } from "../lib/lessonFlow";
+import { modesUnlocked } from "../lib/gating";
 import {
   awardProgressMilestones,
   recordDailyActivity,
@@ -26,10 +27,11 @@ const GAME_NAMES: Record<string, string> = {
 export default function PracticePage() {
   const { lessonId = "" } = useParams();
   const { user } = useAuth();
-  const { loading, isUnlocked } = useProgress();
+  const { loading, isUnlocked, courseProgress } = useProgress();
   const lesson = getLesson(lessonId);
   const Game = getGame(lessonId);
   const next = nextDestination(lessonId, "practice") ?? undefined;
+  const masteryReady = modesUnlocked(courseProgress, lessonId);
 
   const onScore = useCallback(
     async (best: number) => {
@@ -81,31 +83,51 @@ export default function PracticePage() {
     );
   }
 
+  if (!masteryReady) {
+    return (
+      <AppShell>
+        <Empty title="Master the lesson first">
+          <p className="mb-4 text-slate-500">
+            Score 80%+ on the Learn section to unlock this practice game.
+          </p>
+          <Link
+            to={`/lesson/${lessonId}`}
+            className="font-semibold text-brand-600"
+          >
+            Go to the lesson
+          </Link>
+        </Empty>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
-      <div className="mb-4">
-        <Link
-          to="/"
-          className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-4">
+          <Link
+            to="/"
+            className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            ← Course
+          </Link>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink">
+            {lesson.title}
+          </h1>
+          <p className="text-sm text-slate-500">
+            Practice{GAME_NAMES[lessonId] ? ` · ${GAME_NAMES[lessonId]}` : ""}
+          </p>
+        </div>
+        <Suspense
+          fallback={
+            <div className="flex min-h-[40vh] items-center justify-center">
+              <Spinner label="Loading game…" />
+            </div>
+          }
         >
-          ← Course
-        </Link>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink">
-          {lesson.title}
-        </h1>
-        <p className="text-sm text-slate-500">
-          Practice{GAME_NAMES[lessonId] ? ` · ${GAME_NAMES[lessonId]}` : ""}
-        </p>
+          <Game onScore={onScore} next={next} />
+        </Suspense>
       </div>
-      <Suspense
-        fallback={
-          <div className="flex min-h-[40vh] items-center justify-center">
-            <Spinner label="Loading game…" />
-          </div>
-        }
-      >
-        <Game onScore={onScore} next={next} />
-      </Suspense>
     </AppShell>
   );
 }

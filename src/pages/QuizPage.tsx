@@ -5,6 +5,7 @@ import { useProgress } from "../hooks/useProgress";
 import { getLesson } from "../content/course";
 import { getQuiz } from "../content/quizzes";
 import { nextDestination } from "../lib/lessonFlow";
+import { QUIZ_PASS_PERCENT, modesUnlocked, quizPassed } from "../lib/gating";
 import {
   awardProgressMilestones,
   recordDailyActivity,
@@ -18,17 +19,21 @@ import { QuizRunner } from "../components/quiz/QuizRunner";
 export default function QuizPage() {
   const { lessonId = "" } = useParams();
   const { user } = useAuth();
-  const { loading, isUnlocked } = useProgress();
+  const { loading, isUnlocked, courseProgress } = useProgress();
   const lesson = getLesson(lessonId);
   const quiz = getQuiz(lessonId);
   const next = nextDestination(lessonId, "quiz") ?? undefined;
+  const masteryReady = modesUnlocked(courseProgress, lessonId);
 
   const onComplete = useCallback(
     async (scorePct: number) => {
       if (!user) return;
       await recordQuizScore(user.uid, lessonId, scorePct);
       await recordDailyActivity(user.uid);
-      await unlockNextLesson(user.uid, lessonId);
+      // Only a passing score (>= 70%) unlocks the next topic.
+      if (quizPassed(scorePct)) {
+        await unlockNextLesson(user.uid, lessonId);
+      }
       await awardProgressMilestones(user.uid);
     },
     [user, lessonId],
@@ -70,6 +75,24 @@ export default function QuizPage() {
     );
   }
 
+  if (!masteryReady) {
+    return (
+      <Frame>
+        <Empty title="Master the lesson first">
+          <p className="mb-4 text-slate-500">
+            Score 80%+ on the Learn section to unlock this quiz.
+          </p>
+          <Link
+            to={`/lesson/${lessonId}`}
+            className="font-semibold text-brand-600"
+          >
+            Go to the lesson
+          </Link>
+        </Empty>
+      </Frame>
+    );
+  }
+
   return (
     <Frame>
       <div className="mb-4">
@@ -84,13 +107,22 @@ export default function QuizPage() {
         </h1>
         <p className="text-sm text-slate-500">Quiz · {quiz.questions.length} questions</p>
       </div>
-      <QuizRunner quiz={quiz} onComplete={onComplete} next={next} />
+      <QuizRunner
+        quiz={quiz}
+        onComplete={onComplete}
+        next={next}
+        passThreshold={QUIZ_PASS_PERCENT}
+      />
     </Frame>
   );
 }
 
 function Frame({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <div className="mx-auto w-full max-w-3xl">{children}</div>
+    </AppShell>
+  );
 }
 
 function BackLink() {

@@ -73,6 +73,41 @@ describe("step validity", () => {
     }
   });
 
+  it("multipleChoice per-option feedback targets only real wrong options", () => {
+    for (const { lessonId, step } of allSteps) {
+      if (step.type !== "multipleChoice") continue;
+      const byOption = step.feedback.incorrectByOption;
+      if (!byOption) continue;
+      const cfg = step.interactionConfig as MultipleChoiceConfig;
+      const optionIds = cfg.options.map((o) => o.id);
+      const correctId = (step.correctAnswer as { optionId: string }).optionId;
+      for (const [optionId, message] of Object.entries(byOption)) {
+        // Each key must be a real option…
+        expect(optionIds, `${lessonId}/${step.id}`).toContain(optionId);
+        // …and never the correct one (those would never be shown).
+        expect(optionId).not.toBe(correctId);
+        // …with a genuinely helpful, non-empty explanation.
+        expect(message.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("multipleChoice per-option feedback, when present, covers every wrong option", () => {
+    for (const { lessonId, step } of allSteps) {
+      if (step.type !== "multipleChoice") continue;
+      const byOption = step.feedback.incorrectByOption;
+      if (!byOption) continue;
+      const cfg = step.interactionConfig as MultipleChoiceConfig;
+      const correctId = (step.correctAnswer as { optionId: string }).optionId;
+      const wrongIds = cfg.options
+        .map((o) => o.id)
+        .filter((id) => id !== correctId);
+      for (const wrongId of wrongIds) {
+        expect(Object.keys(byOption), `${lessonId}/${step.id}`).toContain(wrongId);
+      }
+    }
+  });
+
   it("predict graphDrag answers reference a real region", () => {
     for (const { step } of allSteps) {
       if (step.type !== "graphDrag") continue;

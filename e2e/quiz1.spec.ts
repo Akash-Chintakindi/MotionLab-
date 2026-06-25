@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { signUp, openQuiz } from "./helpers";
+import { signUp, openQuiz, completeLesson1, backToCourse } from "./helpers";
 
 async function mc(page: Page, name: RegExp) {
   await page.getByRole("radio", { name }).click();
@@ -15,6 +15,9 @@ async function num(page: Page, value: number) {
 
 test("Lesson 1 quiz: answer all questions and score 100%", async ({ page }) => {
   await signUp(page);
+  // The quiz unlocks only after mastering the lesson (>= 80%).
+  await completeLesson1(page);
+  await backToCourse(page);
   await openQuiz(page, /Position, Velocity, and Slope/);
 
   await expect(page.getByTestId("quiz-counter")).toContainText("Question 1");
@@ -37,6 +40,8 @@ test("Lesson 1 quiz: immediate feedback marks a wrong answer", async ({
   page,
 }) => {
   await signUp(page);
+  await completeLesson1(page);
+  await backToCourse(page);
   await openQuiz(page, /Position, Velocity, and Slope/);
 
   await page.getByRole("radio", { name: /acceleration/ }).click();

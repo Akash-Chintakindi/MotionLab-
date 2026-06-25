@@ -102,6 +102,18 @@ describe("progressService (emulator)", () => {
     expect(lp!.completedAt).toBeTypeOf("number");
   });
 
+  it("keeps the learner's best mastery across replays", async () => {
+    const uid = await freshUser();
+    await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
+
+    await completeLesson(uid, FIRST_LESSON_ID, 0.9, fdb);
+    // A later, weaker replay must not drop the stored mastery below 0.9.
+    await completeLesson(uid, FIRST_LESSON_ID, 0.5, fdb);
+
+    const cp = await getCourseProgress(uid, fdb);
+    expect(cp!.masteryByLesson[FIRST_LESSON_ID]).toBeCloseTo(0.9);
+  });
+
   it("unlocks the next lesson when a quiz is finished", async () => {
     const uid = await freshUser();
     await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);

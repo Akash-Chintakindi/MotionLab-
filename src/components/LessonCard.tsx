@@ -4,6 +4,7 @@ import type { Lesson } from "../types/content";
 import type { LessonStatus } from "../types/progress";
 import { hasQuiz } from "../content/quizzes";
 import { hasGame } from "../games/registry";
+import { LESSON_MASTERY_THRESHOLD } from "../lib/gating";
 
 interface Props {
   lesson: Lesson;
@@ -26,6 +27,11 @@ export function LessonCard({
 }: Props) {
   const locked = !unlocked;
   const [open, setOpen] = useState(false);
+
+  // Practice + Quiz open only after the learner masters Learn (>= 80%).
+  const modesUnlocked = (mastery ?? 0) >= LESSON_MASTERY_THRESHOLD;
+  const practiceReady = hasGame(lesson.id) && modesUnlocked;
+  const quizReady = hasQuiz(lesson.id) && modesUnlocked;
 
   const badge =
     status === "completed"
@@ -135,28 +141,32 @@ export function LessonCard({
               accent="brand"
             />
             <ModeAction
-              to={hasGame(lesson.id) ? `/lesson/${lesson.id}/practice` : null}
+              to={practiceReady ? `/lesson/${lesson.id}/practice` : null}
               emoji="🎮"
               label="Practice"
               note={
-                hasGame(lesson.id)
-                  ? typeof practiceBest === "number"
-                    ? `Best ${practiceBest}%`
-                    : "Play"
-                  : "Coming soon"
+                !hasGame(lesson.id)
+                  ? "Coming soon"
+                  : !modesUnlocked
+                    ? "🔒 Master Learn (80%)"
+                    : typeof practiceBest === "number"
+                      ? `Best ${practiceBest}%`
+                      : "Play"
               }
               accent="violet"
             />
             <ModeAction
-              to={hasQuiz(lesson.id) ? `/lesson/${lesson.id}/quiz` : null}
+              to={quizReady ? `/lesson/${lesson.id}/quiz` : null}
               emoji="📝"
               label="Quiz"
               note={
-                hasQuiz(lesson.id)
-                  ? typeof quizBest === "number"
-                    ? `Best ${quizBest}%`
-                    : "Start"
-                  : "Coming soon"
+                !hasQuiz(lesson.id)
+                  ? "Coming soon"
+                  : !modesUnlocked
+                    ? "🔒 Master Learn (80%)"
+                    : typeof quizBest === "number"
+                      ? `Best ${quizBest}%`
+                      : "Start"
               }
               accent="emerald"
             />
@@ -213,6 +223,7 @@ function ModeAction({
     <Link
       to={to}
       aria-label={label}
+      data-testid={`lesson-mode-${label.toLowerCase()}`}
       className={`rounded-xl border border-slate-200 px-3 py-2.5 transition ${ACCENTS[accent]}`}
     >
       {body}

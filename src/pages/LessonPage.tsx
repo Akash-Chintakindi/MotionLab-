@@ -80,6 +80,8 @@ export default function LessonPage() {
           lessonId={lessonId}
           lessonTitle={lesson.title}
           result={engine.completion}
+          onReview={engine.onReview}
+          onRestart={engine.onRestart}
         />
       </AppShell>
     );
@@ -103,14 +105,15 @@ export default function LessonPage() {
 
   return (
     <AppShell>
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="mb-3 text-sm font-medium text-slate-500 hover:text-slate-700"
-        >
-          ← Course
-        </button>
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="mb-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            ← Course
+          </button>
         <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-2 font-semibold uppercase tracking-wide">
             {lesson.title}
@@ -184,6 +187,7 @@ export default function LessonPage() {
             </button>
           )}
         </div>
+        </div>
       </div>
     </AppShell>
   );
@@ -224,7 +228,7 @@ function SummaryScreen({
         : "text-rose-500";
 
   return (
-    <div data-testid="lesson-summary">
+    <div data-testid="lesson-summary" className="mx-auto w-full max-w-3xl">
       <Link
         to="/"
         className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
@@ -371,28 +375,37 @@ function CompletionScreen({
   lessonId,
   lessonTitle,
   result,
+  onReview,
+  onRestart,
 }: {
   lessonId: string;
   lessonTitle: string;
   result: CompletionResult;
+  onReview: () => void;
+  onRestart: () => void;
 }) {
   const nextTitle = result.unlockedLessonId
     ? getLesson(result.unlockedLessonId)?.title
     : null;
   const destination = nextDestination(lessonId, "learn");
+  const masteryPct = Math.round(result.mastery * 100);
+  const unlocked = result.practiceUnlocked;
+
   return (
     <div
       data-testid="lesson-complete"
       className="flex min-h-[70vh] flex-col items-center justify-center text-center"
     >
       <div className="mb-4 text-6xl" aria-hidden>
-        🎉
+        {unlocked ? "🎉" : "📊"}
       </div>
-      <h1 className="text-2xl font-bold">Lesson complete!</h1>
+      <h1 className="text-2xl font-bold">
+        {unlocked ? "Lesson complete!" : "Almost there!"}
+      </h1>
       <p className="mt-1 text-slate-500">{lessonTitle}</p>
 
       <div className="mt-6 flex gap-3">
-        <Stat label="Mastery" value={`${Math.round(result.mastery * 100)}%`} />
+        <Stat label="Mastery" value={`${masteryPct}%`} />
         <Stat label="Day streak" value={`${result.streak} 🔥`} />
       </div>
 
@@ -422,20 +435,50 @@ function CompletionScreen({
         </div>
       )}
 
-      {destination && (
-        <div className="mt-8 w-full max-w-sm">
-          {nextTitle && result.unlockedLessonId && (
-            <p className="mb-3 text-sm text-brand-800">
-              Unlocked next lesson: <span className="font-semibold">{nextTitle}</span>
-            </p>
-          )}
-          <Link
-            to={destination.href}
-            data-testid="next-step"
+      {unlocked ? (
+        destination && (
+          <div className="mt-8 w-full max-w-sm">
+            {nextTitle && result.unlockedLessonId && (
+              <p className="mb-3 text-sm text-brand-800">
+                Unlocked next lesson:{" "}
+                <span className="font-semibold">{nextTitle}</span>
+              </p>
+            )}
+            <Link
+              to={destination.href}
+              data-testid="next-step"
+              className="block w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700"
+            >
+              {destination.label}
+            </Link>
+          </div>
+        )
+      ) : (
+        <div
+          data-testid="mastery-locked"
+          className="mt-8 w-full max-w-sm space-y-3"
+        >
+          <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+            Score <span className="font-semibold">80%+</span> to unlock this
+            topic's Practice and Quiz. Review what you missed and give it another
+            go.
+          </p>
+          <button
+            type="button"
+            data-testid="review-button"
+            onClick={onReview}
             className="block w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white hover:bg-brand-700"
           >
-            {destination.label}
-          </Link>
+            Review answers
+          </button>
+          <button
+            type="button"
+            data-testid="restart-button"
+            onClick={onRestart}
+            className="block w-full rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:border-slate-400"
+          >
+            Redo lesson
+          </button>
         </div>
       )}
 

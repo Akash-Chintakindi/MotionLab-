@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { getQuiz } from "../src/content/quizzes";
 
 export function uniqueEmail() {
   return `bob_${Date.now()}_${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -107,6 +108,39 @@ export async function finishQuiz(page: Page) {
 
   await expect(page.getByTestId("quiz-results")).toBeVisible();
   // Let the score/streak/unlock writes commit before the caller moves on.
+  await waitForFirestoreQuiet(page);
+}
+
+/**
+ * Finishes an OPEN quiz (quiz-counter visible) by answering every question
+ * CORRECTLY using the canonical quiz content. This clears the 70% pass bar, so
+ * the next topic unlocks. Waits for the resulting progress writes to settle.
+ */
+export async function passQuiz(page: Page, lessonId: string) {
+  const quiz = getQuiz(lessonId);
+  if (!quiz) throw new Error(`No quiz content for lesson ${lessonId}`);
+
+  await expect(page.getByTestId("quiz-counter")).toBeVisible();
+
+  for (const question of quiz.questions) {
+    const submit = page.getByTestId("quiz-submit");
+    await expect(submit).toBeVisible();
+
+    if (question.type === "multipleChoice") {
+      const correct = question.options!.find(
+        (o) => o.id === question.correctOptionId,
+      )!;
+      await page
+        .getByRole("radio", { name: correct.label, exact: true })
+        .click();
+    } else {
+      await page.getByLabel("Numeric answer").fill(String(question.value));
+    }
+    await submit.click();
+    await page.getByTestId("quiz-continue").click();
+  }
+
+  await expect(page.getByTestId("quiz-results")).toBeVisible();
   await waitForFirestoreQuiet(page);
 }
 

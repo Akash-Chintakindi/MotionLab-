@@ -3,7 +3,7 @@ import {
   signUp,
   openLesson,
   openQuiz,
-  finishQuiz,
+  passQuiz,
   backToCourse,
   completeLesson1,
   completeLesson2,
@@ -27,42 +27,42 @@ test("a learner can complete the entire 7-lesson course in order", async ({
   await completeLesson1(page);
   await backToCourse(page);
   await openQuiz(page, /Position, Velocity, and Slope/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-1-position-velocity");
   await backToCourse(page);
 
   await openLesson(page, /Velocity, Acceleration, and Changing Motion/);
   await completeLesson2(page);
   await backToCourse(page);
   await openQuiz(page, /Velocity, Acceleration, and Changing Motion/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-2-velocity-acceleration");
   await backToCourse(page);
 
   await openLesson(page, /Displacement from Area Under Velocity/);
   await completeLesson3(page);
   await backToCourse(page);
   await openQuiz(page, /Displacement from Area Under Velocity/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-3-displacement-area");
   await backToCourse(page);
 
   await openLesson(page, /From Acceleration to Velocity and Position/);
   await completeLesson4(page);
   await backToCourse(page);
   await openQuiz(page, /From Acceleration to Velocity and Position/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-4-acceleration-to-position");
   await backToCourse(page);
 
   await openLesson(page, /Motion in Two Dimensions/);
   await completeLesson5(page);
   await backToCourse(page);
   await openQuiz(page, /Motion in Two Dimensions/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-5-two-dimensions");
   await backToCourse(page);
 
   await openLesson(page, /Projectile Motion/);
   await completeLesson6(page);
   await backToCourse(page);
   await openQuiz(page, /Projectile Motion/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-6-projectile-motion");
   await backToCourse(page);
 
   await openLesson(page, /Kinematics Mastery Challenge/);

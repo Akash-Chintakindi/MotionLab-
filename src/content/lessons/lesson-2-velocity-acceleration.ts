@@ -34,6 +34,12 @@ export const lesson2: Lesson = {
           "Right. The slope of v(t) is constant and negative, so acceleration is negative throughout.",
         incorrect:
           "Acceleration is the slope of v(t). This line has the same downward slope everywhere.",
+        incorrectByOption: {
+          afterstop:
+            "The slope of v(t) is what matters, and it stays the same downward tilt before and after the stop — so acceleration is negative the whole time, not only afterward.",
+          zero:
+            "Zero acceleration would be a flat, horizontal velocity line. This line slopes downward everywhere, so a is negative, not zero.",
+        },
         hint: "Look at the steepness and direction of the velocity line, not whether velocity is positive or negative.",
       },
     },
@@ -74,6 +80,12 @@ export const lesson2: Lesson = {
           "Yes — velocity and acceleration point in opposite directions, so the object slows down.",
         incorrect:
           "Compare the signs: opposite signs of v and a mean the object is slowing down.",
+        incorrectByOption: {
+          speeding:
+            "Speeding up needs v and a to share a sign. Here they're opposite (positive v, negative a), so the object is slowing down.",
+          rest:
+            "At rest means v = 0, but velocity here is positive. Opposite signs of v and a mean it's slowing down, not stopped.",
+        },
         hint: "Same signs → speeding up. Opposite signs → slowing down.",
       },
     },
@@ -138,6 +150,12 @@ export const lesson2: Lesson = {
         correct: "Correct — the line rises 1.5 m/s every second, so a = 1.5 m/s².",
         incorrect:
           "Acceleration is the slope: change in velocity divided by change in time, not the final velocity.",
+        incorrectByOption: {
+          zero:
+            "Zero would mean a flat velocity line, but this line rises over time. The slope (rise ÷ run) is 1.5 m/s².",
+          nine:
+            "9 is the rise in velocity, not the acceleration. You still divide by the 6 s elapsed: 9 ÷ 6 = 1.5 m/s².",
+        },
         hint: "From t = 0 to t = 6 s velocity goes 1 → 10 m/s. Slope = rise / run.",
       },
     },

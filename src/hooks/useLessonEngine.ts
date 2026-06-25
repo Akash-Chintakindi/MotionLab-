@@ -20,6 +20,7 @@ import {
   computeResumeIndex,
   type LessonSummary,
 } from "../lib/lessonEngine";
+import { modesUnlocked } from "../lib/gating";
 import { accuracyMilestonesFor, COMEBACK } from "../lib/milestones";
 import { course as courseContent } from "../content/course";
 import { stepRequiresAnswer } from "../components/steps/types";
@@ -36,6 +37,12 @@ export interface CompletionResult {
   mastery: number;
   streak: number;
   unlockedLessonId: string | null;
+  /**
+   * Whether this topic's Practice + Quiz are unlocked, i.e. the learner's best
+   * mastery is >= 80%. Drives whether the completion screen offers a "next"
+   * step or asks the learner to review and retry.
+   */
+  practiceUnlocked: boolean;
   /** Milestone ids earned as a result of finishing this lesson. */
   earnedMilestones: string[];
 }
@@ -56,7 +63,7 @@ export interface LessonEngine {
   completion: CompletionResult | null;
   /** Per-step breakdown for a finished lesson (only set in the "summary" phase). */
   summary: LessonSummary | null;
-  onAnswer: (correct: boolean) => void;
+  onAnswer: (correct: boolean, selectedOptionId?: string) => void;
   onContinue: () => void;
   onBack: () => void;
   /** Enter read-only review of a finished lesson's steps. */
@@ -198,16 +205,26 @@ export function useLessonEngine(
       (id) => !earnedBefore.has(id),
     );
 
+    // Practice/Quiz unlock off the BEST stored mastery (set by completeLesson),
+    // so a topic stays open even if this replay scored lower.
+    const practiceUnlocked = modesUnlocked(course, lesson.id);
+
+    // Cache the per-step breakdown so "Review answers" works straight from the
+    // completion screen (not just when revisiting a finished lesson).
+    const lp = await getLessonProgress(user.uid, lesson.id);
+    setSummary(buildLessonSummary(lesson, lp, course?.masteryByLesson[lesson.id]));
+
     setCompletion({
       mastery,
       streak: streak.currentStreak,
       unlockedLessonId,
+      practiceUnlocked,
       earnedMilestones,
     });
   }, [user, lesson, steps.length]);
 
   const onAnswer = useCallback(
-    async (correct: boolean) => {
+    async (correct: boolean, selectedOptionId?: string) => {
       if (!user || !lesson || !step || reviewing) return;
       if (correct) {
         setAnswered((prev) => new Set(prev).add(index));
@@ -216,9 +233,15 @@ export function useLessonEngine(
         await markDailyActivity();
       } else {
         wrongStepsRef.current.add(step.id);
+        // Prefer a tailored explanation for the exact wrong choice the learner
+        // submitted; fall back to the step's generic `incorrect` message.
+        const tailored =
+          selectedOptionId !== undefined
+            ? step.feedback.incorrectByOption?.[selectedOptionId]
+            : undefined;
         setFeedback({
           state: "incorrect",
-          message: step.feedback.incorrect,
+          message: tailored ?? step.feedback.incorrect,
           hint: step.feedback.hint,
         });
         await recordStepAttempt(user.uid, lesson.id, step.id);
@@ -272,6 +295,9 @@ export function useLessonEngine(
   }, []);
 
   const onReview = useCallback(() => {
+    // Clear any just-earned completion so the review steps render (the
+    // completion screen otherwise takes render precedence).
+    setCompletion(null);
     setIndex(0);
     setAnswered(allAnswered());
     setFeedback({ state: null, message: "" });

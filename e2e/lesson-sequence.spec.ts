@@ -7,7 +7,7 @@ import {
   completeLesson1,
   openLesson,
   openQuiz,
-  finishQuiz,
+  passQuiz,
   backToCourse,
 } from "./helpers";
 
@@ -20,7 +20,7 @@ test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", asyn
   // Finishing Learn alone no longer unlocks Lesson 2 — its quiz must be done.
   await backToCourse(page);
   await openQuiz(page, /Position, Velocity, and Slope/);
-  await finishQuiz(page);
+  await passQuiz(page, "lesson-1-position-velocity");
   await backToCourse(page);
 
   // Lesson 2 is now unlocked.

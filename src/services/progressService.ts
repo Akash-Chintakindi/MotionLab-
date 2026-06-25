@@ -258,11 +258,16 @@ export async function completeLesson(
     { merge: true },
   );
 
+  // Keep the learner's BEST mastery so a topic stays unlocked (and earned
+  // accuracy badges stick) even if a later replay scores lower.
+  const prev = await getCourseProgress(uid, fdb);
+  const bestMastery = Math.max(prev?.masteryByLesson?.[lessonId] ?? 0, mastery);
+
   await setDoc(
     courseDoc(uid, fdb),
     {
       completedLessonIds: arrayUnion(lessonId),
-      masteryByLesson: { [lessonId]: mastery },
+      masteryByLesson: { [lessonId]: bestMastery },
       updatedAt: nowMs(),
     },
     { merge: true },

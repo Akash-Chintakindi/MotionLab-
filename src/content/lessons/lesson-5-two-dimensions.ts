@@ -52,6 +52,12 @@ export const lesson5: Lesson = {
         correct: "Right — split the motion into independent x and y problems.",
         incorrect:
           "Each component is its own 1D motion; you solve x and y separately and combine.",
+        incorrectByOption: {
+          mag:
+            "Speed alone throws away direction. The real power of 2D is that the x and y components each behave as their own 1D motion.",
+          ignore:
+            "You can't drop an axis — both matter. The trick is treating x and y as independent 1D motions, then combining them.",
+        },
         hint: "Think about how we treat horizontal and vertical motion separately.",
       },
     },
@@ -65,7 +71,8 @@ export const lesson5: Lesson = {
       feedback: {
         correct:
           "Correct — speed = √(horizontal² + vertical²) = √(3² + 4²) = 5 m/s.",
-        incorrect: "Combine the components with the Pythagorean theorem.",
+        incorrect:
+          "Don't just add 3 + 4. Combine the components with the Pythagorean theorem: √(v_x² + v_y²).",
         hint: "speed = √(horizontal² + vertical²) = √(v_x² + v_y²).",
       },
     },
@@ -86,6 +93,12 @@ export const lesson5: Lesson = {
           "Yes — speed is constant, but direction changes, and that change points to the center.",
         incorrect:
           "The velocity direction is constantly turning toward the center, so acceleration points inward.",
+        incorrectByOption: {
+          tangent:
+            "The velocity is tangent; acceleration is how velocity changes. The direction keeps turning inward, so a points to the center, not along v.",
+          out:
+            "It feels like an outward push, but the acceleration actually points inward — toward the center — which is what bends the path into a circle.",
+        },
         hint: "Watch the red acceleration arrow in the simulation.",
       },
     },
@@ -107,6 +120,12 @@ export const lesson5: Lesson = {
           "Correct — only v_y changes, so acceleration has only a y component. (This is exactly projectile motion!)",
         incorrect:
           "Acceleration comes from the velocity component that changes. Here only v_y changes.",
+        incorrectByOption: {
+          horizontal:
+            "a_x = d(v_x)/dt, and v_x is constant, so a_x = 0. Only v_y changes, so the acceleration is vertical.",
+          zero:
+            "Zero acceleration needs both components constant, but v_y is changing — so a_y is nonzero and the acceleration is vertical.",
+        },
         hint: "a_x = d(v_x)/dt and a_y = d(v_y)/dt. Which one is nonzero?",
       },
     },

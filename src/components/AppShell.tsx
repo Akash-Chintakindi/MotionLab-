@@ -1,6 +1,33 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+
+function TabLink({
+  to,
+  label,
+  end,
+}: {
+  to: string;
+  label: string;
+  end?: boolean;
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        [
+          "rounded-lg px-3 py-2 text-base font-semibold transition",
+          isActive
+            ? "bg-brand-50 text-brand-700"
+            : "text-slate-600 hover:bg-slate-200",
+        ].join(" ")
+      }
+    >
+      {label}
+    </NavLink>
+  );
+}
 
 export function AppShell({
   children,
@@ -15,8 +42,8 @@ export function AppShell({
     .charAt(0)
     .toUpperCase();
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-4 py-3.5 backdrop-blur">
+    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-4 py-3.5 backdrop-blur sm:px-6 lg:px-8">
         <Link
           to="/"
           className="font-display text-2xl font-bold tracking-tight text-ink transition hover:opacity-80"
@@ -55,7 +82,18 @@ export function AppShell({
           )}
         </div>
       </header>
-      <main className="flex-1 px-4 py-5">{children}</main>
+      {user && (
+        <nav
+          className="sticky top-[57px] z-10 flex items-center gap-1 border-b border-slate-200 bg-slate-50/90 px-3 py-1.5 backdrop-blur sm:px-5 lg:px-7"
+          aria-label="Primary"
+        >
+          <TabLink to="/" label="Course" end />
+          <TabLink to="/lab" label="Lab" />
+          <TabLink to="/games" label="Games" />
+          <TabLink to="/leaderboard" label="Leaderboard" />
+        </nav>
+      )}
+      <main className="flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">{children}</main>
     </div>
   );
 }

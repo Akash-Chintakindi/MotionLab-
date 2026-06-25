@@ -51,6 +51,12 @@ export const lesson7: Lesson = {
         correct: "Right — v = dx/dt = 6 − 2t, a straight line crossing zero at t = 3.",
         incorrect:
           "Differentiate: the slope of x(t) = 6t − t² is 6 − 2t, which is a line.",
+        incorrectByOption: {
+          const:
+            "Constant velocity would need a straight-line x(t). Differentiating 6t − t² gives 6 − 2t, which changes with time — a sloped line.",
+          parab:
+            "v is the derivative of x, not a copy of it. d/dt(6t − t²) = 6 − 2t is a straight line, not another parabola.",
+        },
         hint: "The derivative of a parabola is a straight line.",
       },
     },
@@ -77,6 +83,12 @@ export const lesson7: Lesson = {
       feedback: {
         correct: "Yes — the slope of this line is constant and negative (a = −2 m/s²).",
         incorrect: "Acceleration is the slope of v(t). This line has a constant negative slope.",
+        incorrectByOption: {
+          zero:
+            "Zero acceleration means a flat velocity line. This v(t) slopes steadily downward, so a is constant and negative.",
+          increasing:
+            "The slope of this line never changes, so acceleration is constant — and since the line falls, that constant is negative, not increasing.",
+        },
         hint: "A straight velocity line has constant acceleration.",
       },
     },
@@ -151,6 +163,12 @@ export const lesson7: Lesson = {
       feedback: {
         correct: "Correct — that independence is what lets us solve each axis separately.",
         incorrect: "Gravity only affects vertical motion; horizontal motion is unaffected.",
+        incorrectByOption: {
+          linked:
+            "They aren't locked together — gravity touches only the vertical axis, leaving horizontal motion independent.",
+          same:
+            "The two motions differ (horizontal is constant-velocity, vertical accelerates), so they're independent, not equal.",
+        },
         hint: "Recall the projectile lesson: which axis does gravity touch?",
       },
     },
@@ -170,6 +188,12 @@ export const lesson7: Lesson = {
         correct: "Yes — zero acceleration means velocity never changes, though it need not be zero.",
         incorrect:
           "Acceleration is the rate of change of velocity. If it's zero, velocity stays the same.",
+        incorrectByOption: {
+          zero:
+            "Zero acceleration means velocity doesn't change — but it can hold any constant value, not necessarily zero (think of a car at steady highway speed).",
+          increasing:
+            "Increasing velocity requires positive acceleration. With a = 0 there's no change, so velocity stays constant.",
+        },
         hint: "No acceleration means no change in velocity — but the object can still be moving.",
       },
     },

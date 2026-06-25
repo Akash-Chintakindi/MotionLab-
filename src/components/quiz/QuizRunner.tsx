@@ -12,12 +12,18 @@ export function QuizRunner({
   quiz,
   onComplete,
   next,
+  passThreshold = 0,
 }: {
   quiz: Quiz;
   /** Called once with the final score percentage when the quiz finishes. */
   onComplete?: (scorePct: number) => void;
   /** Where to send the learner after the quiz, if anywhere. */
   next?: { href: string; label: string };
+  /**
+   * Minimum score (0–100) required to advance. Below it, the "next" CTA is
+   * hidden and the learner is asked to retake the quiz. Defaults to 0 (no gate).
+   */
+  passThreshold?: number;
 }) {
   const q = useQuiz(quiz.questions);
   const reported = useRef(false);
@@ -35,6 +41,7 @@ export function QuizRunner({
         quiz={quiz}
         controller={q}
         next={next}
+        passThreshold={passThreshold}
         onRetry={() => {
           reported.current = false;
           q.restart();
@@ -216,15 +223,19 @@ function ScoreScreen({
   quiz,
   controller,
   next,
+  passThreshold,
   onRetry,
 }: {
   quiz: Quiz;
   controller: QuizController;
   next?: { href: string; label: string };
+  passThreshold: number;
   onRetry: () => void;
 }) {
   const { scorePct, correctCount, total, results } = controller;
   const resultById = new Map(results.map((r) => [r.questionId, r.correct]));
+  const passed = scorePct >= passThreshold;
+  const showNext = passed && Boolean(next);
   const tone =
     scorePct >= 80
       ? "text-emerald-500"
@@ -244,8 +255,17 @@ function ScoreScreen({
         <p className="mt-1 text-slate-500">
           {correctCount} of {total} correct
         </p>
+        {!passed && passThreshold > 0 && (
+          <p
+            data-testid="quiz-retry-notice"
+            className="mx-auto mt-4 max-w-sm rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200"
+          >
+            You need <span className="font-semibold">{passThreshold}%</span> to
+            move on. Review the explanations below and retake the quiz.
+          </p>
+        )}
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          {next && (
+          {showNext && next && (
             <Link
               to={next.href}
               data-testid="next-step"
@@ -259,12 +279,12 @@ function ScoreScreen({
             data-testid="quiz-retry"
             onClick={onRetry}
             className={
-              next
+              showNext
                 ? "rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400"
                 : "rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white transition hover:bg-brand-700"
             }
           >
-            Try again
+            {passed ? "Try again" : "Retake quiz"}
           </button>
           <Link
             to="/"
