@@ -37,7 +37,8 @@ export default defineConfig({
     exclude: [
       "e2e/**",
       "e2e-smoke/**",
-      "node_modules/**",
+      "**/node_modules/**",
+      "functions/**",
       ".tools/**",
       "src/**/*.integration.test.ts",
     ],

@@ -9,6 +9,11 @@ import {
   connectFirestoreEmulator,
   type Firestore,
 } from "firebase/firestore";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+  type Functions,
+} from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,6 +27,7 @@ const firebaseConfig = {
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
+export const functions: Functions = getFunctions(app);
 
 const useEmulators =
   import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true";
@@ -37,5 +43,6 @@ if (useEmulators && !globalThis.__MOTIONLAB_EMULATORS_CONNECTED__) {
     disableWarnings: true,
   });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
   globalThis.__MOTIONLAB_EMULATORS_CONNECTED__ = true;
 }

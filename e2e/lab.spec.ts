@@ -11,12 +11,19 @@ test("Lab tab replaces Practice and loads the survival game", async ({
   await expect(page.getByRole("link", { name: "Practice", exact: true })).toHaveCount(0);
   await page.getByRole("link", { name: "Lab", exact: true }).click();
 
-  // The survival HUD renders in every phase (independent of question source),
-  // so this is a stable smoke that the route + page shell mounted.
-  await expect(page.getByTestId("lab-score")).toBeVisible();
-  await expect(page.getByTestId("lab-strikes")).toBeVisible();
+  // Lab opens on the mode-select menu (it no longer auto-starts).
+  await expect(page.getByTestId("lab-menu")).toBeVisible();
+  await expect(page.getByTestId("lab-mode-survival")).toBeVisible();
+  await expect(page.getByTestId("lab-mode-time")).toBeVisible();
 
-  // The legacy /practice path still resolves to the Lab page.
-  await page.goto("/practice");
-  await expect(page.getByTestId("lab-score")).toBeVisible();
+  // Choosing Time reveals a minutes input within the 1-30 range.
+  await page.getByTestId("lab-mode-time").click();
+  await expect(page.getByTestId("lab-time-minutes")).toBeVisible();
+
+  // Start Survival -> a 3-2-1 countdown -> the live run with its HUD.
+  await page.getByTestId("lab-mode-survival").click();
+  await page.getByTestId("lab-start").click();
+  await expect(page.getByTestId("lab-countdown")).toBeVisible();
+  await expect(page.getByTestId("lab-score")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("lab-strikes")).toBeVisible();
 });

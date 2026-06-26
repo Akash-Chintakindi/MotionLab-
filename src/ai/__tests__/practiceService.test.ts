@@ -1,27 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GenerateParams } from "../practiceTypes";
 
-// Mock the Firebase app instance so no real app is initialized.
-vi.mock("../lib/firebase", () => ({ app: {} }));
+// Mock the shared Firebase instances so no real app is initialized.
+vi.mock("../../lib/firebase", () => ({ app: {}, functions: {} }));
 
-// Holds the next mocked generateContent behavior; controllable per test.
-const generateContent = vi.fn();
+// Holds the next mocked callable behavior; controllable per test.
+const callable = vi.fn();
 
-vi.mock("firebase/ai", () => {
-  const passthrough = () => ({});
-  return {
-    getAI: vi.fn(() => ({})),
-    GoogleAIBackend: class GoogleAIBackend {},
-    getGenerativeModel: vi.fn(() => ({ generateContent })),
-    Schema: {
-      object: passthrough,
-      array: passthrough,
-      string: passthrough,
-      number: passthrough,
-      enumString: passthrough,
-    },
-  };
-});
+vi.mock("firebase/functions", () => ({
+  httpsCallable: vi.fn(() => callable),
+}));
 
 import { generatePracticeQuestion } from "../practiceService";
 
@@ -34,18 +22,16 @@ const params: GenerateParams = {
   difficulty: "medium",
 };
 
-/** Make generateContent resolve with a model response wrapping `obj`. */
+/** Make the callable resolve with the Cloud Function payload wrapping `obj`. */
 function resolveWith(obj: unknown) {
-  generateContent.mockResolvedValueOnce({
-    response: { text: () => JSON.stringify(obj) },
-  });
+  callable.mockResolvedValueOnce({ data: obj });
 }
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 beforeEach(() => {
-  generateContent.mockReset();
+  callable.mockReset();
 });
 
 describe("generatePracticeQuestion", () => {
@@ -148,21 +134,22 @@ describe("generatePracticeQuestion", () => {
     );
   });
 
-  it("surfaces a friendly error when generateContent rejects", async () => {
-    generateContent.mockRejectedValueOnce(new Error("network blew up"));
+  it("surfaces a friendly error when the callable rejects", async () => {
+    callable.mockRejectedValueOnce(new Error("network blew up"));
 
     await expect(generatePracticeQuestion(params)).rejects.toThrow(
       /Couldn't generate a practice problem\. Please try again\./,
     );
   });
 
-  it("explains provisioning when the AI service is not enabled", async () => {
-    generateContent.mockRejectedValueOnce(
-      new Error("PERMISSION_DENIED: API has not been used"),
-    );
+  it("explains setup when the proxy function isn't deployed", async () => {
+    const notFound = Object.assign(new Error("not found"), {
+      code: "functions/not-found",
+    });
+    callable.mockRejectedValueOnce(notFound);
 
     await expect(generatePracticeQuestion(params)).rejects.toThrow(
-      /firebase init ailogic/,
+      /OPENAI_API_KEY/,
     );
   });
 });
