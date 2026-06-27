@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { AiToggle } from "./AiToggle";
 
 function TabLink({
   to,
@@ -62,6 +63,7 @@ export function AppShell({
           )}
           {user && (
             <>
+              <AiToggle />
               <button
                 type="button"
                 onClick={() => signOut()}

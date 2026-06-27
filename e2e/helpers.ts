@@ -78,40 +78,6 @@ async function waitForFirestoreQuiet(page: Page, quietMs = 800, timeoutMs = 1500
 }
 
 /**
- * Finishes an OPEN quiz (quiz-counter visible) by answering every question with
- * any answer and clicking through per-question feedback until the score screen
- * appears. Unlocking the next lesson only requires finishing the quiz, not a
- * passing score, so we never bother picking correct answers. Waits for the
- * resulting progress writes to settle so the unlock is durable before returning.
- */
-export async function finishQuiz(page: Page) {
-  const counter = page.getByTestId("quiz-counter");
-  await expect(counter).toBeVisible();
-  const counterText = (await counter.textContent()) ?? "";
-  const total = Number(counterText.match(/of\s+(\d+)/)?.[1] ?? 0);
-
-  for (let i = 0; i < total; i++) {
-    const submit = page.getByTestId("quiz-submit");
-    await expect(submit).toBeVisible();
-
-    const radios = page.getByRole("radio");
-    if ((await radios.count()) > 0) {
-      await radios.first().click();
-    } else {
-      await page.getByLabel("Numeric answer").fill("0");
-    }
-    await submit.click();
-
-    // Advance past the per-question feedback to the next question / results.
-    await page.getByTestId("quiz-continue").click();
-  }
-
-  await expect(page.getByTestId("quiz-results")).toBeVisible();
-  // Let the score/streak/unlock writes commit before the caller moves on.
-  await waitForFirestoreQuiet(page);
-}
-
-/**
  * Finishes an OPEN quiz (quiz-counter visible) by answering every question
  * CORRECTLY using the canonical quiz content. This clears the 70% pass bar, so
  * the next topic unlocks. Waits for the resulting progress writes to settle.

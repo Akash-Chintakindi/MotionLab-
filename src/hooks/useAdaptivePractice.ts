@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { generatePracticeQuestion } from "../ai/practiceService";
+import { bankQuestionToAi } from "../ai/practiceQuestion";
+import { getRandomQuestion } from "../content/practiceBank";
+import { isAiEnabled } from "../lib/aiSettings";
 import { adaptiveSuggestion, type AdaptiveSuggestion } from "../ai/adaptive";
 import type {
   AIPracticeQuestion,
@@ -73,6 +76,8 @@ export function useAdaptivePractice(
 
   // Prompts already shown this session, fed back to the model to avoid repeats.
   const seenPromptsRef = useRef<string[]>([]);
+  // Bank ids already shown this session, excluded when AI is off.
+  const seenBankIdsRef = useRef<string[]>([]);
   // Latest difficulty, readable from callbacks without stale closures.
   const difficultyRef = useRef<Difficulty>(initialDifficulty);
   // Monotonic request id so stale/aborted generations are ignored.
@@ -93,6 +98,22 @@ export function useAdaptivePractice(
       setPhase("loading");
       setError(null);
       setLastCorrect(null);
+
+      // AI off (the default): serve the static bank directly — no network call.
+      if (!isAiEnabled()) {
+        const bank = getRandomQuestion(forDifficulty, seenBankIdsRef.current);
+        if (!mountedRef.current || reqId !== requestIdRef.current) return;
+        if (!bank) {
+          setError("No practice questions are available.");
+          setPhase("error");
+          return;
+        }
+        seenBankIdsRef.current = [...seenBankIdsRef.current, bank.id];
+        setQuestion(bankQuestionToAi(bank));
+        setPhase("question");
+        return;
+      }
+
       const avoidPrompts = seenPromptsRef.current.slice(-AVOID_WINDOW);
       generatePracticeQuestion({ topic, difficulty: forDifficulty, avoidPrompts })
         .then((next) => {

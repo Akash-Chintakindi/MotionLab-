@@ -1,6 +1,11 @@
 import type { Vec2 } from "../types";
-import type { Layout, Terrain } from "./cannonLayout";
-import { terrainYAt } from "./cannonLayout";
+import type { Layout, Terrain, TerrainStyle } from "./cannonLayout";
+import {
+  cannonBodyCenter,
+  cannonPivot,
+  generateTerrain,
+  terrainYAt,
+} from "./cannonLayout";
 import type { BankDifficulty } from "../../../content/practiceBank/types";
 
 // ---------------------------------------------------------------------------
@@ -260,6 +265,13 @@ const AI_DIR_MIN = Math.PI / 2 + 0.12; // just past straight up, leaning left
 const AI_DIR_MAX = Math.PI - 0.06; // nearly flat to the left
 
 /**
+ * The player's launch-angle window (rad, y-up). Mirrors the drag clamp in
+ * CannonGame so the solvability check samples exactly what a player can aim.
+ */
+export const PLAYER_DIR_MIN = 0.06;
+export const PLAYER_DIR_MAX = 1.5;
+
+/**
  * Computes the AI's shot toward `target`. It scans lob angles, solves the exact
  * speed for each (idealSpeed), and prefers an angle whose trajectory both stays
  * in the speed range AND clears the terrain to actually reach the player. The
@@ -323,6 +335,187 @@ export function solveAiShot(
   }
 
   return cleanBest ?? fallback;
+}
+
+// --- solvability + guaranteed-solvable terrain ------------------------------
+
+function muzzleTip(lay: Layout, pivot: Vec2, dir: number): Vec2 {
+  return {
+    x: pivot.x + Math.cos(dir) * lay.muzzleLen,
+    y: pivot.y - Math.sin(dir) * lay.muzzleLen,
+  };
+}
+
+/** Sampling density for the existence check: angles × powers per side. */
+export interface SolveGrid {
+  angles: number;
+  powers: number;
+}
+
+/**
+ * A reasonably fine grid (≈33 angles × 17 powers). Fine enough to find a real
+ * firing window, coarse enough to scan hundreds of terrains in a test run.
+ */
+export const DEFAULT_SOLVE_GRID: SolveGrid = { angles: 32, powers: 16 };
+
+/**
+ * Does ANY launch within one cannon's allowed angle/power window land a hit on
+ * `target` without the terrain blocking it first? Reuses `simulateShot` so the
+ * verdict matches real gameplay exactly. Two passes: first the analytic
+ * exact-speed lob at each angle (what the aim solver fires), then a brute power
+ * sweep to cover angles whose ideal speed clamps out of range.
+ */
+function sideCanHit(
+  lay: Layout,
+  terrain: Terrain,
+  pivotX: number,
+  target: Vec2,
+  dirMin: number,
+  dirMax: number,
+  grid: SolveGrid,
+): boolean {
+  const pivot = cannonPivot(lay, terrain, pivotX);
+
+  for (let i = 0; i <= grid.angles; i++) {
+    const dir = dirMin + ((dirMax - dirMin) * i) / grid.angles;
+    const from = muzzleTip(lay, pivot, dir);
+    const ideal = idealSpeed(from, target, dir, lay.gravity);
+    if (ideal == null) continue;
+    const speed = clamp(ideal, lay.speedMin, lay.speedMax);
+    const sim = simulateShot(lay, terrain, from, dir, speed, target, lay.hitR);
+    if (sim.outcome === "hitTarget") return true;
+  }
+
+  for (let i = 0; i <= grid.angles; i++) {
+    const dir = dirMin + ((dirMax - dirMin) * i) / grid.angles;
+    const from = muzzleTip(lay, pivot, dir);
+    for (let j = 0; j <= grid.powers; j++) {
+      const speed =
+        lay.speedMin + ((lay.speedMax - lay.speedMin) * j) / grid.powers;
+      const sim = simulateShot(lay, terrain, from, dir, speed, target, lay.hitR);
+      if (sim.outcome === "hitTarget") return true;
+    }
+  }
+
+  return false;
+}
+
+/** Can the player cannon (left) land a hit on the AI cannon (right)? */
+export function playerCanHit(
+  lay: Layout,
+  terrain: Terrain,
+  grid: SolveGrid = DEFAULT_SOLVE_GRID,
+): boolean {
+  const target = cannonBodyCenter(lay, terrain, lay.aiX);
+  return sideCanHit(
+    lay,
+    terrain,
+    lay.playerX,
+    target,
+    PLAYER_DIR_MIN,
+    PLAYER_DIR_MAX,
+    grid,
+  );
+}
+
+/** Can the AI cannon (right) land a hit on the player cannon (left)? */
+export function aiCanHit(
+  lay: Layout,
+  terrain: Terrain,
+  grid: SolveGrid = DEFAULT_SOLVE_GRID,
+): boolean {
+  const target = cannonBodyCenter(lay, terrain, lay.playerX);
+  return sideCanHit(
+    lay,
+    terrain,
+    lay.aiX,
+    target,
+    AI_DIR_MIN,
+    AI_DIR_MAX,
+    grid,
+  );
+}
+
+/** A terrain is solvable only if BOTH cannons have a feasible firing window. */
+export function isTerrainSolvable(
+  lay: Layout,
+  terrain: Terrain,
+  grid: SolveGrid = DEFAULT_SOLVE_GRID,
+): boolean {
+  return playerCanHit(lay, terrain, grid) && aiCanHit(lay, terrain, grid);
+}
+
+// Progressive height caps (fractions; larger = lower ground) used to shave the
+// peaks between the cannons. Each step lowers any central peak that pokes above
+// the cap, converging on a gentle, always-clearable profile.
+const CARVE_CAPS = [0.5, 0.56, 0.62, 0.68, 0.73, 0.78, 0.83];
+/** Flat-line fraction for the guaranteed fallback (both barrels clear it). */
+const FALLBACK_FLAT = 0.82;
+
+/**
+ * Lowers central peaks so the projectile's achievable apex can clear them.
+ * Only the span between the cannon pads is touched; the peaks are clipped to
+ * `capFrac`, lightly smoothed, then re-clipped so the height bound truly holds.
+ */
+function carveCentral(lay: Layout, terrain: Terrain, capFrac: number): Terrain {
+  const heights = terrain.heights.slice();
+  const n = heights.length - 1;
+  const playerIdx = Math.round((lay.playerX / lay.w) * n);
+  const aiIdx = Math.round((lay.aiX / lay.w) * n);
+  const lo = Math.min(playerIdx, aiIdx);
+  const hi = Math.max(playerIdx, aiIdx);
+  const pad = Math.max(3, Math.round(n * 0.05));
+  const from = lo + pad;
+  const to = hi - pad;
+
+  for (let i = from; i <= to; i++) {
+    if (heights[i] < capFrac) heights[i] = capFrac;
+  }
+  // Soften the clipped shoulders so the carve still reads as organic terrain.
+  const src = heights.slice();
+  for (let i = Math.max(1, from - 2); i <= Math.min(n - 1, to + 2); i++) {
+    heights[i] = (src[i - 1] + 2 * src[i] + src[i + 1]) / 4;
+  }
+  for (let i = from; i <= to; i++) {
+    if (heights[i] < capFrac) heights[i] = capFrac;
+  }
+
+  return { heights, style: terrain.style };
+}
+
+/** A flat, low battlefield — the can't-fail fallback if carving never lands. */
+function flattenSolvable(base: Terrain): Terrain {
+  const heights = base.heights.map(() => FALLBACK_FLAT);
+  return { heights, style: base.style };
+}
+
+/**
+ * Builds a battlefield that is GUARANTEED solvable from both sides. It first
+ * tries a handful of natural fields (best variety + looks); if none are
+ * playable, it carves the last one's central peaks down step by step, and as a
+ * worst-case it flattens to a gentle profile. Deterministic given `rng`, so
+ * tests can pin a seed. Same public signature as `generateTerrain`.
+ */
+export function generateSolvableTerrain(
+  lay: Layout,
+  rng: () => number = Math.random,
+  forced?: TerrainStyle,
+): Terrain {
+  const ATTEMPTS = 12;
+  let last: Terrain | null = null;
+  for (let a = 0; a < ATTEMPTS; a++) {
+    const terrain = generateTerrain(lay, rng, forced);
+    last = terrain;
+    if (isTerrainSolvable(lay, terrain)) return terrain;
+  }
+
+  const base = last ?? generateTerrain(lay, rng, forced);
+  for (const cap of CARVE_CAPS) {
+    const carved = carveCentral(lay, base, cap);
+    if (isTerrainSolvable(lay, carved)) return carved;
+  }
+
+  return flattenSolvable(base);
 }
 
 // --- ammo + shields + question economy -------------------------------------

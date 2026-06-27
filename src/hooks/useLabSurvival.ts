@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { generatePracticeQuestion } from "../ai/practiceService";
-import { getRandomQuestion } from "../content/practiceBank";
+import { getPracticeQuestion } from "../ai/practiceQuestion";
 import { practiceTopics } from "../ai/topics";
 import { gradeQuestion, type QuizAnswer } from "../lib/quiz";
 import type { Difficulty } from "../ai/practiceTypes";
@@ -145,16 +144,20 @@ export function useLabSurvival(): UseLabSurvival {
         topics[Math.floor(Math.random() * topics.length)] ?? topics[0];
       const avoidPrompts = seenPromptsRef.current.slice(-AVOID_WINDOW);
 
-      // AI is the primary source; the static bank is a graceful fallback so the
-      // run keeps going when AI isn't provisioned. When AI is later enabled
-      // this path "just works" with no other changes.
-      generatePracticeQuestion({ topic, difficulty, avoidPrompts })
-        .then((q) => aiToLabQuestion(q, topic.id, difficulty))
-        .catch(() => {
-          const bank = getRandomQuestion(difficulty, seenBankIdsRef.current);
-          if (!bank) throw new Error("No practice questions are available.");
-          return bankToLabQuestion(bank);
-        })
+      // The gating helper honors the global AI toggle: AI questions when it's
+      // enabled (with a graceful bank fallback on error), or the static bank
+      // directly — with no network call — when it's off (the default).
+      getPracticeQuestion({
+        topic,
+        difficulty,
+        avoidPrompts,
+        excludeBankIds: seenBankIdsRef.current,
+      })
+        .then((res) =>
+          res.source === "ai"
+            ? aiToLabQuestion(res.question, topic.id, difficulty)
+            : bankToLabQuestion(res.question),
+        )
         .then((q) => {
           if (!mountedRef.current || reqId !== requestIdRef.current) return;
           // A Time run can expire while a question is still loading.

@@ -1537,6 +1537,356 @@ const BANK: BankQuestion[] = [
     explanation:
       "R = v₀² sin(2θ) / g = 25² × sin 106° / 9.8 = 625 × 0.961 / 9.8 ≈ 61.3 m.",
   },
+
+  // ===========================================================================
+  // AP-STYLE WAVE — exam-flavored items emphasizing the reasoning AP rewards:
+  // ratio reasoning (d ∝ v², R ∝ v²), conceptual traps, motion symmetry, and
+  // independence of x/y motion. Self-contained; numeric answers hand-verified.
+  // ===========================================================================
+
+  // --- Lesson 1 — position & velocity (AP-style) -----------------------------
+  {
+    id: "bank-1-easy-8",
+    topicId: "lesson-1-position-velocity",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "A car's speedometer reads 60 km/h. This reading is a measure of the car's:",
+    options: [
+      { id: "a", label: "Instantaneous speed" },
+      { id: "b", label: "Average velocity for the trip" },
+      { id: "c", label: "Total displacement" },
+      { id: "d", label: "Acceleration" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "A speedometer shows how fast the car is moving at that moment — its instantaneous speed — not an average over the trip and not a direction-dependent velocity.",
+  },
+  {
+    id: "bank-1-medium-7",
+    topicId: "lesson-1-position-velocity",
+    difficulty: "medium",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "A car covers equal distances in each successive 1-second interval of its motion. Which statement best describes the motion?",
+    options: [
+      { id: "a", label: "Constant (uniform) velocity" },
+      { id: "b", label: "Constant nonzero acceleration" },
+      { id: "c", label: "Steadily increasing speed" },
+      { id: "d", label: "Steadily decreasing speed" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "Equal displacements in equal times means Δx/Δt never changes, so the velocity is constant and the acceleration is zero.",
+  },
+  {
+    id: "bank-1-hard-5",
+    topicId: "lesson-1-position-velocity",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A particle has position x(t) = t³ − 12t (meters). What is its average velocity between t = 1 s and t = 3 s?",
+    value: 1,
+    tolerance: 0.1,
+    unit: "m/s",
+    explanation:
+      "x(1) = 1 − 12 = −11 m; x(3) = 27 − 36 = −9 m. v_avg = (−9 − (−11)) / (3 − 1) = 2 / 2 = 1 m/s.",
+  },
+
+  // --- Lesson 2 — velocity & acceleration (AP-style) -------------------------
+  {
+    id: "bank-2-easy-7",
+    topicId: "lesson-2-velocity-acceleration",
+    difficulty: "easy",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A ball rolling up a ramp slows uniformly from 6 m/s to rest in 3 s. What is the magnitude of its acceleration?",
+    value: 2,
+    tolerance: 0.1,
+    unit: "m/s²",
+    explanation:
+      "a = Δv/Δt = (0 − 6) / 3 = −2 m/s²; the magnitude is 2 m/s² (directed down the ramp).",
+  },
+  {
+    id: "bank-2-medium-7",
+    topicId: "lesson-2-velocity-acceleration",
+    difficulty: "medium",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Moving in the +x direction, an object slows down, momentarily stops, then speeds up in the −x direction — all with constant acceleration. During this motion the acceleration is:",
+    options: [
+      { id: "a", label: "Negative the entire time" },
+      { id: "b", label: "Zero at the instant it stops" },
+      { id: "c", label: "Positive, then negative" },
+      { id: "d", label: "Negative, then positive" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "The acceleration is constant and points in the −x direction the whole time. Velocity passes through zero, but acceleration does not — it stays negative, which is exactly what reverses the motion.",
+  },
+  {
+    id: "bank-2-hard-5",
+    topicId: "lesson-2-velocity-acceleration",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A particle starts from rest with acceleration a(t) = 4 − 2t (m/s²). What is its maximum velocity for t > 0?",
+    value: 4,
+    tolerance: 0.1,
+    unit: "m/s",
+    explanation:
+      "v(t) = ∫a dt = 4t − t². Velocity is maximum where a = 0, i.e. 4 − 2t = 0 → t = 2 s. v(2) = 4(2) − 2² = 8 − 4 = 4 m/s.",
+  },
+
+  // --- Lesson 3 — displacement as area (AP-style) ----------------------------
+  {
+    id: "bank-3-easy-6",
+    topicId: "lesson-3-displacement-area",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Two cars travel for the same time. Car A moves at a constant 20 m/s; Car B starts from rest and accelerates uniformly to 20 m/s. Compared with Car A, Car B's displacement is:",
+    options: [
+      { id: "a", label: "The same" },
+      { id: "b", label: "Half as large" },
+      { id: "c", label: "Twice as large" },
+      { id: "d", label: "One-quarter as large" },
+    ],
+    correctOptionId: "b",
+    explanation:
+      "Displacement is the area under the v–t graph. Car A's is a rectangle (20·T); Car B's is a triangle to the same final speed (½·20·T) — exactly half.",
+  },
+  {
+    id: "bank-3-medium-6",
+    topicId: "lesson-3-displacement-area",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "On a v–t graph, an object's velocity rises linearly from 0 to 12 m/s over the first 4 s, then stays constant at 12 m/s for 3 s. What is the total displacement?",
+    value: 60,
+    tolerance: 0.5,
+    unit: "m",
+    explanation:
+      "Triangle area (0–4 s): ½ × 4 × 12 = 24 m. Rectangle area (4–7 s): 12 × 3 = 36 m. Total = 24 + 36 = 60 m.",
+  },
+  {
+    id: "bank-3-hard-7",
+    topicId: "lesson-3-displacement-area",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A particle has velocity v(t) = t² − 4 (m/s) for 0 ≤ t ≤ 3 s. What is its net displacement over this interval?",
+    value: -3,
+    tolerance: 0.1,
+    unit: "m",
+    explanation:
+      "Net displacement = ∫₀³ (t² − 4) dt = [t³/3 − 4t]₀³ = (9 − 12) − 0 = −3 m.",
+  },
+
+  // --- Lesson 4 — constant-acceleration kinematics (AP-style) ----------------
+  {
+    id: "bank-4-easy-6",
+    topicId: "lesson-4-acceleration-to-position",
+    difficulty: "easy",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A car uniformly accelerates from 8 m/s to 20 m/s over 6 s. How far does it travel during this time?",
+    value: 84,
+    tolerance: 0.5,
+    unit: "m",
+    explanation:
+      "With constant acceleration, distance = average velocity × time = ((8 + 20)/2) × 6 = 14 × 6 = 84 m.",
+  },
+  {
+    id: "bank-4-medium-6",
+    topicId: "lesson-4-acceleration-to-position",
+    difficulty: "medium",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Under maximum braking, a car traveling at speed v stops in a distance d. Traveling at 2v with the same braking, its minimum stopping distance is:",
+    options: [
+      { id: "a", label: "2d" },
+      { id: "b", label: "4d" },
+      { id: "c", label: "d√2" },
+      { id: "d", label: "8d" },
+    ],
+    correctOptionId: "b",
+    explanation:
+      "From v² = v₀² + 2aΔx, stopping distance ∝ v₀² for fixed a. Doubling the speed multiplies the distance by 2² = 4, so it becomes 4d.",
+  },
+  {
+    id: "bank-4-hard-6",
+    topicId: "lesson-4-acceleration-to-position",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A stone is dropped from rest and strikes the ground at 28 m/s (g = 9.8 m/s²). From what height was it dropped?",
+    value: 40,
+    tolerance: 0.5,
+    unit: "m",
+    explanation:
+      "v² = 2gh → h = v² / (2g) = 28² / (2 × 9.8) = 784 / 19.6 = 40 m.",
+  },
+
+  // --- Lesson 5 — two dimensions (AP-style) ----------------------------------
+  {
+    id: "bank-5-easy-5",
+    topicId: "lesson-5-two-dimensions",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Two perpendicular displacements, 3 m east and 4 m north, are added. The magnitude of the resultant displacement is:",
+    options: [
+      { id: "a", label: "1 m" },
+      { id: "b", label: "5 m" },
+      { id: "c", label: "7 m" },
+      { id: "d", label: "12 m" },
+    ],
+    correctOptionId: "b",
+    explanation:
+      "Perpendicular vectors add by the Pythagorean theorem: √(3² + 4²) = √25 = 5 m (not the simple sum 7 m).",
+  },
+  {
+    id: "bank-5-medium-5",
+    topicId: "lesson-5-two-dimensions",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "An airplane's velocity has an eastward component of 120 m/s and a northward component of 50 m/s. What is its speed?",
+    value: 130,
+    tolerance: 0.5,
+    unit: "m/s",
+    explanation:
+      "Speed = √(vₓ² + v_y²) = √(120² + 50²) = √(14400 + 2500) = √16900 = 130 m/s.",
+  },
+  {
+    id: "bank-5-hard-5",
+    topicId: "lesson-5-two-dimensions",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A particle has velocity components vₓ = 9 m/s and v_y = −12 m/s. What is its speed?",
+    value: 15,
+    tolerance: 0.1,
+    unit: "m/s",
+    explanation:
+      "Speed is the magnitude regardless of sign: √(9² + (−12)²) = √(81 + 144) = √225 = 15 m/s.",
+  },
+
+  // --- Lesson 6 — projectile motion (AP-style) -------------------------------
+  {
+    id: "bank-6-easy-5",
+    topicId: "lesson-6-projectile-motion",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Two balls are launched horizontally from the same height at the same instant, one faster than the other. Ignoring air resistance, the faster ball lands:",
+    options: [
+      { id: "a", label: "Sooner, and closer" },
+      { id: "b", label: "Later, and farther" },
+      { id: "c", label: "At the same time, but farther away" },
+      { id: "d", label: "At the same time, and the same distance away" },
+    ],
+    correctOptionId: "c",
+    explanation:
+      "Vertical and horizontal motions are independent. Both fall the same height with the same vertical motion, so they land together; the faster ball travels farther horizontally in that shared time.",
+  },
+  {
+    id: "bank-6-medium-6",
+    topicId: "lesson-6-projectile-motion",
+    difficulty: "medium",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "A projectile is launched on level ground at a fixed angle. If its launch speed is doubled, its horizontal range becomes:",
+    options: [
+      { id: "a", label: "2 times as large" },
+      { id: "b", label: "4 times as large" },
+      { id: "c", label: "√2 times as large" },
+      { id: "d", label: "8 times as large" },
+    ],
+    correctOptionId: "b",
+    explanation:
+      "Range R = v₀² sin(2θ)/g is proportional to v₀² at fixed angle. Doubling v₀ multiplies the range by 2² = 4.",
+  },
+  {
+    id: "bank-6-hard-6",
+    topicId: "lesson-6-projectile-motion",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A projectile is launched at 20 m/s at 60° above the horizontal (g = 9.8 m/s²). What is its speed at the highest point of its path?",
+    value: 10,
+    tolerance: 0.2,
+    unit: "m/s",
+    explanation:
+      "At the peak the vertical velocity is zero, so the speed equals the (constant) horizontal component: vₓ = v₀ cos 60° = 20 × 0.5 = 10 m/s.",
+  },
+
+  // --- Lesson 7 — mastery challenge (AP-style) -------------------------------
+  {
+    id: "bank-7-easy-4",
+    topicId: "lesson-7-mastery-challenge",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "A ball is thrown straight up and later falls back to the hand. Ignoring air resistance, the magnitude of its acceleration is:",
+    options: [
+      { id: "a", label: "Greater on the way up" },
+      { id: "b", label: "Greater on the way down" },
+      { id: "c", label: "The same (9.8 m/s²) the entire time" },
+      { id: "d", label: "Zero at the highest point" },
+    ],
+    correctOptionId: "c",
+    explanation:
+      "Gravity acts the same throughout the flight, so the acceleration is a constant 9.8 m/s² downward — including at the peak, where only the velocity is momentarily zero.",
+  },
+  {
+    id: "bank-7-medium-4",
+    topicId: "lesson-7-mastery-challenge",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "Starting from rest, a car uniformly accelerates and covers 24 m in the first 4 s. What is its acceleration?",
+    value: 3,
+    tolerance: 0.1,
+    unit: "m/s²",
+    explanation:
+      "x = ½at² → 24 = ½ a (4²) = 8a → a = 24 / 8 = 3 m/s².",
+  },
+  {
+    id: "bank-7-hard-6",
+    topicId: "lesson-7-mastery-challenge",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A ball thrown straight up returns to the thrower's hand 4 s later (g = 9.8 m/s²). With what speed was it thrown?",
+    value: 19.6,
+    tolerance: 0.2,
+    unit: "m/s",
+    explanation:
+      "Total flight time t = 2v₀/g, so v₀ = g·t/2 = 9.8 × 4 / 2 = 19.6 m/s.",
+  },
 ];
 
 export function bankQuestions(): BankQuestion[] {

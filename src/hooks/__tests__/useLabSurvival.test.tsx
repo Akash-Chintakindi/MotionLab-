@@ -14,6 +14,7 @@ vi.mock("../../ai/practiceService", () => ({
 }));
 
 import { generatePracticeQuestion } from "../../ai/practiceService";
+import { setAiEnabled } from "../../lib/aiSettings";
 
 const mockGenerate = vi.mocked(generatePracticeQuestion);
 
@@ -74,6 +75,10 @@ async function answer(
 
 beforeEach(() => {
   mockGenerate.mockReset();
+  // These tests exercise the AI path (and its bank fallback), so turn AI on;
+  // the AI-off gating is covered in practiceQuestion.test.ts.
+  localStorage.clear();
+  setAiEnabled(true);
 });
 
 describe("useLabSurvival", () => {

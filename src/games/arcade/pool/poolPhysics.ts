@@ -17,6 +17,19 @@ export interface Ball {
   pocketed: boolean;
   isCue?: boolean;
   number?: number;
+  /** True for a 9–15 striped ball (purely cosmetic — drives the render band). */
+  stripe?: boolean;
+  /** Cosmetic accumulated roll angle (radians); drives the rolling animation. */
+  roll?: number;
+  /** Cosmetic unit direction of the ball's last travel, to orient the roll. */
+  rollDir?: Vec2;
+  /**
+   * Transient english tagged onto the cue ball by a spin shot, consumed on the
+   * cue's FIRST object-ball collision (see `integrate`). `x` = side english,
+   * `y` = follow(+)/draw(−), each in [-1,1]. Absent ⇒ no spin (the default
+   * behaviour is byte-for-byte unchanged).
+   */
+  pendingSpin?: Vec2;
 }
 
 export interface Pocket {
@@ -41,6 +54,12 @@ export interface ShotInput {
   angleDeg: number;
   /** Initial speed in units/s. */
   speed: number;
+  /**
+   * Optional english (cue-tip contact offset), each component in [-1,1]:
+   * `x` = side english (right +), `y` = follow(+)/draw(−). Omitted or {0,0}
+   * means a plain centre-ball hit — physics stays exactly as before.
+   */
+  spin?: Vec2;
 }
 
 export type PoolEvent =
@@ -67,6 +86,15 @@ const MAX_SUBSTEPS = 4096;
  */
 const MAX_STEP_FRACTION = 0.25;
 
+/**
+ * How strongly english reshapes the cue's post-contact velocity, as a fraction
+ * of its incoming speed. Follow/draw push the cue forward/back along its travel
+ * line; side english deflects it sideways. Tuned to read as real (a follow shot
+ * trails the object at ~half pace) without teleporting the cue.
+ */
+const FOLLOW_SCALE = 0.5;
+const SIDE_SCALE = 0.32;
+
 function add(a: Vec2, b: Vec2): Vec2 {
   return { x: a.x + b.x, y: a.y + b.y };
 }
@@ -90,14 +118,19 @@ function norm(a: Vec2): Vec2 {
 /** Apply a shot to the cue ball, returning a new ball array. */
 export function applyShot(balls: Ball[], shot: ShotInput): Ball[] {
   const rad = (shot.angleDeg * Math.PI) / 180;
-  return balls.map((b) =>
-    b.isCue && !b.pocketed
-      ? {
-          ...b,
-          vel: { x: Math.cos(rad) * shot.speed, y: Math.sin(rad) * shot.speed },
-        }
-      : b,
-  );
+  // Only a non-zero spin tags the cue; otherwise we strip any stale tag so the
+  // result is identical to a plain centre-ball hit (no behavioural drift).
+  const hasSpin = !!shot.spin && (shot.spin.x !== 0 || shot.spin.y !== 0);
+  return balls.map((b) => {
+    if (!b.isCue || b.pocketed) return b;
+    const { pendingSpin: _drop, ...rest } = b;
+    const next: Ball = {
+      ...rest,
+      vel: { x: Math.cos(rad) * shot.speed, y: Math.sin(rad) * shot.speed },
+    };
+    if (hasSpin && shot.spin) next.pendingSpin = { x: shot.spin.x, y: shot.spin.y };
+    return next;
+  });
 }
 
 /**
@@ -232,6 +265,11 @@ function integrate(
         // Only resolve if they are actually approaching, so an already
         // overlapping pair isn't given spurious extra velocity.
         if (diff < 0) {
+          // A spin-tagged cue ball: capture its incoming velocity *before* the
+          // exchange so the english can be applied along its true travel line.
+          const spinner = a.isCue && a.pendingSpin ? a : b.isCue && b.pendingSpin ? b : null;
+          const cueVelBefore = spinner ? { ...spinner.vel } : null;
+
           a.vel = add(a.vel, scale(n, diff));
           b.vel = add(b.vel, scale(n, -diff));
           anyMotion = true;
@@ -241,6 +279,9 @@ function integrate(
             b: b.id,
             impact: Math.abs(diff),
           });
+
+          // Consume the english on this first object-ball contact only.
+          if (spinner && cueVelBefore) applySpin(spinner, cueVelBefore);
         }
       }
     }
@@ -260,6 +301,29 @@ function integrate(
   }
 
   return anyMotion;
+}
+
+/**
+ * Consumes a cue ball's pending english on its first object-ball contact,
+ * nudging its post-collision velocity. `velBefore` is the cue's velocity at the
+ * instant of impact; the effect scales with that speed so a soft tap barely
+ * curves while a firm follow really trails the object — momentum made visible.
+ *  - follow (`spin.y > 0`): push the cue FORWARD along its travel line.
+ *  - draw   (`spin.y < 0`): pull the cue BACK (reverse component).
+ *  - side   (`spin.x`):     deflect the cue sideways (right of travel is +).
+ * The tag is cleared so it can never re-fire on a later collision.
+ */
+function applySpin(cue: Ball, velBefore: Vec2): void {
+  const spin = cue.pendingSpin;
+  cue.pendingSpin = undefined;
+  if (!spin) return;
+  const sp = len(velBefore);
+  if (sp < EPS) return;
+  const fwd = scale(velBefore, 1 / sp);
+  // Right-hand normal: travelling +x, "right" points toward −y (math plane).
+  const right: Vec2 = { x: fwd.y, y: -fwd.x };
+  cue.vel = add(cue.vel, scale(fwd, spin.y * sp * FOLLOW_SCALE));
+  cue.vel = add(cue.vel, scale(right, spin.x * sp * SIDE_SCALE));
 }
 
 // ---- Shot solving / grading ----------------------------------------------
@@ -305,6 +369,123 @@ export function computeIdealShot(
   return { aimAngleDeg, ghostBall, minSpeed, idealSpeed };
 }
 
+// ---- Aim prediction (live guide) -----------------------------------------
+
+export interface AimPrediction {
+  /** What the aim ray meets first. */
+  kind: "ball" | "cushion" | "none";
+  /** Cue-ball *center* position at first contact (ghost ball / rail touch). */
+  contact: Vec2;
+  /** Distance the cue ball travels along the aim ray to that contact. */
+  distance: number;
+  /** Struck object ball id (only for kind === "ball"). */
+  ballId?: string;
+  /** Unit direction the struck object ball will travel (the line of centers). */
+  objectDir?: Vec2;
+  /**
+   * Unit direction the cue ball continues after the contact. For a ball hit it
+   * is the equal-mass elastic carom (the 90° tangent component); for a cushion
+   * it is the reflected ray. May be a zero vector for a dead-straight ball hit.
+   */
+  cueDir?: Vec2;
+}
+
+/**
+ * Casts a ray from the cue ball along `angleDeg` and predicts the first thing
+ * it meets — an object ball or a cushion — so the aim guide can show contact
+ * and rebound. Pure and side-effect free (used purely for the on-table guide).
+ *
+ *  - Object ball: returns the ghost-ball contact point (cue center where the
+ *    centre separation equals the summed radii), the object-ball travel
+ *    direction (along the line of centers) and the cue-ball carom direction
+ *    (equal-mass elastic ≈ 90° to the object direction — the tangent rule).
+ *  - Cushion: returns the rail touch point and the reflected direction.
+ */
+export function predictAim(
+  balls: Ball[],
+  table: PoolTable,
+  cueId: string,
+  angleDeg: number,
+): AimPrediction {
+  const cue = balls.find((b) => b.id === cueId && !b.pocketed);
+  const rad = (angleDeg * Math.PI) / 180;
+  const d: Vec2 = { x: Math.cos(rad), y: Math.sin(rad) };
+  if (!cue) return { kind: "none", contact: { x: 0, y: 0 }, distance: 0 };
+  const c = cue.pos;
+
+  // Nearest object ball: ray–circle intersection at separation (rc + rb).
+  let ballT = Infinity;
+  let struck: Ball | null = null;
+  for (const b of balls) {
+    if (b.id === cueId || b.isCue || b.pocketed) continue;
+    const big = cue.radius + b.radius;
+    const fx = c.x - b.pos.x;
+    const fy = c.y - b.pos.y;
+    const proj = d.x * fx + d.y * fy; // d · (C − O)
+    const cc = fx * fx + fy * fy - big * big;
+    const disc = proj * proj - cc;
+    if (disc < 0) continue; // ray misses this ball
+    const t = -proj - Math.sqrt(disc); // nearest forward root
+    if (t > EPS && t < ballT) {
+      ballT = t;
+      struck = b;
+    }
+  }
+
+  // Nearest cushion: the cue *center* is bounded by its radius on every rail.
+  const r = cue.radius;
+  let railT = Infinity;
+  let railAxis: "x" | "y" | null = null;
+  if (d.x > EPS) {
+    const t = (table.width - r - c.x) / d.x;
+    if (t > EPS && t < railT) ((railT = t), (railAxis = "x"));
+  } else if (d.x < -EPS) {
+    const t = (r - c.x) / d.x;
+    if (t > EPS && t < railT) ((railT = t), (railAxis = "x"));
+  }
+  if (d.y > EPS) {
+    const t = (table.height - r - c.y) / d.y;
+    if (t > EPS && t < railT) ((railT = t), (railAxis = "y"));
+  } else if (d.y < -EPS) {
+    const t = (r - c.y) / d.y;
+    if (t > EPS && t < railT) ((railT = t), (railAxis = "y"));
+  }
+
+  if (struck && ballT <= railT) {
+    const contact: Vec2 = { x: c.x + d.x * ballT, y: c.y + d.y * ballT };
+    const objectDir = norm(sub(struck.pos, contact)); // contact → object centre
+    const along = d.x * objectDir.x + d.y * objectDir.y;
+    // Equal-mass elastic: the object takes the line-of-centers component, the
+    // cue keeps the tangential remainder (≈ perpendicular — the 90° rule).
+    const cueDir = norm({
+      x: d.x - objectDir.x * along,
+      y: d.y - objectDir.y * along,
+    });
+    return {
+      kind: "ball",
+      contact,
+      distance: ballT,
+      ballId: struck.id,
+      objectDir,
+      cueDir,
+    };
+  }
+
+  if (railAxis) {
+    const contact: Vec2 = { x: c.x + d.x * railT, y: c.y + d.y * railT };
+    const cueDir =
+      railAxis === "x" ? { x: -d.x, y: d.y } : { x: d.x, y: -d.y };
+    return { kind: "cushion", contact, distance: railT, cueDir };
+  }
+
+  // Degenerate (zero direction): just project a short stub forward.
+  return {
+    kind: "none",
+    contact: { x: c.x + d.x * 20, y: c.y + d.y * 20 },
+    distance: 20,
+  };
+}
+
 export interface ShotTolerance {
   /** Acceptable absolute angle error in degrees. */
   angleDeg: number;
@@ -346,4 +527,38 @@ export function gradeShot(
       input.speed >= ideal.minSpeed * tol.speedLow &&
       input.speed <= ideal.minSpeed * tol.speedHigh,
   };
+}
+
+// ---- Headless settle ------------------------------------------------------
+
+export interface SettleResult {
+  balls: Ball[];
+  /** Every ball that dropped this run, in the order it was pocketed. */
+  pocketed: { ball: string; pocket: string }[];
+  events: PoolEvent[];
+}
+
+/**
+ * Steps the simulation to rest in one call (no animation). Used by the full
+ * game's reduced-motion path and by tests. Deterministic for a given input.
+ */
+export function simulateToSettle(
+  balls: Ball[],
+  table: PoolTable,
+  dt = 1 / 120,
+  maxSteps = 8000,
+): SettleResult {
+  let current = balls;
+  const events: PoolEvent[] = [];
+  const pocketed: { ball: string; pocket: string }[] = [];
+  for (let i = 0; i < maxSteps; i++) {
+    const res = stepSimulation(current, table, dt);
+    current = res.balls;
+    for (const ev of res.events) {
+      events.push(ev);
+      if (ev.type === "pocketed") pocketed.push({ ball: ev.ball, pocket: ev.pocket });
+    }
+    if (res.settled) break;
+  }
+  return { balls: current, pocketed, events };
 }

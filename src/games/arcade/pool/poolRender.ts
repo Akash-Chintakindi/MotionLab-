@@ -1,4 +1,4 @@
-import type { Ball, PoolTable } from "./poolPhysics";
+import type { AimPrediction, Ball, PoolTable } from "./poolPhysics";
 import type { Vec2 } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -36,11 +36,36 @@ export interface CueAnim {
   recoil: number;
 }
 
+/**
+ * Aim-Assist overlay: the optimal ghost-ball line for the best makeable shot,
+ * drawn in a distinct cyan so it reads as a "suggested" line, separate from the
+ * player's own amber aim. All points are in table units.
+ */
+export interface AssistGuide {
+  cue: Vec2;
+  ghostBall: Vec2;
+  objectPos: Vec2;
+  objectDir: Vec2;
+  pocket: Vec2;
+}
+
 export interface SceneState {
   table: PoolTable;
   balls: Ball[];
   targetPocketId: string | null;
   aim: { angleDeg: number; speed: number } | null;
+  /** Live aim guide: where the aim ray first lands and how it rebounds. */
+  aimPredict?: AimPrediction | null;
+  /** Aim committed by the player: render the guide as locked-in, not live. */
+  aimLocked?: boolean;
+  /** Aim-Assist perk: the revealed optimal line (null when inactive). */
+  assist?: AssistGuide | null;
+  /** Ball-in-Hand perk: the player is dragging the cue ball into position. */
+  placingCue?: boolean;
+  /** Whether the current ball-in-hand drag position is a legal spot. */
+  placementLegal?: boolean;
+  /** Spin perk: chosen cue-ball english (x = side, y = follow+/draw−), or null. */
+  cueSpin?: Vec2 | null;
   cue: CueAnim | null;
   particles: Particle[];
   pocketFx: PocketFx[];
@@ -94,11 +119,29 @@ export function drawScene(
   drawGrid(ctx, tx, ty, u, table, scale);
   drawPockets(ctx, tx, ty, u, table, s);
 
-  // Aim confirmation line (the player's input direction — NOT the solution).
+  // Aim guide: the player's aim direction plus a prediction of the first
+  // contact (ghost ball + carom, or a cushion bank).
   if (s.aim) {
     const cueBall = s.balls.find((b) => b.isCue && !b.pocketed);
-    if (cueBall) drawAimLine(ctx, tx, ty, u, cueBall, s.aim, s.time);
+    if (cueBall) {
+      drawAimLine(
+        ctx,
+        tx,
+        ty,
+        u,
+        cueBall,
+        s.aim,
+        s.balls,
+        s.aimPredict ?? null,
+        s.time,
+        !!s.aimLocked,
+      );
+    }
   }
+
+  // Aim-Assist perk: the suggested optimal line, under the live aim guide so
+  // the player's own amber aim stays visually dominant.
+  if (s.assist) drawAssistGuide(ctx, tx, ty, u, s.assist, s.time);
 
   // Pocket-drop effects sit under the balls.
   for (const fx of s.pocketFx) drawPocketFx(ctx, tx, ty, u, fx);
@@ -108,6 +151,14 @@ export function drawScene(
     const reveal = b.id === s.revealObjectId ? s.revealPulse : 0;
     drawBall(ctx, tx, ty, u, b, reveal);
   }
+
+  // Spin perk: a small marker on the cue ball showing the chosen english.
+  if (s.cueSpin && (s.cueSpin.x !== 0 || s.cueSpin.y !== 0)) {
+    drawSpinIndicator(ctx, tx, ty, u, s, s.cueSpin);
+  }
+
+  // Ball-in-Hand perk: a clear placement ring around the draggable cue ball.
+  if (s.placingCue) drawPlacementAffordance(ctx, tx, ty, u, s);
 
   if (s.cue) drawCueStick(ctx, tx, ty, u, s);
 
@@ -247,6 +298,29 @@ function drawBall(
   const py = ty(b.pos.y);
   const r = u(b.radius);
 
+  // Rolling: a sphere rolling in screen-direction `sdir` carries its surface
+  // markings across the visible face (forward over the leading edge, back in at
+  // the trailing one). `roll` is the accumulated angle; `sdir` flips y because
+  // the table y-axis is drawn inverted. With no travel the markings sit still.
+  const roll = b.roll ?? 0;
+  let sdx = 0;
+  let sdy = 0;
+  if (b.rollDir) {
+    sdx = b.rollDir.x;
+    sdy = -b.rollDir.y;
+  } else if (b.vel.x !== 0 || b.vel.y !== 0) {
+    const vl = Math.hypot(b.vel.x, b.vel.y);
+    sdx = b.vel.x / vl;
+    sdy = -b.vel.y / vl;
+  }
+  const rolling = sdx !== 0 || sdy !== 0;
+  // Perpendicular to travel, for placing markings off the roll axis.
+  const spx = -sdy;
+  const spy = sdx;
+  // A fast break spins many radians per frame; render at a fraction of the true
+  // roll so the surface reads as turning without strobing (tasteful > literal).
+  const mroll = roll * 0.3;
+
   // Contact shadow.
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.32)";
@@ -283,17 +357,63 @@ function drawBall(
   ctx.arc(px, py, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // Number circle for object balls.
+  // Subtle surface freckles that orbit as the ball rolls — a cheap, clear cue
+  // of motion. Each sits on the near hemisphere only (depth = cos of its phase).
+  if (rolling) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.clip();
+    const perp = [-0.4, 0.12, 0.46];
+    for (let i = 0; i < perp.length; i++) {
+      const phase = mroll + i * 2.0944;
+      const depth = Math.cos(phase);
+      if (depth <= 0.12) continue;
+      const along = Math.sin(phase) * r * 0.62;
+      const sx = px + sdx * along + spx * perp[i] * r * depth;
+      const sy = py + sdy * along + spy * perp[i] * r * depth;
+      ctx.globalAlpha = 0.3 * depth;
+      ctx.fillStyle = darken(b.color, 0.35);
+      ctx.beginPath();
+      ctx.arc(sx, sy, r * 0.16 * depth, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Striped balls (9–15) wear a white equator band, clipped to the sphere. When
+  // rolling it lies across the travel axis and slides over the face.
+  if (b.stripe) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = "rgba(255,255,255,0.93)";
+    if (rolling) {
+      const off = Math.sin(mroll) * r;
+      ctx.translate(px + sdx * off, py + sdy * off);
+      ctx.rotate(Math.atan2(sdy, sdx));
+      ctx.fillRect(-r * 0.46, -r * 1.2, r * 0.92, r * 2.4);
+    } else {
+      ctx.fillRect(px - r, py - r * 0.46, r * 2, r * 0.92);
+    }
+    ctx.restore();
+  }
+
+  // Number circle for object balls. It bobs gently along the roll so it feels
+  // anchored to the surface, but never spins (legibility first).
   if (b.number != null) {
+    const nbx = rolling ? px + sdx * Math.sin(mroll) * r * 0.12 : px;
+    const nby = rolling ? py + sdy * Math.sin(mroll) * r * 0.12 : py;
     ctx.fillStyle = "rgba(255,255,255,0.95)";
     ctx.beginPath();
-    ctx.arc(px, py, r * 0.52, 0, Math.PI * 2);
+    ctx.arc(nbx, nby, r * 0.52, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#15212e";
     ctx.font = `bold ${r * 0.7}px "Space Grotesk", system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(String(b.number), px, py + r * 0.04);
+    ctx.fillText(String(b.number), nbx, nby + r * 0.04);
   }
 
   // Specular highlight.
@@ -312,7 +432,10 @@ function drawAimLine(
   u: (v: number) => number,
   cue: Ball,
   aim: { angleDeg: number; speed: number },
+  balls: Ball[],
+  predict: AimPrediction | null,
   time: number,
+  locked: boolean,
 ): void {
   const rad = (aim.angleDeg * Math.PI) / 180;
   const dir = { x: Math.cos(rad), y: Math.sin(rad) };
@@ -320,24 +443,275 @@ function drawAimLine(
     x: cue.pos.x + dir.x * cue.radius,
     y: cue.pos.y + dir.y * cue.radius,
   };
-  const reach = Math.min(28, 5 + aim.speed * 0.5);
-  const end = { x: start.x + dir.x * reach, y: start.y + dir.y * reach };
+
+  // Where the dotted travel line ends: the predicted contact, or a plain reach.
+  const contact =
+    predict && predict.kind !== "none"
+      ? predict.contact
+      : {
+          x: start.x + dir.x * Math.min(28, 5 + aim.speed * 0.5),
+          y: start.y + dir.y * Math.min(28, 5 + aim.speed * 0.5),
+        };
 
   ctx.save();
-  ctx.setLineDash([u(1.4), u(1)]);
-  ctx.lineDashOffset = -time * u(6);
-  ctx.strokeStyle = "rgba(255,255,255,0.78)";
-  ctx.lineWidth = u(0.35);
+  ctx.lineCap = "round";
+
+  // Cue travel line up to the contact point. Live aim reads as a faint animated
+  // dashed line (inviting adjustment); a locked aim reads as committed — a solid,
+  // brighter amber beam with a soft glow.
+  if (locked) {
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(255,214,90,0.95)";
+    ctx.lineWidth = u(0.5);
+    ctx.shadowColor = "rgba(255,200,60,0.8)";
+    ctx.shadowBlur = u(1.6);
+  } else {
+    ctx.setLineDash([u(1.4), u(1)]);
+    ctx.lineDashOffset = -time * u(6);
+    ctx.strokeStyle = "rgba(255,255,255,0.78)";
+    ctx.lineWidth = u(0.35);
+  }
   ctx.beginPath();
   ctx.moveTo(tx(start.x), ty(start.y));
-  ctx.lineTo(tx(end.x), ty(end.y));
+  ctx.lineTo(tx(contact.x), ty(contact.y));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+
+  if (predict && predict.kind === "ball" && predict.objectDir) {
+    // Faint ghost ball: the cue's footprint at the moment of contact.
+    ctx.beginPath();
+    ctx.arc(tx(contact.x), ty(contact.y), u(cue.radius), 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.10)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.lineWidth = u(0.22);
+    ctx.stroke();
+
+    // Object-ball predicted path (coloured to match the struck ball).
+    const objCenter = {
+      x: contact.x + predict.objectDir.x * cue.radius * 2,
+      y: contact.y + predict.objectDir.y * cue.radius * 2,
+    };
+    const struck = predict.ballId ? balls.find((b) => b.id === predict.ballId) : null;
+    const objColor = struck ? lighten(struck.color, 0.35) : "rgba(255,210,120,0.95)";
+    drawGuideRay(ctx, tx, ty, u, objCenter, predict.objectDir, 11, objColor, 0.45);
+
+    // Cue carom path (white). Skipped when the cue effectively stops (head-on).
+    if (predict.cueDir && Math.hypot(predict.cueDir.x, predict.cueDir.y) > 0.05) {
+      drawGuideRay(
+        ctx,
+        tx,
+        ty,
+        u,
+        contact,
+        predict.cueDir,
+        7.5,
+        "rgba(235,245,255,0.92)",
+        0.35,
+      );
+    }
+  } else if (predict && predict.kind === "cushion" && predict.cueDir) {
+    // Bank: a short reflected segment off the rail so the rebound reads.
+    drawGuideRay(
+      ctx,
+      tx,
+      ty,
+      u,
+      contact,
+      predict.cueDir,
+      9,
+      "rgba(235,245,255,0.82)",
+      0.32,
+    );
+    ctx.beginPath();
+    ctx.arc(tx(contact.x), ty(contact.y), u(0.7), 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/**
+ * Aim-Assist guide: a distinct cyan ghost-ball line revealing the optimal shot
+ * — cue→ghost, a ghost-ball footprint, and the object→pocket lane into a
+ * highlighted pocket. Kept visually separate from the player's amber aim.
+ */
+function drawAssistGuide(
+  ctx: CanvasRenderingContext2D,
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+  u: (v: number) => number,
+  a: AssistGuide,
+  time: number,
+): void {
+  const cyan = "rgba(94,231,223,0.95)";
+  ctx.save();
+  ctx.lineCap = "round";
+
+  // Cue → ghost-ball line (animated dashes so it reads as a suggestion).
+  ctx.setLineDash([u(1.6), u(1.1)]);
+  ctx.lineDashOffset = -time * u(7);
+  ctx.strokeStyle = cyan;
+  ctx.lineWidth = u(0.4);
+  ctx.shadowColor = "rgba(94,231,223,0.7)";
+  ctx.shadowBlur = u(1.4);
+  ctx.beginPath();
+  ctx.moveTo(tx(a.cue.x), ty(a.cue.y));
+  ctx.lineTo(tx(a.ghostBall.x), ty(a.ghostBall.y));
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Arrowhead.
-  const ang = Math.atan2(ty(end.y) - ty(start.y), tx(end.x) - tx(start.x));
-  const ah = u(1.6);
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  // Ghost-ball footprint at contact.
+  ctx.beginPath();
+  ctx.arc(tx(a.ghostBall.x), ty(a.ghostBall.y), u(1.4), 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(94,231,223,0.12)";
+  ctx.fill();
+  ctx.strokeStyle = cyan;
+  ctx.lineWidth = u(0.22);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Object → pocket lane.
+  drawGuideRay(
+    ctx,
+    tx,
+    ty,
+    u,
+    a.objectPos,
+    a.objectDir,
+    Math.max(6, len2(a.pocket, a.objectPos)),
+    cyan,
+    0.42,
+  );
+
+  // Pulsing ring on the suggested pocket.
+  const pulse = 0.5 + 0.5 * Math.sin(time * 4);
+  ctx.beginPath();
+  ctx.arc(tx(a.pocket.x), ty(a.pocket.y), u(3.2) + pulse * u(0.8), 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(94,231,223,${0.5 + pulse * 0.4})`;
+  ctx.lineWidth = u(0.6);
+  ctx.shadowColor = "rgba(94,231,223,0.9)";
+  ctx.shadowBlur = u(2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Straight-line table-unit distance between two points. */
+function len2(a: Vec2, b: Vec2): number {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/**
+ * Ball-in-Hand affordance: a dashed ring + crosshair around the cue ball while
+ * the player drags it, tinted green for a legal spot and red for an illegal one.
+ */
+function drawPlacementAffordance(
+  ctx: CanvasRenderingContext2D,
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+  u: (v: number) => number,
+  s: SceneState,
+): void {
+  const cue = s.balls.find((b) => b.isCue && !b.pocketed);
+  if (!cue) return;
+  const px = tx(cue.pos.x);
+  const py = ty(cue.pos.y);
+  const legal = s.placementLegal !== false;
+  const color = legal ? "rgba(74,222,128,0.95)" : "rgba(248,113,113,0.95)";
+  const pulse = 0.5 + 0.5 * Math.sin(s.time * 5);
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.setLineDash([u(1), u(0.8)]);
+  ctx.lineDashOffset = -s.time * u(6);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = u(0.45);
+  ctx.shadowColor = color;
+  ctx.shadowBlur = u(1.5) + pulse * u(1.5);
+  ctx.beginPath();
+  ctx.arc(px, py, u(cue.radius) + u(1.6), 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Crosshair through the ball center.
+  const reach = u(cue.radius) + u(2.6);
+  ctx.lineWidth = u(0.25);
+  ctx.beginPath();
+  ctx.moveTo(px - reach, py);
+  ctx.lineTo(px + reach, py);
+  ctx.moveTo(px, py - reach);
+  ctx.lineTo(px, py + reach);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * Spin indicator: a small contact dot on the cue-ball face at the chosen
+ * english offset, so the player sees where they're striking. Subtle so it
+ * never competes with the aim line.
+ */
+function drawSpinIndicator(
+  ctx: CanvasRenderingContext2D,
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+  u: (v: number) => number,
+  s: SceneState,
+  spin: Vec2,
+): void {
+  const cue = s.balls.find((b) => b.isCue && !b.pocketed);
+  if (!cue) return;
+  const px = tx(cue.pos.x);
+  const py = ty(cue.pos.y);
+  const r = u(cue.radius);
+  // Offset within the ball face; y flips because the canvas y-axis is inverted.
+  const dx = spin.x * r * 0.62;
+  const dy = -spin.y * r * 0.62;
+
+  ctx.save();
+  // Faint guide ring on the ball so the contact dot reads against any colour.
+  ctx.beginPath();
+  ctx.arc(px, py, r * 0.7, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(20,33,46,0.35)";
+  ctx.lineWidth = u(0.18);
+  ctx.stroke();
+  // Contact dot.
+  ctx.beginPath();
+  ctx.arc(px + dx, py + dy, r * 0.26, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(244,63,94,0.95)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.9)";
+  ctx.lineWidth = u(0.16);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** A short solid guide ray with an arrowhead, used for predicted travel. */
+function drawGuideRay(
+  ctx: CanvasRenderingContext2D,
+  tx: (x: number) => number,
+  ty: (y: number) => number,
+  u: (v: number) => number,
+  from: Vec2,
+  dir: Vec2,
+  length: number,
+  color: string,
+  width: number,
+): void {
+  const end = { x: from.x + dir.x * length, y: from.y + dir.y * length };
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = u(width);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(tx(from.x), ty(from.y));
+  ctx.lineTo(tx(end.x), ty(end.y));
+  ctx.stroke();
+
+  const ang = Math.atan2(ty(end.y) - ty(from.y), tx(end.x) - tx(from.x));
+  const ah = u(1.5);
   ctx.beginPath();
   ctx.moveTo(tx(end.x), ty(end.y));
   ctx.lineTo(tx(end.x) - ah * Math.cos(ang - 0.4), ty(end.y) - ah * Math.sin(ang - 0.4));

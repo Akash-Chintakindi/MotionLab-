@@ -11,6 +11,7 @@ vi.mock("../../ai/practiceService", () => ({
 }));
 
 import { generatePracticeQuestion } from "../../ai/practiceService";
+import { setAiEnabled } from "../../lib/aiSettings";
 
 const mockGenerate = vi.mocked(generatePracticeQuestion);
 
@@ -36,6 +37,10 @@ function mcQuestion(id: string): AIPracticeQuestion {
 
 beforeEach(() => {
   mockGenerate.mockReset();
+  // Most tests exercise the AI path; turn AI on. The AI-off bank path has its
+  // own dedicated test below.
+  localStorage.clear();
+  setAiEnabled(true);
 });
 
 describe("useAdaptivePractice", () => {
@@ -101,6 +106,27 @@ describe("useAdaptivePractice", () => {
 
     expect(result.current.results).toEqual([true, true, true]);
     expect(result.current.suggestion).toEqual({ kind: "levelUp", to: "medium" });
+  });
+
+  it("serves a bank question with no AI call when AI is disabled", async () => {
+    setAiEnabled(false);
+
+    const { result } = renderHook(() => useAdaptivePractice(topic, "easy"));
+
+    await waitFor(() => expect(result.current.phase).toBe("question"));
+    expect(mockGenerate).not.toHaveBeenCalled();
+    expect(result.current.question).not.toBeNull();
+    expect(result.current.question?.explanation).toBeTruthy();
+
+    // The bank question still grades and advances to feedback.
+    const q = result.current.question!;
+    const answer =
+      q.type === "multipleChoice"
+        ? (q.correctOptionId ?? "")
+        : String(q.value ?? 0);
+    act(() => result.current.submit(answer));
+    expect(result.current.lastCorrect).toBe(true);
+    expect(result.current.phase).toBe("feedback");
   });
 
   it("surfaces a friendly error when generation rejects", async () => {

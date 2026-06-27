@@ -3,6 +3,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useProgress } from "../hooks/useProgress";
 import { course } from "../content/course";
 import { AppShell } from "../components/AppShell";
+import { AiToggle } from "../components/AiToggle";
 import { Spinner } from "../components/Spinner";
 import { milestoneCatalog, type Milestone } from "../lib/milestones";
 
@@ -72,6 +73,17 @@ export default function ProfilePage() {
           <Stat label="Day streak" value={`${streak?.currentStreak ?? 0}`} />
           <Stat label="Badges" value={`${earnedBadges}/${totalBadges}`} />
         </dl>
+      </section>
+
+      {/* Settings */}
+      <section className="mt-6">
+        <h2 className="mb-1 font-display text-lg font-bold text-ink">
+          Settings
+        </h2>
+        <p className="mb-4 text-sm text-slate-500">
+          Choose where practice questions come from.
+        </p>
+        <AiToggle variant="full" />
       </section>
 
       {/* Badges */}

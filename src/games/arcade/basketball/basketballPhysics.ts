@@ -177,17 +177,33 @@ const SIM_MAX_STEPS = 1400;
 
 const MAX_RIM_CONTACTS = 2;
 
+// Backboard front-face collision. The board is a vertical surface mounted
+// behind the rim; a ball that reaches its face while still high reflects off
+// it — the HORIZONTAL (depth-proxy) velocity flips and loses energy, the
+// vertical velocity is only damped so the ball keeps falling under gravity.
+// physics-intuition: a real board bounce sheds energy (slow-out) and sends the
+// ball back the way it came, so off-angle hits carom AWAY from the hoop while
+// a flush, well-paced hit banks down into the rim.
+const BOARD_REST = 0.58; // horizontal coefficient of restitution
+const BOARD_VKEEP = 0.72; // vertical energy retained through the contact
+// How far PAST the rim center (toward the board) the ball must reach while at
+// board height to count as striking the face. Clean makes crest in FRONT of
+// this plane (verified against the rim geometry), so swishes never bank.
+const BOARD_FACE_INSET = 0.32; // × rimRx
+
 /**
  * Integrates a projectile from `ball` launched at `dir`/`speed` and resolves it
- * against the rim. The returned polyline is ready for the component to animate.
+ * against the backboard and rim. The returned polyline is ready to animate.
  *
  * physics-intuition: the ball is a real falling mass. A near-centered descent
- * drops straight through (swish). A descent that catches the ring RATTLES — it
- * deflects off the rim (funneling inward when it grazes near the hole, kicking
- * outward when it strikes the outer edge), loses energy each contact (damped
- * bounce, slow-out), and on a later descent may still drop in or finally clank
- * out. Deterministic (no rng): whether a rattle falls in depends on HOW far the
- * aim was off, so being closer to true is rewarded.
+ * drops straight through (swish). A ball that sails too deep strikes the
+ * BACKBOARD's front face and rebounds — horizontal velocity reverses with
+ * energy loss, vertical is merely damped — so it caroms back the way it came;
+ * a flush hit banks down into the rim, an off one kicks AWAY toward the
+ * shooter. A descent that instead catches the ring RATTLES — deflecting off the
+ * rim and losing energy each contact (damped bounce, slow-out) — and may still
+ * drop in or finally clank out. Deterministic (no rng): the outcome depends
+ * only on HOW far the aim/power was off, so being closer to true is rewarded.
  */
 export function simulateShot(
   lay: Layout,
@@ -207,12 +223,22 @@ export function simulateShot(
   const travelSign = Math.sign(vx || hoopX - ball.x) || 1;
   const clipOuter = lay.rimRx + lay.ballR;
 
+  // Backboard face: a vertical plane just past the rim center, only reachable
+  // while the ball is within the board's vertical extent + horizontal span.
+  const board = lay.board;
+  const boardTop = board.y;
+  const boardBot = board.y + board.h;
+  const boardLeft = board.x - lay.ballR;
+  const boardRight = board.x + board.w + lay.ballR;
+  const faceX = hoopX + travelSign * lay.rimRx * BOARD_FACE_INSET;
+
   const pts: Vec2[] = [{ x, y }];
   let apexX = x;
   let apexY = y;
   let everCrossed = false;
   let classified = false;
   let contacts = 0;
+  let banked = false;
   let crossDx = 0;
   let result: ShotResult = "wide";
   let made = false;
@@ -229,6 +255,27 @@ export function simulateShot(
     }
     if (step % 2 === 0) pts.push({ x, y });
 
+    // Backboard front-face strike: the ball, still up at board height and over
+    // the board, reaches the face plane heading toward the board. Reflect the
+    // horizontal component (energy loss) and damp the vertical — the ball then
+    // keeps falling and may bank into the rim or carom back out.
+    if (
+      !banked &&
+      y <= boardBot &&
+      y >= boardTop &&
+      x >= boardLeft &&
+      x <= boardRight &&
+      (x - faceX) * travelSign >= 0 &&
+      (prevX - faceX) * travelSign < 0
+    ) {
+      banked = true;
+      x = faceX;
+      vx = -vx * BOARD_REST;
+      vy = vy * BOARD_VKEEP;
+      pts.push({ x, y });
+      continue;
+    }
+
     // Descending crossing of the rim plane (was above, now at/below, moving down).
     if (!classified && vy > 0 && prevY < hoopY && y >= hoopY) {
       everCrossed = true;
@@ -240,14 +287,14 @@ export function simulateShot(
 
       if (a <= lay.rimInner) {
         made = true;
-        result = contacts > 0 ? "rimIn" : "swish";
+        result = banked ? "bankIn" : contacts > 0 ? "rimIn" : "swish";
         pts.push({ x: cx, y: hoopY });
         pts.push({ x: hoopX + crossDx * 0.22, y: hoopY + lay.netDrop * 0.55 });
         return { points: pts, result, made, apex: { x: apexX, y: apexY }, crossDx };
       }
       if (a <= lay.rimRx) {
         made = true;
-        result = far ? "bankIn" : "rimIn";
+        result = banked || far ? "bankIn" : "rimIn";
         pts.push({ x: cx, y: hoopY });
         pts.push({ x: hoopX + crossDx * 0.18, y: hoopY + lay.netDrop * 0.5 });
         return { points: pts, result, made, apex: { x: apexX, y: apexY }, crossDx };

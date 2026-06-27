@@ -209,6 +209,64 @@ describe("rim rattle for slightly-off aim (physics-intuition)", () => {
   });
 });
 
+describe("backboard carom (physics-intuition: real reflection, not a funnel)", () => {
+  // Spawned LEFT of the hoop, so "away from the hoop" means back toward the
+  // shooter (smaller x). The board sits behind the rim; a too-deep ball should
+  // strike its front face and rebound the way it came, NOT get pulled inward.
+  const ball = { x: lay.hoop.x - 130, y: lay.spawnY };
+  const center = aimRange(ball, lay.hoop).centerRad;
+  const ideal = idealSpeed(ball, lay.hoop, center, lay.gravity)!;
+
+  it("caroms an off-target overthrow AWAY from the hoop off the board", () => {
+    // Aimed slightly shooter-ward but over-powered: the ball sails PAST the rim
+    // center into the board, reflects, and comes back toward the shooter side.
+    const sim = simulateShot(lay, ball, center - 0.2, ideal * 1.1);
+    expect(sim.made).toBe(false);
+    const maxX = Math.max(...sim.points.map((p) => p.x));
+    const late = sim.points[sim.points.length - 1];
+    // Travelled past center (into the board) then reversed: the tail of the path
+    // sits well on the shooter side, i.e. heading AWAY from the rim.
+    expect(maxX).toBeGreaterThan(lay.hoop.x);
+    expect(late.x).toBeLessThan(lay.hoop.x - lay.rimRx);
+  });
+
+  it("banks a flush, well-paced shot IN (bankIn)", () => {
+    const sim = simulateShot(lay, ball, center, ideal * 1.1);
+    expect(sim.made).toBe(true);
+    expect(sim.result).toBe("bankIn");
+  });
+
+  it("still swishes the dead-on shot at ideal power", () => {
+    const sim = simulateShot(lay, ball, center, ideal);
+    expect(sim.made).toBe(true);
+    expect(sim.result).toBe("swish");
+  });
+
+  it("does NOT funnel every overthrow toward the rim", () => {
+    // The old bug: any mis-hit drifted toward the hoop. Now an over-powered
+    // sweep must produce at least one shot that caroms onto the shooter side.
+    let awayMisses = 0;
+    for (let dd = -0.25; dd <= 0.05 + 1e-9; dd += 0.05) {
+      const sim = simulateShot(lay, ball, center + dd, ideal * 1.2);
+      const late = sim.points[sim.points.length - 1];
+      if (!sim.made && late.x < lay.hoop.x - lay.rimRx) awayMisses++;
+    }
+    expect(awayMisses).toBeGreaterThan(0);
+  });
+});
+
+describe("solveSpeedWindow still yields makes after the board change", () => {
+  it("finds a non-empty make window for a well-aimed direction", () => {
+    const ball = { x: lay.hoop.x - 110, y: lay.spawnY };
+    const center = aimRange(ball, lay.hoop).centerRad;
+    const win = solveSpeedWindow(lay, ball, center);
+    expect(win).not.toBeNull();
+    expect(win!.lo).toBeLessThan(win!.hi);
+    const mid = (win!.lo + win!.hi) / 2;
+    expect(simulateShot(lay, ball, center, mid).made).toBe(true);
+  });
+});
+
 describe("previewArc", () => {
   it("returns a polyline starting at the ball", () => {
     const ball = { x: lay.hoop.x - 100, y: lay.spawnY };

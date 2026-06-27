@@ -5,19 +5,24 @@ import {
   cannonPivot,
   generateTerrain,
   SEGMENTS,
+  TERRAIN_STYLES,
   type Terrain,
   type Layout,
 } from "../cannonLayout";
 import {
   aiAim,
+  aiCanHit,
   applyReward,
   applyWrongAnswer,
   computeScore,
   freshMatch,
+  generateSolvableTerrain,
   idealSpeed,
+  isTerrainSolvable,
   launchVelocity,
   MAX_AI_SHIELDS,
   MAX_PLAYER_SHIELDS,
+  playerCanHit,
   powerToSpeed,
   previewArc,
   questionDifficulty,
@@ -196,6 +201,62 @@ describe("terrain generation", () => {
   it("keeps every height within the canvas bounds", () => {
     for (let seed = 0; seed < 8; seed++) {
       const t = generateTerrain(lay, mulberry32(seed));
+      for (const hf of t.heights) {
+        expect(hf).toBeGreaterThanOrEqual(0);
+        expect(hf).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+});
+
+describe("generateSolvableTerrain is always playable from both sides", () => {
+  // Test across several layouts so the guarantee isn't tuned to one canvas.
+  const layouts: Layout[] = [
+    computeLayout(480, 360),
+    computeLayout(640, 480),
+    computeLayout(800, 600),
+    computeLayout(1024, 768),
+  ];
+
+  it("produces a solvable field for 240 deterministic seeds", () => {
+    for (const layout of layouts) {
+      for (let seed = 0; seed < 240; seed++) {
+        const terrain = generateSolvableTerrain(layout, mulberry32(seed));
+        expect(
+          playerCanHit(layout, terrain),
+          `player blocked: layout ${layout.w}x${layout.h}, seed ${seed}, style ${terrain.style}`,
+        ).toBe(true);
+        expect(
+          aiCanHit(layout, terrain),
+          `ai blocked: layout ${layout.w}x${layout.h}, seed ${seed}, style ${terrain.style}`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("is solvable for EVERY terrain style across many seeds", () => {
+    for (const style of TERRAIN_STYLES) {
+      for (let seed = 0; seed < 60; seed++) {
+        const terrain = generateSolvableTerrain(lay, mulberry32(seed), style);
+        expect(terrain.style).toBe(style);
+        expect(
+          isTerrainSolvable(lay, terrain),
+          `unsolvable: style ${style}, seed ${seed}`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("is deterministic for a given seed", () => {
+    const a = generateSolvableTerrain(lay, mulberry32(42));
+    const b = generateSolvableTerrain(lay, mulberry32(42));
+    expect(a.style).toBe(b.style);
+    expect(a.heights).toEqual(b.heights);
+  });
+
+  it("keeps every solvable height within the canvas bounds", () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const t = generateSolvableTerrain(lay, mulberry32(seed));
       for (const hf of t.heights) {
         expect(hf).toBeGreaterThanOrEqual(0);
         expect(hf).toBeLessThanOrEqual(1);

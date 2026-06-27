@@ -102,6 +102,7 @@ export type SfxName =
   | "ballClack"
   | "pocket"
   | "rail"
+  | "rackBreak"
   // basketball
   | "shoot"
   | "swish"
@@ -138,6 +139,12 @@ export function playSfx(name: SfxName): void {
       break;
     case "rail":
       noise(0.05, 0.25, 1500);
+      break;
+    case "rackBreak":
+      // The cue smashing the rack: a punchy thud plus a scatter of clacks.
+      noise(0.09, 0.6, 3200, true);
+      tone(150, 0.12, "square", 0.3, 70);
+      noise(0.22, 0.35, 5200, true);
       break;
     case "shoot":
       tone(300, 0.18, "triangle", 0.3, 600);

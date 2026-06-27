@@ -11,7 +11,6 @@ import {
   cannonBodyCenter,
   cannonPivot,
   computeLayout,
-  generateTerrain,
   type Layout,
   type Terrain,
 } from "./cannonLayout";
@@ -21,7 +20,10 @@ import {
   applyWrongAnswer,
   computeScore,
   freshMatch,
+  generateSolvableTerrain,
   MAX_PLAYER_SHIELDS,
+  PLAYER_DIR_MAX,
+  PLAYER_DIR_MIN,
   powerToSpeed,
   previewArc,
   questionDifficulty,
@@ -54,8 +56,6 @@ const INTRO_DUR = 0.85;
 
 const PLAYER_REST = 0.85;
 const AI_REST = Math.PI - 0.85;
-const PLAYER_DIR_MIN = 0.06;
-const PLAYER_DIR_MAX = 1.5;
 
 const WARM_BALL = "#ffc564";
 const HOT_BALL = "#ff7a5b";
@@ -200,7 +200,7 @@ export function CannonGame(props: ArcadeGameProps) {
   difficultyRef.current = difficulty;
 
   const gRef = useRef<GState>(
-    freshGState(generateTerrain(computeLayout(480, 360))),
+    freshGState(generateSolvableTerrain(computeLayout(480, 360))),
   );
   const g = gRef.current;
 
@@ -378,8 +378,9 @@ export function CannonGame(props: ArcadeGameProps) {
 
   const beginPlayerRound = useCallback(() => {
     const lay = layoutRef.current;
-    // Regenerate the battlefield each round so the terrain keeps changing.
-    g.terrain = generateTerrain(lay);
+    // Regenerate the battlefield each round so the terrain keeps changing —
+    // always guaranteed solvable from both cannons.
+    g.terrain = generateSolvableTerrain(lay);
     g.turn = "player";
     g.phase = "playerAim";
     g.aiming = false;
@@ -573,7 +574,7 @@ export function CannonGame(props: ArcadeGameProps) {
     endedRef.current = false;
     excludeRef.current = [];
     const lay = layoutRef.current;
-    const fresh = freshGState(generateTerrain(lay));
+    const fresh = freshGState(generateSolvableTerrain(lay));
     if (reducedRef.current) fresh.intro = 1;
     else fresh.flash = 0.55;
     gRef.current = fresh;

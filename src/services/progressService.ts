@@ -31,8 +31,6 @@ import type {
 
 const nowMs = () => Date.now();
 
-export { todayISO, computeStreak };
-
 // ---- Document references -------------------------------------------------
 
 function database(database?: Firestore): Firestore {

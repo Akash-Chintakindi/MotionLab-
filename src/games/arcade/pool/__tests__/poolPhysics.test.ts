@@ -3,6 +3,7 @@ import {
   applyShot,
   stepSimulation,
   computeIdealShot,
+  predictAim,
   gradeShot,
   angleDelta,
   DEFAULT_TOLERANCE,
@@ -288,6 +289,81 @@ describe("computeIdealShot", () => {
 });
 
 // ---------------------------------------------------------------------------
+// predictAim (live aim guide)
+// ---------------------------------------------------------------------------
+
+describe("predictAim", () => {
+  it("head-on hit: object goes straight, cue ~stops, ghost sits 2r behind", () => {
+    const table = makeTable({ ballRadius: 1 });
+    const cue = makeBall({ id: "cue", pos: { x: 10, y: 25 }, isCue: true });
+    const obj = makeBall({ id: "obj", pos: { x: 40, y: 25 } });
+
+    const p = predictAim([cue, obj], table, "cue", 0);
+
+    expect(p.kind).toBe("ball");
+    expect(p.ballId).toBe("obj");
+    // object ball drives straight along +x
+    expect(p.objectDir?.x).toBeCloseTo(1, 5);
+    expect(p.objectDir?.y).toBeCloseTo(0, 5);
+    // contact (cue centre) is one diameter back from the object
+    expect(p.contact.x).toBeCloseTo(40 - 2 * table.ballRadius, 4);
+    expect(p.contact.y).toBeCloseTo(25, 5);
+    // the cue effectively stops (no tangential component) on a dead-straight hit
+    expect(Math.hypot(p.cueDir?.x ?? 0, p.cueDir?.y ?? 0)).toBeLessThan(0.05);
+  });
+
+  it("cut shot: object follows the line of centers, cue caroms ~90°", () => {
+    const table = makeTable({ ballRadius: 1 });
+    const cue = makeBall({ id: "cue", pos: { x: 10, y: 25 }, isCue: true });
+    // object sits one unit above the aim line → a leftward/upward cut
+    const obj = makeBall({ id: "obj", pos: { x: 40, y: 26 } });
+
+    const p = predictAim([cue, obj], table, "cue", 0);
+
+    expect(p.kind).toBe("ball");
+    // object ball travels up and to the right (along the line of centers)
+    expect(p.objectDir?.x).toBeGreaterThan(0);
+    expect(p.objectDir?.y).toBeGreaterThan(0);
+    // cue carom is perpendicular to the object direction (90° tangent rule)
+    const d = (p.objectDir?.x ?? 0) * (p.cueDir?.x ?? 0) +
+      (p.objectDir?.y ?? 0) * (p.cueDir?.y ?? 0);
+    expect(Math.abs(d)).toBeLessThan(1e-6);
+    // it deflects forward-and-down, opposite the object's vertical kick
+    expect(p.cueDir?.x).toBeGreaterThan(0);
+    expect(p.cueDir?.y).toBeLessThan(0);
+  });
+
+  it("clear lane: reflects off the cushion it reaches first", () => {
+    const table = makeTable({ ballRadius: 1, width: 100, height: 50 });
+    const cue = makeBall({ id: "cue", pos: { x: 50, y: 25 }, isCue: true });
+
+    const p = predictAim([cue], table, "cue", 0);
+
+    expect(p.kind).toBe("cushion");
+    // touches the right rail at width − r, y unchanged
+    expect(p.contact.x).toBeCloseTo(100 - table.ballRadius, 4);
+    expect(p.contact.y).toBeCloseTo(25, 5);
+    // perpendicular component reflected: now heading back left
+    expect(p.cueDir?.x).toBeLessThan(0);
+    expect(p.cueDir?.y).toBeCloseTo(0, 5);
+  });
+
+  it("ignores pocketed balls and an absent cue gracefully", () => {
+    const table = makeTable({ ballRadius: 1 });
+    const cue = makeBall({ id: "cue", pos: { x: 10, y: 25 }, isCue: true });
+    const ghost = makeBall({ id: "obj", pos: { x: 40, y: 25 }, pocketed: true });
+
+    // the only object ball is pocketed → the ray runs on to a cushion
+    const p = predictAim([cue, ghost], table, "cue", 0);
+    expect(p.kind).toBe("cushion");
+
+    // no cue on the table → a harmless "none" result
+    const none = predictAim([ghost], table, "cue", 0);
+    expect(none.kind).toBe("none");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // INTEGRATION: the ideal shot actually sinks the object ball
 // ---------------------------------------------------------------------------
 
@@ -358,6 +434,83 @@ describe("applyShot", () => {
     const cue = makeBall({ id: "cue", pos: { x: 10, y: 10 }, isCue: true, pocketed: true });
     const out = applyShot([cue], { angleDeg: 0, speed: 50 });
     expect(byId(out, "cue").vel).toEqual({ x: 0, y: 0 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spin / english
+// ---------------------------------------------------------------------------
+
+/** Steps a head-on cue→object hit until the collision fires; returns the cue. */
+function cueAfterHeadOn(spin?: { x: number; y: number }): Ball {
+  const table = makeTable({ friction: 0, ballRadius: 1 });
+  const cue = makeBall({ id: "cue", pos: { x: 20, y: 25 }, isCue: true });
+  const obj = makeBall({ id: "obj", pos: { x: 40, y: 25 } });
+  const launched = applyShot([cue, obj], { angleDeg: 0, speed: 20, spin });
+  const { balls } = runToSettleUntilEvent(launched, table, "ballCollision");
+  return byId(balls, "cue");
+}
+
+describe("spin / english", () => {
+  it("no spin (omitted) leaves the cue stopped after a head-on hit — unchanged", () => {
+    const cue = cueAfterHeadOn();
+    expect(cue.vel.x).toBeCloseTo(0, 4);
+    expect(cue.vel.y).toBeCloseTo(0, 4);
+    // applyShot must NOT tag a centre-ball hit.
+    expect(cue.pendingSpin).toBeUndefined();
+  });
+
+  it("a {0,0} spin is treated as no spin (byte-for-byte identical)", () => {
+    const plain = cueAfterHeadOn();
+    const zero = cueAfterHeadOn({ x: 0, y: 0 });
+    expect(zero.vel.x).toBeCloseTo(plain.vel.x, 6);
+    expect(zero.vel.y).toBeCloseTo(plain.vel.y, 6);
+    expect(zero.pendingSpin).toBeUndefined();
+  });
+
+  it("applyShot tags the cue with pending spin only when non-zero", () => {
+    const cue = makeBall({ id: "cue", pos: { x: 20, y: 25 }, isCue: true });
+    const none = byId(applyShot([cue], { angleDeg: 0, speed: 20 }), "cue");
+    expect(none.pendingSpin).toBeUndefined();
+    const tagged = byId(
+      applyShot([cue], { angleDeg: 0, speed: 20, spin: { x: 0, y: 1 } }),
+      "cue",
+    );
+    expect(tagged.pendingSpin).toEqual({ x: 0, y: 1 });
+  });
+
+  it("follow (top-spin) pushes the cue FORWARD after striking an object ball", () => {
+    const cue = cueAfterHeadOn({ x: 0, y: 1 });
+    // Without spin the cue stops dead; follow keeps it rolling along +x.
+    expect(cue.vel.x).toBeGreaterThan(1);
+    expect(cue.vel.y).toBeCloseTo(0, 4);
+    // …and the english was consumed so it can't re-fire.
+    expect(cue.pendingSpin).toBeUndefined();
+  });
+
+  it("draw (back-spin) pulls the cue BACK after contact", () => {
+    const cue = cueAfterHeadOn({ x: 0, y: -1 });
+    expect(cue.vel.x).toBeLessThan(-1);
+    expect(cue.vel.y).toBeCloseTo(0, 4);
+  });
+
+  it("side english deflects the cue sideways off a head-on contact", () => {
+    const cue = cueAfterHeadOn({ x: 1, y: 0 });
+    // A centre hit leaves the cue with no lateral motion; right english gives it
+    // a sideways component (downward-right of +x travel in the math plane).
+    expect(Math.abs(cue.vel.y)).toBeGreaterThan(1);
+  });
+
+  it("scales with impact speed — a softer follow trails less than a firm one", () => {
+    const table = makeTable({ friction: 0, ballRadius: 1 });
+    const follow = (speed: number) => {
+      const cue = makeBall({ id: "cue", pos: { x: 20, y: 25 }, isCue: true });
+      const obj = makeBall({ id: "obj", pos: { x: 40, y: 25 } });
+      const launched = applyShot([cue, obj], { angleDeg: 0, speed, spin: { x: 0, y: 1 } });
+      const { balls } = runToSettleUntilEvent(launched, table, "ballCollision");
+      return byId(balls, "cue").vel.x;
+    };
+    expect(follow(40)).toBeGreaterThan(follow(20));
   });
 });
 
