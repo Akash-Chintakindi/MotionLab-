@@ -7,15 +7,8 @@ const lesson2Id = course.lessons[1].id;
 const lastLessonId = course.lessons[6].id;
 
 describe("nextDestination", () => {
-  it("sends lesson 1 learn to its practice", () => {
+  it("sends lesson 1 learn straight to its quiz", () => {
     expect(nextDestination(lesson1Id, "learn")).toEqual({
-      href: `/lesson/${lesson1Id}/practice`,
-      label: "Practice this lesson",
-    });
-  });
-
-  it("sends lesson 1 practice to its quiz", () => {
-    expect(nextDestination(lesson1Id, "practice")).toEqual({
       href: `/lesson/${lesson1Id}/quiz`,
       label: "Take the quiz",
     });
@@ -28,19 +21,15 @@ describe("nextDestination", () => {
     });
   });
 
-  it("chains learn -> practice for lessons that have a game (all do now)", () => {
+  it("chains learn -> quiz for any lesson that has a quiz", () => {
     expect(nextDestination(lesson2Id, "learn")).toEqual({
-      href: `/lesson/${lesson2Id}/practice`,
-      label: "Practice this lesson",
+      href: `/lesson/${lesson2Id}/quiz`,
+      label: "Take the quiz",
     });
   });
 
-  it("chains the last lesson learn -> practice -> quiz, then stops", () => {
+  it("chains the last lesson learn -> quiz, then stops", () => {
     expect(nextDestination(lastLessonId, "learn")).toEqual({
-      href: `/lesson/${lastLessonId}/practice`,
-      label: "Practice this lesson",
-    });
-    expect(nextDestination(lastLessonId, "practice")).toEqual({
       href: `/lesson/${lastLessonId}/quiz`,
       label: "Take the quiz",
     });

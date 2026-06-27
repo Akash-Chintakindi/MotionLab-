@@ -5,6 +5,7 @@ import { useGameLoop } from "../useGameLoop";
 import { useArcadeAudio } from "../audio/useArcadeAudio";
 import { POOL_TRACK } from "../audio/audioEngine";
 import { MuteButton } from "../MuteButton";
+import { EndLeaderboard } from "../basketball/EndLeaderboard";
 import {
   applyShot,
   predictAim,
@@ -110,7 +111,8 @@ interface GameRefState {
 export function FullPoolGame(
   props: ArcadeGameProps & { difficulty: Difficulty; onBack: () => void },
 ) {
-  const { highScore, onGameOver, difficulty, onBack } = props;
+  const { highScore, onGameOver, leaderboard, difficulty, onBack, onTopicResult } =
+    props;
   const reduced = usePrefersReducedMotion();
   const { muted, toggleMute, start: startTrack, sfx, resumeAudio } = useArcadeAudio();
 
@@ -152,6 +154,10 @@ export function FullPoolGame(
   // Question sourcing: avoid recent prompts/bank ids across the match.
   const topicsRef = useRef(practiceTopics());
   const avoidPromptsRef = useRef<string[]>([]);
+  // Topic id + difficulty of the most recently served question, so a graded
+  // answer can be attributed to the right course topic for the mastery model.
+  const lastTopicRef = useRef<string | null>(null);
+  const lastDiffRef = useRef<BankDifficulty>("medium");
   const excludeBankIdsRef = useRef<string[]>([]);
 
   const gRef = useRef<GameRefState>({
@@ -495,10 +501,13 @@ export function FullPoolGame(
         avoidPrompts: avoidPromptsRef.current.slice(-6),
         excludeBankIds: excludeBankIdsRef.current,
       });
+      lastDiffRef.current = d;
       if (res.source === "ai") {
+        lastTopicRef.current = topic.id;
         avoidPromptsRef.current = [...avoidPromptsRef.current, res.question.prompt].slice(-10);
         return aiToPoolQuestion(res.question, d);
       }
+      lastTopicRef.current = res.question.topicId;
       excludeBankIdsRef.current = [...excludeBankIdsRef.current, res.question.id].slice(-10);
       return { ...res.question, source: "bank" };
     } catch {
@@ -507,6 +516,9 @@ export function FullPoolGame(
   }
 
   function handleAnswered(correct: boolean, d: BankDifficulty) {
+    if (lastTopicRef.current) {
+      onTopicResult?.(lastTopicRef.current, correct, lastDiffRef.current);
+    }
     if (correct) scoreRef.current += QUESTION_POINTS[d];
     sfx(correct ? "correct" : "wrong");
   }
@@ -922,6 +934,14 @@ export function FullPoolGame(
                   ? "New personal best!"
                   : `Best: ${Math.max(highScore, scoreRef.current)}`}
               </p>
+              {leaderboard && scoreRef.current > 0 && (
+                <div className="mt-3 flex justify-center">
+                  <EndLeaderboard
+                    leaderboard={leaderboard}
+                    score={scoreRef.current}
+                  />
+                </div>
+              )}
               <div className="mt-4 flex justify-center gap-2">
                 <button
                   type="button"

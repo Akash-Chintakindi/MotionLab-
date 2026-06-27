@@ -53,11 +53,11 @@ test("completing Lesson 1 unlocks and allows Lesson 2 (sim + sort + plot)", asyn
   await mcAnswer(page, /1\.5 m\/s/);
   await continueStep(page);
 
-  // Completion chains onward. Lesson 2 now has a practice game, so the next
-  // step is Lesson 2's Practice.
+  // Completion chains onward. Practice is now woven into Learn, so the next
+  // step is Lesson 2's Quiz.
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
   await expect(page.getByTestId("next-step")).toHaveAttribute(
     "href",
-    "/lesson/lesson-2-velocity-acceleration/practice",
+    "/lesson/lesson-2-velocity-acceleration/quiz",
   );
 });

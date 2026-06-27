@@ -5,6 +5,7 @@ import type { PlotPreset } from "../lib/functions";
 
 export type StepType =
   | "concept"
+  | "workedExample"
   | "multipleChoice"
   | "graphDrag"
   | "sliderSimulation"
@@ -29,6 +30,33 @@ export interface ConceptConfig {
   formula?: string;
   /** Optional read-only illustrative graph. */
   graph?: GraphConfig;
+}
+
+/** One line of a worked solution, shown in order as a teaching demonstration. */
+export interface WorkedSolutionLine {
+  /** Short step label, e.g. "Step 1 — List what's known". */
+  label?: string;
+  /** The reasoning/work for this line. */
+  detail: string;
+  /** Optional equation rendered monospace for emphasis. */
+  formula?: string;
+}
+
+/**
+ * A fully solved example problem, demonstrated step by step. This is a teaching
+ * (auto) step: it is meant to model the method on ONE problem just before the
+ * learner attempts a similar one themselves (the "I do" of I-do/we-do/you-do).
+ */
+export interface WorkedExampleConfig {
+  /** The problem being demonstrated (deliberately different from the practice). */
+  problem: string;
+  /** Optional read-only visuals reused from the lesson primitives. */
+  graph?: GraphConfig;
+  plot?: PlotConfig;
+  /** The ordered solution lines. */
+  solution: WorkedSolutionLine[];
+  /** Optional transferable takeaway to carry into the next problem. */
+  takeaway?: string;
 }
 
 export interface MultipleChoiceConfig {
@@ -132,11 +160,33 @@ export interface SliderSimulationConfig {
 
 export type InteractionConfig =
   | ConceptConfig
+  | WorkedExampleConfig
   | MultipleChoiceConfig
   | GraphDragConfig
   | SortConfig
   | NumericConfig
   | SliderSimulationConfig;
+
+/** Difficulty tag for a graded step (drives the mastery wiring + content pacing). */
+export type StepDifficulty = "easy" | "medium" | "hard";
+
+/**
+ * Optional mastery-learning scaffolding for a graded step. Powers the
+ * worked-example -> faded -> independent flow: on the first miss the learner
+ * sees `scaffold` (an intermediate nudge); on the second miss they see the full
+ * `reveal` and a prompt to revisit the teaching step `reviewToStepId`, then may
+ * continue. Omit it entirely and the step behaves exactly as before.
+ */
+export interface StepMastery {
+  /** Shown after the FIRST miss: a scaffolded, intermediate hint. */
+  scaffold?: string;
+  /** Shown after the SECOND miss: the full worked solution for THIS problem. */
+  reveal?: string;
+  /** After the second miss, offer a button jumping back to this step id. */
+  reviewToStepId?: string;
+  /** Difficulty tag for mastery recording; defaults to "medium". */
+  difficulty?: StepDifficulty;
+}
 
 export interface StepFeedback {
   correct: string;
@@ -168,6 +218,8 @@ export interface LessonStep {
    */
   correctAnswer: Record<string, unknown> | null;
   feedback: StepFeedback;
+  /** Optional mastery-learning scaffolding (worked example -> faded -> independent). */
+  mastery?: StepMastery;
 }
 
 export interface Lesson {

@@ -18,7 +18,7 @@ const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
  * share the same page contract (highScore + onGameOver).
  */
 export function PoolGame(props: ArcadeGameProps) {
-  const { highScore, onGameOver } = props;
+  const { highScore, onGameOver, leaderboard, onTopicResult } = props;
   const [mode, setMode] = useState<Mode>("menu");
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
 
@@ -30,13 +30,20 @@ export function PoolGame(props: ArcadeGameProps) {
   return (
     <div data-testid="pool-game" className="mx-auto w-full max-w-3xl select-none">
       {mode === "oneshot" && (
-        <OneShotGame highScore={highScore} onGameOver={onGameOver} onBack={backToMenu} />
+        <OneShotGame
+          highScore={highScore}
+          onGameOver={onGameOver}
+          leaderboard={leaderboard}
+          onBack={backToMenu}
+        />
       )}
 
       {mode === "full" && difficulty && (
         <FullPoolGame
           highScore={highScore}
           onGameOver={onGameOver}
+          leaderboard={leaderboard}
+          onTopicResult={onTopicResult}
           difficulty={difficulty}
           onBack={backToMenu}
         />

@@ -211,7 +211,7 @@ export const TRIPLE_THREAT: Milestone = {
   id: "triple-threat",
   label: "Triple Threat",
   emoji: "🔱",
-  description: "Finish Learn, Practice, and Quiz of one lesson",
+  description: "Master a lesson (80%+), take its quiz, and complete it",
 };
 
 const ACCURACY_MILESTONES: Milestone[] = [
@@ -315,17 +315,20 @@ export function quizMilestonesFor(
 
 /**
  * Triple Threat: earned once any single lesson has its Learn completed AND a
- * recorded practice score AND a recorded quiz score.
+ * recorded quiz score AND high mastery (>= 80%) on that lesson. (The standalone
+ * Practice tab was folded into Learn, so mastery now stands in for it.)
  */
 export function tripleThreatMilestonesFor(
   completedLessonIds: string[],
-  practiceScores: Record<string, number>,
   quizScores: Record<string, number>,
+  masteryByLesson: Record<string, number>,
+  masteryThreshold = 0.8,
 ): string[] {
   const did = (m: Record<string, number>, id: string) =>
     Object.prototype.hasOwnProperty.call(m, id);
   const earned = completedLessonIds.some(
-    (id) => did(practiceScores, id) && did(quizScores, id),
+    (id) =>
+      did(quizScores, id) && (masteryByLesson[id] ?? 0) >= masteryThreshold,
   );
   return earned ? [TRIPLE_THREAT.id] : [];
 }

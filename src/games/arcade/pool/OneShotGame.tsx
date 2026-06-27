@@ -5,6 +5,7 @@ import { useGameLoop } from "../useGameLoop";
 import { useArcadeAudio } from "../audio/useArcadeAudio";
 import { POOL_TRACK } from "../audio/audioEngine";
 import { MuteButton } from "../MuteButton";
+import { EndLeaderboard } from "../basketball/EndLeaderboard";
 import {
   applyShot,
   computeIdealShot,
@@ -86,7 +87,7 @@ function makeAmbient(): Ball[] {
 
 /** The original calculation-based one-shot puzzle mode. */
 export function OneShotGame(props: ArcadeGameProps & { onBack: () => void }) {
-  const { highScore, onGameOver, onBack } = props;
+  const { highScore, onGameOver, leaderboard, onBack } = props;
   const reduced = usePrefersReducedMotion();
   const { muted, toggleMute, start: startTrack, sfx, resumeAudio } = useArcadeAudio();
 
@@ -565,6 +566,9 @@ export function OneShotGame(props: ArcadeGameProps & { onBack: () => void }) {
                 ? "New personal best! 🎉"
                 : `Best: ${bestSoFar}`}
             </p>
+            {leaderboard && sessionScore > 0 && (
+              <EndLeaderboard leaderboard={leaderboard} score={sessionScore} />
+            )}
             <button
               type="button"
               onClick={startGame}

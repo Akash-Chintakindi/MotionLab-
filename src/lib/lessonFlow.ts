@@ -1,8 +1,7 @@
 import { getNextLessonId } from "../content/course";
-import { hasGame } from "../games/registry";
 import { hasQuiz } from "../content/quizzes";
 
-export type LessonMode = "learn" | "practice" | "quiz";
+export type LessonMode = "learn" | "quiz";
 
 export interface NextDestination {
   href: string;
@@ -11,27 +10,14 @@ export interface NextDestination {
 
 /**
  * Computes where a learner should go next after finishing a given mode of a
- * lesson. The flow is Learn -> Practice -> Quiz -> next lesson's Learn, but
- * modes that don't exist for the lesson are skipped.
+ * lesson. The flow is Learn -> Quiz -> next lesson's Learn; a quiz that doesn't
+ * exist for the lesson is skipped. (Practice is now woven into Learn itself.)
  */
 export function nextDestination(
   lessonId: string,
   mode: LessonMode,
 ): NextDestination | null {
   if (mode === "learn") {
-    if (hasGame(lessonId)) {
-      return {
-        href: `/lesson/${lessonId}/practice`,
-        label: "Practice this lesson",
-      };
-    }
-    if (hasQuiz(lessonId)) {
-      return { href: `/lesson/${lessonId}/quiz`, label: "Take the quiz" };
-    }
-    return nextLesson(lessonId);
-  }
-
-  if (mode === "practice") {
     if (hasQuiz(lessonId)) {
       return { href: `/lesson/${lessonId}/quiz`, label: "Take the quiz" };
     }

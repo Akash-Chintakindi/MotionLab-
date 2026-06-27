@@ -43,8 +43,12 @@ import type {
   Screen,
 } from "./basketballScene";
 import { drawScene } from "./basketballRender";
-import type { BankDifficulty } from "../../../content/practiceBank/types";
-import { getRandomQuestion } from "../../../content/practiceBank";
+import type {
+  BankDifficulty,
+  BankQuestion,
+} from "../../../content/practiceBank/types";
+import { getGameQuestion } from "../../../ai/practiceQuestion";
+import { practiceTopics } from "../../../ai/topics";
 import { QuestionModal } from "./QuestionModal";
 
 const TWO_PI = Math.PI * 2;
@@ -229,7 +233,7 @@ const COMBO_BANNERS: Record<number, string> = {
 };
 
 export function BasketballGame(props: ArcadeGameProps) {
-  const { highScore, onGameOver, leaderboard } = props;
+  const { highScore, onGameOver, leaderboard, onTopicResult } = props;
   const reduced = usePrefersReducedMotion();
   const { muted, toggleMute, start: startTrack, sfx, resumeAudio } =
     useArcadeAudio();
@@ -246,6 +250,11 @@ export function BasketballGame(props: ArcadeGameProps) {
   const layoutRef = useRef<Layout>(computeLayout(360, 450));
   const crowdRef = useRef<CrowdSeed[]>(makeCrowd());
   const excludeRef = useRef<string[]>([]);
+  const topicsRef = useRef(practiceTopics());
+  // Topic id of the most recently served question, so a graded answer can be
+  // attributed to the right course topic for the mastery model.
+  const lastTopicRef = useRef<string | null>(null);
+  const avoidPromptsRef = useRef<string[]>([]);
   const endedRef = useRef(false);
   const gRef = useRef<GState>(freshGState(60));
   const g = gRef.current;
@@ -411,14 +420,37 @@ export function BasketballGame(props: ArcadeGameProps) {
     sfx("countdown");
   }, [g, sfx]);
 
-  const handlePickQuestion = useCallback((d: BankDifficulty) => {
-    const q = getRandomQuestion(d, excludeRef.current);
-    if (q) excludeRef.current = [...excludeRef.current, q.id].slice(-10);
-    return q ?? null;
-  }, []);
+  const handlePickQuestion = useCallback(
+    async (d: BankDifficulty): Promise<BankQuestion | null> => {
+      // Honors the global AI toggle: live AI (with bank fallback) when on, the
+      // static bank with no network call when off. The clock is paused while
+      // the modal is open, so the AI round-trip never costs the player time.
+      const res = await getGameQuestion({
+        difficulty: d,
+        topics: topicsRef.current,
+        avoidPrompts: avoidPromptsRef.current.slice(-6),
+        excludeBankIds: excludeRef.current,
+      });
+      if (!res) return null;
+      lastTopicRef.current = res.question.topicId;
+      if (res.source === "ai") {
+        avoidPromptsRef.current = [
+          ...avoidPromptsRef.current,
+          res.question.prompt,
+        ].slice(-10);
+      } else {
+        excludeRef.current = [...excludeRef.current, res.question.id].slice(-10);
+      }
+      return res.question;
+    },
+    [],
+  );
 
   const handleAnswered = useCallback(
     (correct: boolean, d: BankDifficulty) => {
+      if (lastTopicRef.current) {
+        onTopicResult?.(lastTopicRef.current, correct, d);
+      }
       const lay = layoutRef.current;
       const delta = correct ? TIME_BONUS[d] : -WRONG_PENALTY;
       g.remaining = applyTimeDelta(g.remaining, delta);
@@ -433,7 +465,7 @@ export function BasketballGame(props: ArcadeGameProps) {
       );
       sfx(correct ? "correct" : "wrong");
     },
-    [g, pushFloat, sfx],
+    [g, pushFloat, sfx, onTopicResult],
   );
 
   const closeQuestion = useCallback(() => {

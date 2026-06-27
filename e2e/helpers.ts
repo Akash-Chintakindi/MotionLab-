@@ -119,122 +119,183 @@ export async function numericAnswer(page: Page, value: number) {
   await page.getByRole("button", { name: "Check answer" }).click();
 }
 
-/** Plays Lesson 1 from the dashboard through to its completion screen. */
+/**
+ * Plays Lesson 1 from the dashboard through to its completion screen.
+ *
+ * All lessons now follow the mastery template: a retrieval opener (MC), a
+ * bridge + interactive teaching steps (auto), then worked example -> faded ->
+ * independent practice. These walkthroughs answer every graded step correctly
+ * so the learner finishes at 100% mastery (unlocking the Quiz).
+ */
 export async function completeLesson1(page: Page) {
   await openLesson(page, /Position, Velocity, and Slope/);
   await mcAnswer(page, /In the middle/);
-  await continueStep(page); // step 1 hook
-  await continueStep(page); // step 2 explore
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 explore
   await page.getByRole("button", { name: "Select Middle region" }).click();
-  await continueStep(page); // step 3 predict
-  await continueStep(page); // step 4 average
-  await continueStep(page); // step 5 instant
-  await continueStep(page); // step 6 derivative
-  await continueStep(page); // step 7 calc concept
+  await continueStep(page); // 4 predict
+  await continueStep(page); // 5 average (secant)
+  await continueStep(page); // 6 instant (secant)
+  await continueStep(page); // 7 derivative concept
+  await continueStep(page); // 8 calc concept
+  await continueStep(page); // 9 worked example
   await numericAnswer(page, 4);
-  await continueStep(page); // step 8 calc practice
+  await continueStep(page); // 10 faded practice
   await sortPick(page, "Point A", "Positive velocity");
   await sortPick(page, "Point B", "Zero velocity");
   await sortPick(page, "Point C", "Negative velocity");
   await page.getByRole("button", { name: "Check answer" }).click();
-  await continueStep(page); // step 9 sort
+  await continueStep(page); // 11 sort
   await mcAnswer(page, /Moving backward/);
-  await continueStep(page); // step 10 application -> finish
+  await continueStep(page); // 12 application
+  await numericAnswer(page, -4);
+  await continueStep(page); // 13 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 /** The following helpers assume the lesson page is already open at step 1. */
 
 export async function completeLesson2(page: Page) {
-  await mcAnswer(page, /negative the whole time/);
-  await continueStep(page);
-  await continueStep(page); // motion sim
+  await mcAnswer(page, /The velocity/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 motion sim
+  await continueStep(page); // 5 sign concept
   await mcAnswer(page, /Slowing down/);
-  await continueStep(page);
-  await continueStep(page); // concept
+  await continueStep(page); // 6 faded sign-rule MC
   await sortPick(page, "acceleration +2", "Speeding up");
   await sortPick(page, "acceleration -2", "Slowing down");
   await sortPick(page, "acceleration -1", "Speeding up");
   await page.getByRole("button", { name: "Check answer" }).click();
-  await continueStep(page);
+  await continueStep(page); // 7 sort
+  await continueStep(page); // 8 worked example
+  await numericAnswer(page, 5);
+  await continueStep(page); // 9 faded practice
   await mcAnswer(page, /1\.5 m\/s/);
-  await continueStep(page);
+  await continueStep(page); // 10 read accel off graph
+  await numericAnswer(page, -3);
+  await continueStep(page); // 11 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 export async function completeLesson3(page: Page) {
-  await continueStep(page); // concept
-  await continueStep(page); // area sim
+  await mcAnswer(page, /The acceleration/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 area sim
+  await continueStep(page); // 5 signed concept
+  await continueStep(page); // 6 worked example
+  await numericAnswer(page, 9);
+  await continueStep(page); // 7 faded practice
   await numericAnswer(page, 16);
-  await continueStep(page);
+  await continueStep(page); // 8 net displacement
   await mcAnswer(page, /less than total distance/);
-  await continueStep(page);
+  await continueStep(page); // 9 compare
   await numericAnswer(page, 20);
-  await continueStep(page);
+  await continueStep(page); // 10 total distance
   await mcAnswer(page, /moving backward/);
-  await continueStep(page);
+  await continueStep(page); // 11 sign of area
+  await numericAnswer(page, 12);
+  await continueStep(page); // 12 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 export async function completeLesson4(page: Page) {
-  await continueStep(page); // concept
-  await continueStep(page); // kinematics sim
+  await mcAnswer(page, /area under the velocity/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept (velocity)
+  await continueStep(page); // 4 concept (position)
+  await continueStep(page); // 5 kinematics sim
+  await continueStep(page); // 6 worked example
   await numericAnswer(page, 10);
-  await continueStep(page);
+  await continueStep(page); // 7 final velocity
+  await numericAnswer(page, 14);
+  await continueStep(page); // 8 faded practice
   await numericAnswer(page, 25);
-  await continueStep(page);
+  await continueStep(page); // 9 displacement
+  await numericAnswer(page, 33);
+  await continueStep(page); // 10 independent (position)
   await mcAnswer(page, /shifts upward/);
-  await continueStep(page);
+  await continueStep(page); // 11 initial conditions
   await mcAnswer(page, /A parabola/);
-  await continueStep(page);
+  await continueStep(page); // 12 apply -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 export async function completeLesson5(page: Page) {
-  await continueStep(page); // concept
-  await continueStep(page); // vectors sim
+  await mcAnswer(page, /v₀/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 vectors sim
+  await continueStep(page); // 5 centripetal concept
   await mcAnswer(page, /analyzed independently/);
-  await continueStep(page);
+  await continueStep(page); // 6 key idea
+  await continueStep(page); // 7 worked example
   await numericAnswer(page, 5);
-  await continueStep(page);
+  await continueStep(page); // 8 speed (faded)
   await mcAnswer(page, /Toward the center/);
-  await continueStep(page);
+  await continueStep(page); // 9 centripetal
   await mcAnswer(page, /Purely vertical/);
-  await continueStep(page);
+  await continueStep(page); // 10 apply
+  await numericAnswer(page, 13);
+  await continueStep(page); // 11 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 export async function completeLesson6(page: Page) {
-  await continueStep(page); // concept
-  await continueStep(page); // projectile sim
+  await mcAnswer(page, /two separate 1D motions/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 vertical concept
+  await continueStep(page); // 5 projectile sim
   await mcAnswer(page, /Stays constant/);
-  await continueStep(page);
-  await numericAnswer(page, 10);
-  await continueStep(page);
+  await continueStep(page); // 6 horizontal velocity
   await mcAnswer(page, /^Zero$/);
-  await continueStep(page);
+  await continueStep(page); // 7 peak
+  await numericAnswer(page, 10);
+  await continueStep(page); // 8 component
+  await continueStep(page); // 9 worked example
+  await numericAnswer(page, 1.5);
+  await continueStep(page); // 10 faded practice
   await mcAnswer(page, /45/);
-  await continueStep(page);
+  await continueStep(page); // 11 range angle
+  await numericAnswer(page, 6);
+  await continueStep(page); // 12 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }
 
 export async function completeLesson7(page: Page) {
-  await continueStep(page); // intro concept
+  await mcAnswer(page, /Differentiate once to get/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 synthesis concept
+  await continueStep(page); // 4 kinematics sim
+  await continueStep(page); // 5 worked example
+  await numericAnswer(page, 24);
+  await continueStep(page); // 6 faded practice
   await mcAnswer(page, /straight line starting positive/);
-  await continueStep(page);
+  await continueStep(page); // 7 x -> v
   await mcAnswer(page, /constant negative value/);
-  await continueStep(page);
+  await continueStep(page); // 8 v -> a
   await numericAnswer(page, 16);
-  await continueStep(page);
+  await continueStep(page); // 9 area
   await sortPick(page, "Position to velocity", "Derivative");
   await sortPick(page, "Velocity to acceleration", "Derivative");
   await sortPick(page, "Acceleration to velocity", "Integral");
   await sortPick(page, "Velocity to position", "Integral");
   await page.getByRole("button", { name: "Check answer" }).click();
-  await continueStep(page);
+  await continueStep(page); // 10 derivative/integral sort
   await mcAnswer(page, /Independent of each other/);
-  await continueStep(page);
-  await mcAnswer(page, /Constant/);
-  await continueStep(page);
+  await continueStep(page); // 11 2D independence
+  await numericAnswer(page, 60);
+  await continueStep(page); // 12 independent challenge
+  await mcAnswer(page, /^Constant$/);
+  await continueStep(page); // 13 final -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }

@@ -5,15 +5,18 @@ import type { BankDifficulty, BankQuestion } from "../../../content/practiceBank
 import { TIME_BONUS, WRONG_PENALTY } from "./basketballPhysics";
 
 interface Props {
-  /** Pulls a question for the chosen difficulty (parent tracks exclusions). */
-  onPickQuestion: (d: BankDifficulty) => BankQuestion | null;
+  /**
+   * Pulls a question for the chosen difficulty (parent tracks exclusions).
+   * Async because it may call the AI Cloud Function when the AI toggle is on.
+   */
+  onPickQuestion: (d: BankDifficulty) => Promise<BankQuestion | null>;
   /** Reports the graded result so the parent can adjust the clock + sfx. */
   onAnswered: (correct: boolean, d: BankDifficulty) => void;
   /** Closes the modal and resumes play. */
   onClose: () => void;
 }
 
-type Stage = "pick" | "answer" | "feedback";
+type Stage = "pick" | "loading" | "answer" | "feedback";
 
 const DIFFS: { id: BankDifficulty; label: string; tone: string }[] = [
   { id: "easy", label: "Easy", tone: "from-emerald-400 to-emerald-600" },
@@ -28,13 +31,15 @@ export function QuestionModal({ onPickQuestion, onAnswered, onClose }: Props) {
   const [numeric, setNumeric] = useState("");
   const [correct, setCorrect] = useState(false);
 
-  function pick(d: BankDifficulty) {
-    const q = onPickQuestion(d);
+  async function pick(d: BankDifficulty) {
+    setDifficulty(d);
+    setStage("loading");
+    const q = await onPickQuestion(d);
     if (!q) {
+      // Never soft-lock: if no question is available, just resume play.
       onClose();
       return;
     }
-    setDifficulty(d);
     setQuestion(q);
     setNumeric("");
     setStage("answer");
@@ -85,6 +90,15 @@ export function QuestionModal({ onPickQuestion, onAnswered, onClose }: Props) {
               ))}
             </div>
           </>
+        )}
+
+        {stage === "loading" && (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" />
+            <p className="text-sm font-semibold text-slate-300">
+              Loading a {difficulty} question…
+            </p>
+          </div>
         )}
 
         {stage === "answer" && question && (

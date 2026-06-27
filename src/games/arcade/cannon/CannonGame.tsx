@@ -5,6 +5,7 @@ import { useGameLoop } from "../useGameLoop";
 import { useArcadeAudio } from "../audio/useArcadeAudio";
 import { CANNON_TRACK } from "../audio/audioEngine";
 import { MuteButton } from "../MuteButton";
+import { EndLeaderboard } from "../basketball/EndLeaderboard";
 import {
   ASPECT_H,
   ASPECT_W,
@@ -44,8 +45,12 @@ import type {
   Side,
 } from "./cannonScene";
 import { drawScene } from "./cannonRender";
-import type { BankDifficulty } from "../../../content/practiceBank/types";
-import { getRandomQuestion } from "../../../content/practiceBank";
+import type {
+  BankDifficulty,
+  BankQuestion,
+} from "../../../content/practiceBank/types";
+import { getGameQuestion } from "../../../ai/practiceQuestion";
+import { practiceTopics } from "../../../ai/topics";
 import { QuestionModal } from "./QuestionModal";
 
 const TWO_PI = Math.PI * 2;
@@ -178,7 +183,7 @@ function muzzleTip(lay: Layout, pivot: Vec2, angle: number): Vec2 {
 }
 
 export function CannonGame(props: ArcadeGameProps) {
-  const { highScore, onGameOver } = props;
+  const { highScore, onGameOver, leaderboard, onTopicResult } = props;
   const reduced = usePrefersReducedMotion();
   const { muted, toggleMute, start: startTrack, sfx, resumeAudio } =
     useArcadeAudio();
@@ -195,6 +200,12 @@ export function CannonGame(props: ArcadeGameProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const layoutRef = useRef<Layout>(computeLayout(480, 360));
   const excludeRef = useRef<string[]>([]);
+  const topicsRef = useRef(practiceTopics());
+  // Topic id + difficulty of the most recently served question, so a graded
+  // answer can be attributed to the right course topic for the mastery model.
+  const lastTopicRef = useRef<string | null>(null);
+  const lastDiffRef = useRef<BankDifficulty>("medium");
+  const avoidPromptsRef = useRef<string[]>([]);
   const endedRef = useRef(false);
   const difficultyRef = useRef<BankDifficulty>("medium");
   difficultyRef.current = difficulty;
@@ -474,14 +485,38 @@ export function CannonGame(props: ArcadeGameProps) {
     sfx("countdown");
   }, [g, sfx]);
 
-  const handlePickQuestion = useCallback((d: BankDifficulty) => {
-    const q = getRandomQuestion(d, excludeRef.current);
-    if (q) excludeRef.current = [...excludeRef.current, q.id].slice(-12);
-    return q ?? null;
-  }, []);
+  const handlePickQuestion = useCallback(
+    async (d: BankDifficulty): Promise<BankQuestion | null> => {
+      // Honors the global AI toggle: live AI (with bank fallback) when on, the
+      // static bank with no network call when off. The duel is paused while the
+      // modal is open, so the AI round-trip never affects play.
+      const res = await getGameQuestion({
+        difficulty: d,
+        topics: topicsRef.current,
+        avoidPrompts: avoidPromptsRef.current.slice(-6),
+        excludeBankIds: excludeRef.current,
+      });
+      if (!res) return null;
+      lastTopicRef.current = res.question.topicId;
+      lastDiffRef.current = res.question.difficulty;
+      if (res.source === "ai") {
+        avoidPromptsRef.current = [
+          ...avoidPromptsRef.current,
+          res.question.prompt,
+        ].slice(-12);
+      } else {
+        excludeRef.current = [...excludeRef.current, res.question.id].slice(-12);
+      }
+      return res.question;
+    },
+    [],
+  );
 
   const handleAnswered = useCallback(
     (correct: boolean) => {
+      if (lastTopicRef.current) {
+        onTopicResult?.(lastTopicRef.current, correct, lastDiffRef.current);
+      }
       if (correct) {
         sfx("correct");
         return;
@@ -492,7 +527,7 @@ export function CannonGame(props: ArcadeGameProps) {
       const lay = layoutRef.current;
       pushFloat("RIVAL +🛡", "#fca5a5", lay.aiX, lay.h * 0.3, lay.w * 0.03);
     },
-    [g, sfx, pushFloat],
+    [g, sfx, pushFloat, onTopicResult],
   );
 
   const handleReward = useCallback(
@@ -939,6 +974,9 @@ export function CannonGame(props: ArcadeGameProps) {
               <p className="mt-1 text-sm text-slate-200">
                 {newHigh ? "🏆 New personal best!" : `High score: ${bestScore}`}
               </p>
+              {leaderboard && end.score > 0 && (
+                <EndLeaderboard leaderboard={leaderboard} score={end.score} />
+              )}
               <button
                 type="button"
                 onClick={startGame}

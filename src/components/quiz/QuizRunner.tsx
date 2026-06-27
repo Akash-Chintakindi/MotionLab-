@@ -11,12 +11,18 @@ import { RichText } from "../RichText";
 export function QuizRunner({
   quiz,
   onComplete,
+  onResults,
   next,
   passThreshold = 0,
 }: {
   quiz: Quiz;
   /** Called once with the final score percentage when the quiz finishes. */
   onComplete?: (scorePct: number) => void;
+  /**
+   * Called once when the quiz finishes with the per-question results, so the
+   * caller can feed them into the spaced-repetition mastery model.
+   */
+  onResults?: (results: { questionId: string; correct: boolean }[]) => void;
   /** Where to send the learner after the quiz, if anywhere. */
   next?: { href: string; label: string };
   /**
@@ -32,8 +38,9 @@ export function QuizRunner({
     if (q.phase === "done" && !reported.current) {
       reported.current = true;
       onComplete?.(q.scorePct);
+      onResults?.(q.results.map((r) => ({ questionId: r.questionId, correct: r.correct })));
     }
-  }, [q.phase, q.scorePct, onComplete]);
+  }, [q.phase, q.scorePct, q.results, onComplete, onResults]);
 
   if (q.phase === "done") {
     return (

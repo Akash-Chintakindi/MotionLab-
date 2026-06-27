@@ -34,4 +34,14 @@ export interface ArcadeGameProps {
   onGameOver: (result: { score: number }) => void;
   /** Optional opt-in cross-user leaderboard (absent when signed out). */
   leaderboard?: ArcadeLeaderboard;
+  /**
+   * Optional sink for graded in-game physics questions, so the page can feed
+   * them into the spaced-repetition mastery model. The game stays auth-free; the
+   * page (under AuthProvider) supplies this. `topicId` is a course lesson id.
+   */
+  onTopicResult?: (
+    topicId: string,
+    correct: boolean,
+    difficulty: "easy" | "medium" | "hard",
+  ) => void;
 }

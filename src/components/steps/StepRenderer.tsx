@@ -1,5 +1,6 @@
 import type { StepComponentProps } from "./types";
 import { ConceptStep } from "./ConceptStep";
+import { WorkedExampleStep } from "./WorkedExampleStep";
 import { MultipleChoiceStep } from "./MultipleChoiceStep";
 import { GraphDragStep } from "./GraphDragStep";
 import { SortStep } from "./SortStep";
@@ -10,6 +11,8 @@ export function StepRenderer(props: StepComponentProps) {
   switch (props.step.type) {
     case "concept":
       return <ConceptStep {...props} />;
+    case "workedExample":
+      return <WorkedExampleStep {...props} />;
     case "multipleChoice":
       return <MultipleChoiceStep {...props} />;
     case "graphDrag":

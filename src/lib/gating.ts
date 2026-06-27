@@ -4,7 +4,7 @@ import type { CourseProgress } from "../types/progress";
  * Progression thresholds (see "Learning Science.txt").
  *
  * - A lesson's Learn section must be mastered at >= 80% to unlock that topic's
- *   Practice and Quiz.
+ *   Quiz.
  * - A quiz must be passed at >= 70% to unlock the next topic.
  */
 export const LESSON_MASTERY_THRESHOLD = 0.8; // fraction (0–1)
@@ -18,8 +18,8 @@ export function lessonMastery(course: MasterySource, lessonId: string): number {
 }
 
 /**
- * Whether a topic's Practice and Quiz are unlocked. They open only once the
- * learner masters the Learn section at >= 80%.
+ * Whether a topic's Quiz is unlocked. It opens only once the learner masters
+ * the Learn section at >= 80%.
  */
 export function modesUnlocked(course: MasterySource, lessonId: string): boolean {
   return lessonMastery(course, lessonId) >= LESSON_MASTERY_THRESHOLD;

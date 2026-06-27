@@ -19,15 +19,16 @@ import {
   getCourseProgress,
   getLessonProgress,
   getStreak,
-  recordPracticeScore,
   recordQuizScore,
   recordDailyActivity,
+  recordDailyProgress,
   recordStepAttempt,
   recordStepResult,
   startLesson,
   unlockNextLesson,
 } from "../progressService";
 import { course, FIRST_LESSON_ID, getNextLessonId } from "../../content/course";
+import { DAILY_GOAL } from "../../lib/streak";
 
 let fdb: Firestore;
 let auth: Auth;
@@ -159,11 +160,29 @@ describe("progressService (emulator)", () => {
     expect(persisted!.milestoneIds).toContain("first-lesson");
   });
 
+  it("counts daily problems and banks a freeze at the daily goal", async () => {
+    const uid = await freshUser();
+    await ensureUserBootstrap(uid, "kim@example.com", "Kim", fdb);
+
+    let streak = await getStreak(uid, fdb);
+    for (let i = 0; i < DAILY_GOAL; i += 1) {
+      streak = await recordDailyProgress(uid, fdb, "2026-03-01");
+    }
+
+    expect(streak!.dailyCount).toBe(DAILY_GOAL);
+    expect(streak!.freezes).toBe(1);
+    expect(streak!.currentStreak).toBe(1);
+
+    const persisted = await getStreak(uid, fdb);
+    expect(persisted!.dailyCount).toBe(DAILY_GOAL);
+    expect(persisted!.freezes).toBe(1);
+  });
+
   it("awards quiz and Triple Threat milestones from saved progress", async () => {
     const uid = await freshUser();
     await ensureUserBootstrap(uid, "bob@example.com", "Bob", fdb);
+    // Completing at 100% mastery satisfies Triple Threat's mastery requirement.
     await completeLesson(uid, FIRST_LESSON_ID, 1, fdb);
-    await recordPracticeScore(uid, FIRST_LESSON_ID, 72, fdb);
     await recordQuizScore(uid, FIRST_LESSON_ID, 100, fdb);
 
     await awardProgressMilestones(uid, fdb);

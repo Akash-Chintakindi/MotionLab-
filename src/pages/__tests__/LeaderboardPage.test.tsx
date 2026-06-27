@@ -75,6 +75,12 @@ describe("LeaderboardPage", () => {
     await waitFor(() =>
       expect(mockGetLeaderboard).toHaveBeenCalledWith("pool"),
     );
+
+    await userEvent.click(screen.getByTestId("lb-game-cannon"));
+
+    await waitFor(() =>
+      expect(mockGetLeaderboard).toHaveBeenCalledWith("cannon"),
+    );
   });
 
   it("highlights the current user's row", async () => {

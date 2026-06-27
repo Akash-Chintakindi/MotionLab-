@@ -146,6 +146,26 @@ describe("step validity", () => {
     }
   });
 
+  it("mastery.reviewToStepId references a real step in the same lesson", () => {
+    for (const lesson of course.lessons) {
+      const ids = new Set(lesson.steps.map((s) => s.id));
+      for (const step of lesson.steps) {
+        const target = step.mastery?.reviewToStepId;
+        if (target === undefined) continue;
+        expect(ids, `${lesson.id}/${step.id}`).toContain(target);
+      }
+    }
+  });
+
+  it("mastery.difficulty, when set, is a valid tier", () => {
+    const valid = new Set(["easy", "medium", "hard"]);
+    for (const { lessonId, step } of allSteps) {
+      const diff = step.mastery?.difficulty;
+      if (diff === undefined) continue;
+      expect(valid, `${lessonId}/${step.id}`).toContain(diff);
+    }
+  });
+
   it("every referenced curve and plot preset resolves", () => {
     for (const { step } of allSteps) {
       const cfg = step.interactionConfig as Record<string, unknown>;

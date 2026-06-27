@@ -21,6 +21,7 @@ import {
   type LessonSummary,
 } from "../lib/lessonEngine";
 import { modesUnlocked } from "../lib/gating";
+import { recordTopicResult } from "../services/masteryStore";
 import { accuracyMilestonesFor, COMEBACK } from "../lib/milestones";
 import { course as courseContent } from "../content/course";
 import { stepRequiresAnswer } from "../components/steps/types";
@@ -38,11 +39,11 @@ export interface CompletionResult {
   streak: number;
   unlockedLessonId: string | null;
   /**
-   * Whether this topic's Practice + Quiz are unlocked, i.e. the learner's best
-   * mastery is >= 80%. Drives whether the completion screen offers a "next"
-   * step or asks the learner to review and retry.
+   * Whether this topic's Quiz is unlocked, i.e. the learner's best mastery is
+   * >= 80%. Drives whether the completion screen offers a "next" step or asks
+   * the learner to review and retry.
    */
-  practiceUnlocked: boolean;
+  quizUnlocked: boolean;
   /** Milestone ids earned as a result of finishing this lesson. */
   earnedMilestones: string[];
 }
@@ -60,12 +61,20 @@ export interface LessonEngine {
   prefillCorrect: boolean;
   progressPct: number;
   feedback: { state: FeedbackState; message: string; hint?: string };
+  /** First-miss scaffolded nudge for the current step, else null. */
+  scaffold: string | null;
+  /** Second-miss full worked reveal for the current step, else null. */
+  reveal: string | null;
+  /** When revealed, the teaching step id to offer a jump-back to, else null. */
+  reviewToStepId: string | null;
   completion: CompletionResult | null;
   /** Per-step breakdown for a finished lesson (only set in the "summary" phase). */
   summary: LessonSummary | null;
   onAnswer: (correct: boolean, selectedOptionId?: string) => void;
   onContinue: () => void;
   onBack: () => void;
+  /** Jump to a specific step by id (used by the "review the lesson" remediation). */
+  onJumpToStep: (stepId: string) => void;
   /** Enter read-only review of a finished lesson's steps. */
   onReview: () => void;
   /** Wipe progress and replay the lesson from the first step. */
@@ -94,6 +103,10 @@ export function useLessonEngine(
     hint?: string;
   }>({ state: null, message: "" });
   const [completion, setCompletion] = useState<CompletionResult | null>(null);
+  // Wrong submissions on the CURRENT step, and whether its solution was revealed
+  // (soft remediation after the second miss). Reset whenever the step changes.
+  const [attempts, setAttempts] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
   const wrongStepsRef = useRef<Set<string>>(new Set());
   const dailyMarkedRef = useRef(false);
@@ -104,12 +117,19 @@ export function useLessonEngine(
   const isLastStep = index === steps.length - 1;
   // A step is "solved" when it's auto (no answer needed) or already answered.
   const reviewing = answered.has(index);
-  const locked = isAuto || reviewing;
+  // Revealing the solution also locks the inputs and unlocks Continue.
+  const locked = isAuto || reviewing || revealed;
 
   const allAnswered = useCallback(
     () => new Set(Array.from({ length: steps.length }, (_, i) => i)),
     [steps.length],
   );
+
+  // Reset the per-step remediation state whenever the active step changes.
+  useEffect(() => {
+    setAttempts(0);
+    setRevealed(false);
+  }, [index]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,9 +225,9 @@ export function useLessonEngine(
       (id) => !earnedBefore.has(id),
     );
 
-    // Practice/Quiz unlock off the BEST stored mastery (set by completeLesson),
-    // so a topic stays open even if this replay scored lower.
-    const practiceUnlocked = modesUnlocked(course, lesson.id);
+    // The Quiz unlocks off the BEST stored mastery (set by completeLesson), so
+    // a topic stays open even if this replay scored lower.
+    const quizUnlocked = modesUnlocked(course, lesson.id);
 
     // Cache the per-step breakdown so "Review answers" works straight from the
     // completion screen (not just when revisiting a finished lesson).
@@ -218,7 +238,7 @@ export function useLessonEngine(
       mastery,
       streak: streak.currentStreak,
       unlockedLessonId,
-      practiceUnlocked,
+      quizUnlocked,
       earnedMilestones,
     });
   }, [user, lesson, steps.length]);
@@ -226,6 +246,14 @@ export function useLessonEngine(
   const onAnswer = useCallback(
     async (correct: boolean, selectedOptionId?: string) => {
       if (!user || !lesson || !step || reviewing) return;
+      // Feed every graded lesson answer into the spaced-repetition mastery model
+      // (topic === lessonId), using the step's difficulty tag (default medium).
+      void recordTopicResult(
+        user.uid,
+        lesson.id,
+        correct,
+        step.mastery?.difficulty ?? "medium",
+      );
       if (correct) {
         setAnswered((prev) => new Set(prev).add(index));
         setFeedback({ state: "correct", message: step.feedback.correct });
@@ -233,6 +261,8 @@ export function useLessonEngine(
         await markDailyActivity();
       } else {
         wrongStepsRef.current.add(step.id);
+        const nextAttempts = attempts + 1;
+        setAttempts(nextAttempts);
         // Prefer a tailored explanation for the exact wrong choice the learner
         // submitted; fall back to the step's generic `incorrect` message.
         const tailored =
@@ -244,10 +274,15 @@ export function useLessonEngine(
           message: tailored ?? step.feedback.incorrect,
           hint: step.feedback.hint,
         });
+        // Soft remediation: on the second miss, reveal the worked solution and
+        // let the learner continue (the miss still counts against mastery).
+        if (nextAttempts >= 2 && step.mastery?.reveal) {
+          setRevealed(true);
+        }
         await recordStepAttempt(user.uid, lesson.id, step.id);
       }
     },
-    [user, lesson, step, index, reviewing, markDailyActivity],
+    [user, lesson, step, index, reviewing, attempts, markDailyActivity],
   );
 
   const onContinue = useCallback(async () => {
@@ -269,6 +304,11 @@ export function useLessonEngine(
     if (isAuto && !reviewing) {
       await recordStepResult(user.uid, lesson.id, step.id, index, true);
       await markDailyActivity();
+    } else if (revealed && !reviewing) {
+      // The learner saw the solution after two misses; record the step as
+      // completed-incorrect so resume + the summary stay accurate.
+      await recordStepResult(user.uid, lesson.id, step.id, index, false);
+      await markDailyActivity();
     }
     if (isLastStep) {
       await finishLesson();
@@ -283,6 +323,7 @@ export function useLessonEngine(
     index,
     isAuto,
     reviewing,
+    revealed,
     isLastStep,
     phase,
     markDailyActivity,
@@ -293,6 +334,16 @@ export function useLessonEngine(
     setIndex((i) => Math.max(0, i - 1));
     setFeedback({ state: null, message: "" });
   }, []);
+
+  const onJumpToStep = useCallback(
+    (stepId: string) => {
+      const target = steps.findIndex((s) => s.id === stepId);
+      if (target < 0) return;
+      setIndex(target);
+      setFeedback({ state: null, message: "" });
+    },
+    [steps],
+  );
 
   const onReview = useCallback(() => {
     // Clear any just-earned completion so the review steps render (the
@@ -325,6 +376,15 @@ export function useLessonEngine(
     ? { state: "correct" as FeedbackState, message: step?.feedback.correct ?? "" }
     : feedback;
 
+  // Escalating remediation surfaced to the page: a scaffold after the first
+  // miss, then the full reveal + a jump-back prompt after the second.
+  const scaffold =
+    !reviewing && !revealed && attempts >= 1
+      ? (step?.mastery?.scaffold ?? null)
+      : null;
+  const reveal = revealed ? (step?.mastery?.reveal ?? null) : null;
+  const reviewToStepId = revealed ? (step?.mastery?.reviewToStepId ?? null) : null;
+
   const progressPct = steps.length
     ? Math.round(((index + (locked ? 1 : 0)) / steps.length) * 100)
     : 0;
@@ -341,11 +401,15 @@ export function useLessonEngine(
     prefillCorrect: reviewing,
     progressPct,
     feedback: displayFeedback,
+    scaffold,
+    reveal,
+    reviewToStepId,
     completion,
     summary,
     onAnswer,
     onContinue,
     onBack,
+    onJumpToStep,
     onReview,
     onRestart,
   };

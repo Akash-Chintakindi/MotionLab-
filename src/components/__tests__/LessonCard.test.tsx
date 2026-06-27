@@ -22,7 +22,7 @@ function renderCard(props: Partial<Parameters<typeof LessonCard>[0]> = {}) {
 }
 
 describe("LessonCard dropdown", () => {
-  it("is collapsed by default and expands to show three modes", async () => {
+  it("is collapsed by default and expands to show Learn + Quiz", async () => {
     renderCard();
     expect(screen.queryByRole("link", { name: "Learn" })).toBeNull();
 
@@ -31,26 +31,21 @@ describe("LessonCard dropdown", () => {
     );
 
     const learn = screen.getByRole("link", { name: "Learn" });
-    const practice = screen.getByRole("link", { name: "Practice" });
     const quiz = screen.getByRole("link", { name: "Quiz" });
     expect(learn).toHaveAttribute("href", "/lesson/lesson-1-position-velocity");
-    expect(practice).toHaveAttribute(
-      "href",
-      "/lesson/lesson-1-position-velocity/practice",
-    );
+    expect(screen.queryByRole("link", { name: "Practice" })).toBeNull();
     expect(quiz).toHaveAttribute(
       "href",
       "/lesson/lesson-1-position-velocity/quiz",
     );
   });
 
-  it("surfaces best quiz and practice scores when present", async () => {
-    renderCard({ quizBest: 90, practiceBest: 75 });
+  it("surfaces the best quiz score when present", async () => {
+    renderCard({ quizBest: 90 });
     await userEvent.click(
       screen.getByRole("button", { name: /Position, Velocity, and Slope/ }),
     );
     expect(screen.getByText("Best 90%")).toBeInTheDocument();
-    expect(screen.getByText("Best 75%")).toBeInTheDocument();
   });
 
   it("does not expand when locked", () => {
@@ -60,16 +55,15 @@ describe("LessonCard dropdown", () => {
     ).toBeNull();
   });
 
-  it("locks Practice and Quiz until the lesson is mastered (80%)", async () => {
+  it("locks the Quiz until the lesson is mastered (80%)", async () => {
     renderCard({ status: "in_progress", mastery: 0.6 });
     await userEvent.click(
       screen.getByRole("button", { name: /Position, Velocity, and Slope/ }),
     );
 
-    // Learn stays available; Practice/Quiz are not navigable links yet.
+    // Learn stays available; the Quiz is not a navigable link yet.
     expect(screen.getByRole("link", { name: "Learn" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Practice" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Quiz" })).toBeNull();
-    expect(screen.getAllByText("🔒 Master Learn (80%)")).toHaveLength(2);
+    expect(screen.getByText("🔒 Master Learn (80%)")).toBeInTheDocument();
   });
 });

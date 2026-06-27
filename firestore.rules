@@ -24,6 +24,40 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Squads (class/group rooms). Any signed-in user may read squad metadata and
+    // join (write their OWN member doc). The squad doc itself is create-only by
+    // its owner and never edited/deleted, so a code can't be hijacked.
+    match /squads/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.code == code
+        && request.resource.data.name is string;
+      allow update, delete: if false;
+
+      // Membership: a user may only create/remove their own membership row.
+      match /members/{memberUid} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null
+          && request.auth.uid == memberUid
+          && request.resource.data.uid == memberUid;
+        allow delete: if request.auth != null && request.auth.uid == memberUid;
+      }
+
+      // Daily-question board: readable by any member; a user may only write their
+      // own entry (doc id == uid) and never delete it.
+      match /dailyBoards/{date}/entries/{entryUid} {
+        allow read: if request.auth != null;
+        allow create, update: if request.auth != null
+          && request.auth.uid == entryUid
+          && request.resource.data.uid == entryUid
+          && request.resource.data.score is number
+          && request.resource.data.correct is bool
+          && request.resource.data.timeMs is number;
+        allow delete: if false;
+      }
+    }
+
     // Everything else is denied by default.
     match /{document=**} {
       allow read, write: if false;

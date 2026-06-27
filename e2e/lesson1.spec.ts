@@ -34,11 +34,13 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   // Lesson 2 should be locked on the dashboard.
   await expect(page.getByText("Locked").first()).toBeVisible();
 
-  // Open Lesson 1 (Learn mode).
+  // Open Lesson 1 (Learn mode). Lesson 1 follows the mastery template:
+  // retrieval opener -> bridge -> interactive teaching -> worked example ->
+  // faded practice -> independent practice (13 steps).
   await openLearn(page, /Position, Velocity, and Slope/);
   await expect(page.getByTestId("step-counter")).toContainText("Step 1");
 
-  // Step 1: hook (multiple choice) — wrong then right. Grading only on submit.
+  // Step 1: retrieval opener (multiple choice) — wrong then right.
   await page.getByRole("radio", { name: /Late/ }).click();
   await page.getByRole("button", { name: /Submit/ }).click();
   await expect(page.getByText("Not quite")).toBeVisible();
@@ -48,41 +50,49 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Step 2: explore graph (auto).
+  // Step 2: bridge + learning intention (concept, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 2");
   await continueStep(page);
 
-  // Step 3: predict region.
+  // Step 3: explore graph (auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 3");
+  await continueStep(page);
+
+  // Step 4: predict region.
+  await expect(page.getByTestId("step-counter")).toContainText("Step 4");
   await page.getByRole("button", { name: "Select Middle region" }).click();
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Step 4: average velocity (secant, auto).
-  await expect(page.getByTestId("step-counter")).toContainText("Step 4");
-  await continueStep(page);
-
-  // Step 5: instantaneous velocity (secant + slider, auto).
+  // Step 5: average velocity (secant, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 5");
   await continueStep(page);
 
-  // Step 6: derivative reveal (concept, auto).
+  // Step 6: instantaneous velocity (secant + slider, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 6");
   await continueStep(page);
 
-  // Step 7: calculating velocity from a formula (concept, auto).
+  // Step 7: derivative reveal (concept, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 7");
   await continueStep(page);
 
-  // Step 8: average-velocity calculation (numeric).
+  // Step 8: computing velocity from a formula (concept, auto).
   await expect(page.getByTestId("step-counter")).toContainText("Step 8");
+  await continueStep(page);
+
+  // Step 9: worked example (auto teaching step).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 9");
+  await continueStep(page);
+
+  // Step 10: faded practice — average velocity (numeric).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 10");
   await page.getByLabel("Numeric answer").fill("4");
   await page.getByRole("button", { name: "Check answer" }).click();
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Step 9: sort points by velocity sign.
-  await expect(page.getByTestId("step-counter")).toContainText("Step 9");
+  // Step 11: sort points by velocity sign.
+  await expect(page.getByTestId("step-counter")).toContainText("Step 11");
   await sortPick(page, "Point A", "Positive velocity");
   await sortPick(page, "Point B", "Zero velocity");
   await sortPick(page, "Point C", "Negative velocity");
@@ -90,19 +100,26 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Step 10: application (multiple choice).
-  await expect(page.getByTestId("step-counter")).toContainText("Step 10");
+  // Step 12: application (multiple choice).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 12");
   await page.getByRole("radio", { name: /Moving backward/ }).click();
   await page.getByRole("button", { name: /Submit/ }).click();
   await expect(page.getByText("Correct")).toBeVisible();
   await continueStep(page);
 
-  // Completion + chained next step (Practice for lesson 1).
+  // Step 13: independent challenge — average velocity with a sign (numeric).
+  await expect(page.getByTestId("step-counter")).toContainText("Step 13");
+  await page.getByLabel("Numeric answer").fill("-4");
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await expect(page.getByText("Correct")).toBeVisible();
+  await continueStep(page);
+
+  // Completion + chained next step (Quiz for lesson 1).
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
   await expect(page.getByTestId("next-step")).toBeVisible();
   await expect(page.getByTestId("next-step")).toHaveAttribute(
     "href",
-    "/lesson/lesson-1-position-velocity/practice",
+    "/lesson/lesson-1-position-velocity/quiz",
   );
 
   // Completing Learn no longer unlocks Lesson 2 — it's still locked until the

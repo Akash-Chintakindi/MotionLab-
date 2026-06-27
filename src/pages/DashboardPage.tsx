@@ -2,7 +2,10 @@ import { useAuth } from "../auth/AuthProvider";
 import { useProgress } from "../hooks/useProgress";
 import { course, getLessonByOrder } from "../content/course";
 import { AppShell } from "../components/AppShell";
+import { DailyQuestionCard } from "../components/DailyQuestionCard";
 import { LessonCard } from "../components/LessonCard";
+import { MasteryPanel } from "../components/MasteryPanel";
+import { MomentumGauge } from "../components/MomentumGauge";
 import { Spinner } from "../components/Spinner";
 import { getMilestone } from "../lib/milestones";
 
@@ -32,15 +35,25 @@ export default function DashboardPage() {
   const firstName = (user?.displayName ?? "Learner").split(" ")[0];
 
   return (
-    <AppShell streak={streak?.currentStreak ?? 0}>
-      <div className="lg:grid lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+    <AppShell streak={streak?.currentStreak ?? 0} freezes={streak?.freezes ?? 0}>
+      <div className="lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <section className="mb-6 lg:mb-0">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Hi {firstName} 👋
+          <p className="font-display text-xs font-semibold uppercase tracking-[0.22em] text-accent-600">
+            {course.title}
+          </p>
+          <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
+            Welcome back, {firstName}.
           </h1>
-          <p className="mt-1 text-slate-500">{course.title}</p>
 
-        <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+        <div className="mt-4">
+          <MomentumGauge streak={streak} />
+        </div>
+
+        <div className="mt-3">
+          <DailyQuestionCard streak={streak} />
+        </div>
+
+        <div className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-medium text-slate-700">Course progress</span>
             <span className="text-slate-500">
@@ -49,24 +62,21 @@ export default function DashboardPage() {
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-brand-500 transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-3">
+        <MasteryPanel quizScores={courseProgress?.quizScores} />
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <MiniStat
-            label="Day streak"
-            value={`${streak?.currentStreak ?? 0}`}
-            emoji="🔥"
-          />
-          <MiniStat
-            label="Longest"
+            label="Longest streak"
             value={`${streak?.longestStreak ?? 0}`}
             emoji="🏅"
           />
-          <MiniStat label="Completed" value={`${completedCount}`} emoji="✅" />
+          <MiniStat label="Lessons done" value={`${completedCount}`} emoji="✅" />
         </div>
 
         {(streak?.milestoneIds.length ?? 0) > 0 && (
@@ -107,7 +117,6 @@ export default function DashboardPage() {
                 unlocked={isUnlocked(lesson.id)}
                 mastery={courseProgress?.masteryByLesson[lesson.id]}
                 quizBest={courseProgress?.quizScores?.[lesson.id]}
-                practiceBest={courseProgress?.practiceScores?.[lesson.id]}
                 prerequisiteTitle={prereq?.title}
               />
             );
@@ -129,13 +138,13 @@ function MiniStat({
 }) {
   return (
     <div className="rounded-xl bg-white px-3 py-2.5 text-center ring-1 ring-slate-200">
-      <div className="text-lg font-bold">
+      <div className="font-display text-xl font-bold tabular-nums text-ink">
         <span aria-hidden className="mr-0.5">
           {emoji}
         </span>
         {value}
       </div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="mt-0.5 text-xs text-slate-500">{label}</div>
     </div>
   );
 }

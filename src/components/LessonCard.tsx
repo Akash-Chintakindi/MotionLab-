@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import type { Lesson } from "../types/content";
 import type { LessonStatus } from "../types/progress";
 import { hasQuiz } from "../content/quizzes";
-import { hasGame } from "../games/registry";
 import { LESSON_MASTERY_THRESHOLD } from "../lib/gating";
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
   unlocked: boolean;
   mastery?: number;
   quizBest?: number;
-  practiceBest?: number;
   prerequisiteTitle?: string;
 }
 
@@ -22,15 +20,13 @@ export function LessonCard({
   unlocked,
   mastery,
   quizBest,
-  practiceBest,
   prerequisiteTitle,
 }: Props) {
   const locked = !unlocked;
   const [open, setOpen] = useState(false);
 
-  // Practice + Quiz open only after the learner masters Learn (>= 80%).
+  // The Quiz opens only after the learner masters Learn (>= 80%).
   const modesUnlocked = (mastery ?? 0) >= LESSON_MASTERY_THRESHOLD;
-  const practiceReady = hasGame(lesson.id) && modesUnlocked;
   const quizReady = hasQuiz(lesson.id) && modesUnlocked;
 
   const badge =
@@ -132,28 +128,13 @@ export function LessonCard({
 
       {open && (
         <div className="border-t border-slate-100 px-4 pb-4 pt-3">
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2">
             <ModeAction
               to={`/lesson/${lesson.id}`}
               emoji="📘"
               label="Learn"
               note={learnStatus}
               accent="brand"
-            />
-            <ModeAction
-              to={practiceReady ? `/lesson/${lesson.id}/practice` : null}
-              emoji="🎮"
-              label="Practice"
-              note={
-                !hasGame(lesson.id)
-                  ? "Coming soon"
-                  : !modesUnlocked
-                    ? "🔒 Master Learn (80%)"
-                    : typeof practiceBest === "number"
-                      ? `Best ${practiceBest}%`
-                      : "Play"
-              }
-              accent="violet"
             />
             <ModeAction
               to={quizReady ? `/lesson/${lesson.id}/quiz` : null}

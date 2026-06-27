@@ -131,14 +131,19 @@ describe("quizMilestonesFor", () => {
 });
 
 describe("tripleThreatMilestonesFor", () => {
-  it("awards nothing until one lesson has Learn + Practice + Quiz", () => {
+  it("awards nothing until one completed lesson has a quiz AND high mastery", () => {
+    // completed but no quiz / no mastery
     expect(tripleThreatMilestonesFor(["a"], {}, {})).toEqual([]);
+    // quiz taken but mastery missing
     expect(tripleThreatMilestonesFor(["a"], { a: 50 }, {})).toEqual([]);
-    expect(tripleThreatMilestonesFor([], { a: 50 }, { a: 90 })).toEqual([]);
+    // quiz + mastery present but lesson not completed
+    expect(tripleThreatMilestonesFor([], { a: 50 }, { a: 0.9 })).toEqual([]);
+    // mastery below the 80% bar
+    expect(tripleThreatMilestonesFor(["a"], { a: 80 }, { a: 0.7 })).toEqual([]);
   });
-  it("awards when the same lesson clears all three modes", () => {
+  it("awards when a completed lesson has a quiz score AND >= 80% mastery", () => {
     expect(
-      tripleThreatMilestonesFor(["a", "b"], { a: 0 }, { a: 100 }),
+      tripleThreatMilestonesFor(["a", "b"], { a: 0 }, { a: 0.9 }),
     ).toEqual(["triple-threat"]);
   });
 });

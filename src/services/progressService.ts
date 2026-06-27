@@ -16,7 +16,13 @@ import {
   course,
   getNextLessonId,
 } from "../content/course";
-import { computeStreak, EMPTY_STREAK, todayISO } from "../lib/streak";
+import {
+  computeStreak,
+  EMPTY_STREAK,
+  recordDailyQuestion,
+  recordProblem,
+  todayISO,
+} from "../lib/streak";
 import {
   courseMilestonesFor,
   quizMilestonesFor,
@@ -28,6 +34,7 @@ import type {
   StreakData,
   UserProfile,
 } from "../types/progress";
+import type { TopicMasteryEntry } from "../lib/srs";
 
 const nowMs = () => Date.now();
 
@@ -321,24 +328,22 @@ export async function recordQuizScore(
 }
 
 /**
- * Records a practice-game result, keeping only the best score (0–100) per
- * lesson. Returns the best score now stored.
+ * Persists one topic's spaced-repetition + mastery entry into the course-progress
+ * doc. The caller computes the next entry with the pure `srs` helpers (so we do
+ * NOT read-before-write on every answer); this just merges the single nested
+ * field. Topic ids are lesson ids, so the keys are a small fixed set.
  */
-export async function recordPracticeScore(
+export async function persistTopicMastery(
   uid: string,
-  lessonId: string,
-  scorePct: number,
+  topicId: string,
+  entry: TopicMasteryEntry,
   fdb?: Firestore,
-): Promise<number> {
-  const current = await getCourseProgress(uid, fdb);
-  const prev = current?.practiceScores?.[lessonId] ?? 0;
-  const best = Math.max(prev, Math.round(scorePct));
+): Promise<void> {
   await setDoc(
     courseDoc(uid, fdb),
-    { practiceScores: { [lessonId]: best }, updatedAt: nowMs() },
+    { topicMastery: { [topicId]: entry }, updatedAt: nowMs() },
     { merge: true },
   );
-  return best;
 }
 
 /**
@@ -364,7 +369,7 @@ export async function awardMilestones(
 /**
  * Awards badges that depend on accumulated course progress rather than a
  * single lesson event: quiz accuracy/completion goals and Triple Threat
- * (Learn + Practice + Quiz on the same lesson).
+ * (Learn completed + Quiz taken + high mastery on the same lesson).
  */
 export async function awardProgressMilestones(
   uid: string,
@@ -377,8 +382,8 @@ export async function awardProgressMilestones(
     ...quizMilestonesFor(progress.quizScores ?? {}, course.lessons.length),
     ...tripleThreatMilestonesFor(
       progress.completedLessonIds,
-      progress.practiceScores ?? {},
       progress.quizScores ?? {},
+      progress.masteryByLesson ?? {},
     ),
   ];
   return awardMilestones(uid, ids, fdb);
@@ -395,6 +400,39 @@ export async function recordDailyActivity(
 ): Promise<StreakData> {
   const current = (await getStreak(uid, fdb)) ?? EMPTY_STREAK;
   const next = computeStreak(current, today);
+  await setDoc(streakDoc(uid, fdb), next, { merge: true });
+  return next;
+}
+
+/**
+ * Records one solved problem toward the daily goal and streak. Called from the
+ * universal graded-answer chokepoint (masteryStore.recordTopicResult) so every
+ * surface — lessons, quizzes, games, Lab, review — feeds the same daily ring and
+ * banks streak freezes when the goal is hit.
+ */
+export async function recordDailyProgress(
+  uid: string,
+  fdb?: Firestore,
+  today = todayISO(),
+): Promise<StreakData> {
+  const current = (await getStreak(uid, fdb)) ?? EMPTY_STREAK;
+  const next = recordProblem(current, today);
+  await setDoc(streakDoc(uid, fdb), next, { merge: true });
+  return next;
+}
+
+/**
+ * Records the user's answer to the shared Question of the Day, advancing the
+ * daily-question streak. No-op (returns current) if already answered today.
+ */
+export async function recordDailyQuestionResult(
+  uid: string,
+  correct: boolean,
+  fdb?: Firestore,
+  today = todayISO(),
+): Promise<StreakData> {
+  const current = (await getStreak(uid, fdb)) ?? EMPTY_STREAK;
+  const next = recordDailyQuestion(current, today, correct);
   await setDoc(streakDoc(uid, fdb), next, { merge: true });
   return next;
 }

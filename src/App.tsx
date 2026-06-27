@@ -8,15 +8,16 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AuthPage = lazy(() => import("./auth/AuthPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const LessonPage = lazy(() => import("./pages/LessonPage"));
-const PracticePage = lazy(() => import("./pages/PracticePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const LabPage = lazy(() => import("./pages/LabPage"));
+const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const PoolGamePage = lazy(() => import("./pages/PoolGamePage"));
 const BasketballGamePage = lazy(() => import("./pages/BasketballGamePage"));
 const CannonGamePage = lazy(() => import("./pages/CannonGamePage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const SquadPage = lazy(() => import("./pages/SquadPage"));
 
 function PageFallback() {
   return (
@@ -61,14 +62,6 @@ export default function App() {
               }
             />
             <Route
-              path="/lesson/:lessonId/practice"
-              element={
-                <RequireAuth>
-                  <PracticePage />
-                </RequireAuth>
-              }
-            />
-            <Route
               path="/lesson/:lessonId/quiz"
               element={
                 <RequireAuth>
@@ -90,6 +83,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <LabPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/review"
+              element={
+                <RequireAuth>
+                  <ReviewPage />
                 </RequireAuth>
               }
             />
@@ -130,6 +131,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <LeaderboardPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/squad"
+              element={
+                <RequireAuth>
+                  <SquadPage />
                 </RequireAuth>
               }
             />

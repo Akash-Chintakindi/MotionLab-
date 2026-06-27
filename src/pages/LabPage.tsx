@@ -12,6 +12,7 @@ import {
   type LabRunConfig,
 } from "../hooks/useLabSurvival";
 import { useHighScore } from "../games/arcade/useHighScore";
+import { useMastery } from "../services/masteryStore";
 import { practiceTopics } from "../ai/topics";
 import { DIFFICULTY_LABEL, type Difficulty } from "../ai/practiceTypes";
 import type { LabQuestion, WeakArea } from "../lib/labAdaptive";
@@ -28,6 +29,20 @@ function formatClock(totalSeconds: number): string {
 export default function LabPage() {
   const lab = useLabSurvival();
   const { highScore, submit: submitHighScore } = useHighScore(GAME_ID);
+  const { record } = useMastery();
+
+  // Feed every graded Lab answer into the spaced-repetition mastery model.
+  // We track how many records we've already recorded so each answer counts once;
+  // a shrinking array means a new run started, so reset the cursor.
+  const recordedRef = useRef(0);
+  useEffect(() => {
+    if (lab.records.length < recordedRef.current) recordedRef.current = 0;
+    for (let i = recordedRef.current; i < lab.records.length; i++) {
+      const r = lab.records[i];
+      record(r.topicId, r.correct, r.difficulty);
+    }
+    recordedRef.current = lab.records.length;
+  }, [lab.records, record]);
 
   const topics = useMemo(() => practiceTopics(), []);
   const topicTitle = useMemo(() => {

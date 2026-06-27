@@ -15,6 +15,7 @@ import {
 import { AppShell } from "../components/AppShell";
 import { Spinner } from "../components/Spinner";
 import { QuizRunner } from "../components/quiz/QuizRunner";
+import { recordTopicResult } from "../services/masteryStore";
 
 export default function QuizPage() {
   const { lessonId = "" } = useParams();
@@ -35,6 +36,18 @@ export default function QuizPage() {
         await unlockNextLesson(user.uid, lessonId);
       }
       await awardProgressMilestones(user.uid);
+    },
+    [user, lessonId],
+  );
+
+  // Feed each quiz question into the spaced-repetition mastery model
+  // (topic === lessonId). Quizzes are graded assessments, so use "medium".
+  const onResults = useCallback(
+    (results: { questionId: string; correct: boolean }[]) => {
+      if (!user) return;
+      for (const r of results) {
+        void recordTopicResult(user.uid, lessonId, r.correct, "medium");
+      }
     },
     [user, lessonId],
   );
@@ -110,6 +123,7 @@ export default function QuizPage() {
       <QuizRunner
         quiz={quiz}
         onComplete={onComplete}
+        onResults={onResults}
         next={next}
         passThreshold={QUIZ_PASS_PERCENT}
       />

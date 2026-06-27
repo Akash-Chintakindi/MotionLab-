@@ -23,6 +23,7 @@ export interface LeaderboardEntry {
 export const LEADERBOARD_GAMES = [
   { id: "basketball", label: "Buzzer Beater" },
   { id: "pool", label: "Physics Pool" },
+  { id: "cannon", label: "Cannon Duel" },
   { id: "lab", label: "Lab Survival" },
 ] as const;
 

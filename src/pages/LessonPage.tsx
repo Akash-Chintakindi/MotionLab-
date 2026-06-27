@@ -103,9 +103,16 @@ export default function LessonPage() {
   const reviewing = engine.phase === "review";
   const showContinue = engine.isAuto || engine.locked;
 
+  // Text-only teaching steps (concept / worked example) read better with more
+  // room, so let them use a wider column; interactive graph/sim steps stay
+  // narrower where a tighter canvas is easier to scan.
+  const isExplanationStep =
+    step.type === "concept" || step.type === "workedExample";
+  const widthClass = isExplanationStep ? "max-w-4xl" : "max-w-3xl";
+
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-3xl">
+      <div className={`mx-auto w-full ${widthClass}`}>
         <div className="mb-4">
           <button
             type="button"
@@ -168,6 +175,44 @@ export default function LessonPage() {
               message={engine.feedback.message}
               hint={engine.feedback.hint}
             />
+          )}
+
+          {engine.scaffold && (
+            <div
+              data-testid="step-scaffold"
+              className="animate-pop-in rounded-xl bg-sky-50 px-4 py-3 text-[15px] ring-1 ring-sky-200"
+            >
+              <p className="text-sm font-semibold text-sky-900">
+                Let's break it down
+              </p>
+              <p className="mt-1 leading-relaxed text-sky-900">
+                <RichText>{engine.scaffold}</RichText>
+              </p>
+            </div>
+          )}
+
+          {engine.reveal && (
+            <div
+              data-testid="step-reveal"
+              className="animate-pop-in rounded-xl bg-slate-50 px-4 py-3 text-[15px] ring-1 ring-slate-200"
+            >
+              <p className="text-sm font-semibold text-slate-700">
+                Here's the full solution
+              </p>
+              <p className="mt-1 leading-relaxed text-slate-700">
+                <RichText>{engine.reveal}</RichText>
+              </p>
+              {engine.reviewToStepId && (
+                <button
+                  type="button"
+                  data-testid="review-step-button"
+                  onClick={() => engine.onJumpToStep(engine.reviewToStepId!)}
+                  className="mt-3 inline-flex items-center rounded-lg bg-amber-100 px-3.5 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-200"
+                >
+                  ↩ Review this part of the lesson
+                </button>
+              )}
+            </div>
           )}
 
           {showContinue && (
@@ -389,7 +434,7 @@ function CompletionScreen({
     : null;
   const destination = nextDestination(lessonId, "learn");
   const masteryPct = Math.round(result.mastery * 100);
-  const unlocked = result.practiceUnlocked;
+  const unlocked = result.quizUnlocked;
 
   return (
     <div
@@ -460,8 +505,7 @@ function CompletionScreen({
         >
           <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
             Score <span className="font-semibold">80%+</span> to unlock this
-            topic's Practice and Quiz. Review what you missed and give it another
-            go.
+            topic's Quiz. Review what you missed and give it another go.
           </p>
           <button
             type="button"

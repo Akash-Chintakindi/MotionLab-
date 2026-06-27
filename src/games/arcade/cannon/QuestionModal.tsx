@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RichText } from "../../../components/RichText";
 import { gradeQuestion, type QuizAnswer } from "../../../lib/quiz";
 import type {
@@ -12,8 +12,11 @@ interface Props {
   difficulty: BankDifficulty;
   /** False when the player already holds the max shield (offer ammo only). */
   canTakeShield: boolean;
-  /** Pulls a question for the chosen difficulty (parent tracks exclusions). */
-  onPickQuestion: (d: BankDifficulty) => BankQuestion | null;
+  /**
+   * Pulls a question for the chosen difficulty (parent tracks exclusions).
+   * Async because it may call the AI Cloud Function when the AI toggle is on.
+   */
+  onPickQuestion: (d: BankDifficulty) => Promise<BankQuestion | null>;
   /** Reports the graded result (parent handles sfx + the AI's wrong-answer shield). */
   onAnswered: (correct: boolean) => void;
   /** Correct answer: the player banks their chosen reward. */
@@ -22,7 +25,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Stage = "answer" | "reward" | "feedback";
+type Stage = "loading" | "answer" | "reward" | "feedback";
 
 const DIFF_LABEL: Record<BankDifficulty, string> = {
   easy: "Easy",
@@ -44,16 +47,31 @@ export function QuestionModal({
   onChooseReward,
   onClose,
 }: Props) {
-  const [question] = useState<BankQuestion | null>(() =>
-    onPickQuestion(difficulty),
-  );
-  const [stage, setStage] = useState<Stage>("answer");
+  const [question, setQuestion] = useState<BankQuestion | null>(null);
+  const [stage, setStage] = useState<Stage>("loading");
   const [numeric, setNumeric] = useState("");
+  const startedRef = useRef(false);
 
-  if (!question) {
-    // No question available — never soft-lock; close out gracefully.
-    return null;
-  }
+  // Fetch the question once on mount (may be an async AI call). The duel is
+  // already paused, so the network round-trip costs no game time.
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    let active = true;
+    void onPickQuestion(difficulty).then((q) => {
+      if (!active) return;
+      if (!q) {
+        // No question available — never soft-lock; resume the duel.
+        onClose();
+        return;
+      }
+      setQuestion(q);
+      setStage("answer");
+    });
+    return () => {
+      active = false;
+    };
+  }, [difficulty, onPickQuestion, onClose]);
 
   function submit(answer: QuizAnswer) {
     if (!question) return;
@@ -80,7 +98,16 @@ export function QuestionModal({
           <span className={DIFF_TONE[difficulty]}>{DIFF_LABEL[difficulty]}</span>
         </p>
 
-        {stage === "answer" && (
+        {stage === "loading" && (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" />
+            <p className="text-sm font-semibold text-slate-300">
+              Loading a {DIFF_LABEL[difficulty].toLowerCase()} question…
+            </p>
+          </div>
+        )}
+
+        {stage === "answer" && question && (
           <AnswerStage
             question={question}
             numeric={numeric}
@@ -89,7 +116,7 @@ export function QuestionModal({
           />
         )}
 
-        {stage === "reward" && (
+        {stage === "reward" && question && (
           <div className="mt-2 text-center">
             <p className="font-display text-2xl font-bold text-emerald-300">
               Direct hit on the question!
@@ -128,7 +155,7 @@ export function QuestionModal({
           </div>
         )}
 
-        {stage === "feedback" && (
+        {stage === "feedback" && question && (
           <div className="mt-2 text-center">
             <p className="font-display text-2xl font-bold text-rose-300">
               Misfire!

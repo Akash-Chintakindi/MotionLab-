@@ -3,6 +3,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { AppShell } from "../components/AppShell";
 import { BasketballGame } from "../games/arcade/basketball/BasketballGame";
 import { useHighScore } from "../games/arcade/useHighScore";
+import { useMastery } from "../services/masteryStore";
 import type { ArcadeLeaderboard } from "../games/arcade/types";
 import {
   getLeaderboard,
@@ -14,6 +15,7 @@ const GAME_ID = "basketball";
 export default function BasketballGamePage() {
   const { user } = useAuth();
   const { highScore, submit } = useHighScore(GAME_ID);
+  const { record } = useMastery();
 
   // Opt-in cross-user leaderboard, wired here so the game never imports Firebase.
   const leaderboard = useMemo<ArcadeLeaderboard | undefined>(() => {
@@ -35,6 +37,7 @@ export default function BasketballGamePage() {
         highScore={highScore}
         onGameOver={({ score }) => submit(score)}
         leaderboard={leaderboard}
+        onTopicResult={record}
       />
     </AppShell>
   );
