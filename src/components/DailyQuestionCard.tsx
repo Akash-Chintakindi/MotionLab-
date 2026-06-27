@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useMastery } from "../services/masteryStore";
 import { RichText } from "./RichText";
@@ -7,7 +6,6 @@ import { course } from "../content/course";
 import { dailyQuestion } from "../lib/dailyQuestion";
 import { dailyQuestionAnswered } from "../lib/streak";
 import { recordDailyQuestionResult } from "../services/progressService";
-import { recordDailyResultToSquads } from "../services/squadService";
 import { gradeQuestion, type QuizAnswer } from "../lib/quiz";
 import type { StreakData } from "../types/progress";
 import type { BankQuestion } from "../content/practiceBank/types";
@@ -35,8 +33,6 @@ export function DailyQuestionCard({ streak }: { streak: StreakData | null }) {
   );
 
   const [open, setOpen] = useState(false);
-  // When the question modal opened, to measure time-to-answer for the squad board.
-  const openedAtRef = useRef<number>(0);
   // Result from answering during this session (optimistic), if any.
   const [session, setSession] = useState<{ correct: boolean; streak: number } | null>(
     null,
@@ -51,9 +47,6 @@ export function DailyQuestionCard({ streak }: { streak: StreakData | null }) {
   async function handleSubmit(answer: QuizAnswer) {
     if (!user || done) return;
     const correct = gradeQuestion(question, answer);
-    const timeMs = openedAtRef.current
-      ? Date.now() - openedAtRef.current
-      : 0;
     // Persist the daily-question streak first, then fold the answer into mastery
     // + the daily goal (the mastery write targets a different doc; recording the
     // daily-question result first keeps the streak-doc writes ordered).
@@ -65,24 +58,14 @@ export function DailyQuestionCard({ streak }: { streak: StreakData | null }) {
       // Optimistic streak still shows; next load reconciles from Firestore.
     }
     record(question.topicId, correct, question.difficulty);
-    // Post the result to every squad's daily board (best-effort, ranked by
-    // correctness then speed). No-op if the user isn't in any squad.
-    const name =
-      user.displayName || user.email?.split("@")[0] || "Anonymous";
-    void recordDailyResultToSquads(user.uid, name, correct, timeMs).catch(() => {});
     setSession({ correct, streak: nextStreak });
-  }
-
-  function openModal() {
-    openedAtRef.current = Date.now();
-    setOpen(true);
   }
 
   return (
     <>
       <button
         type="button"
-        onClick={openModal}
+        onClick={() => setOpen(true)}
         data-testid="daily-question-open"
         aria-haspopup="dialog"
         className="group flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-brand-600 to-accent-600 p-4 text-left text-white shadow-sm ring-1 ring-black/5 transition hover:brightness-110 active:brightness-95"
@@ -234,23 +217,13 @@ function ResultPanel({
       <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700">
         <RichText>{question.explanation}</RichText>
       </div>
-      <div className="mt-4 flex gap-2">
-        <Link
-          to="/squad"
-          onClick={onClose}
-          data-testid="daily-squad-link"
-          className="flex flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 px-4 py-3 text-base font-semibold text-white shadow-sm transition hover:brightness-110"
-        >
-          See your squad board
-        </Link>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-xl bg-slate-100 px-5 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-200"
-        >
-          Done
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-3 text-base font-semibold text-white transition hover:bg-slate-700"
+      >
+        Done
+      </button>
     </div>
   );
 }

@@ -56,11 +56,22 @@ export default {
           "0%, 100%": { transform: "scale(1) rotate(-2deg)" },
           "50%": { transform: "scale(1.08) rotate(2deg)" },
         },
+        "podium-rise": {
+          "0%": { transform: "translateY(100%)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        "score-pop": {
+          "0%": { transform: "scale(0.6)", opacity: "0" },
+          "60%": { transform: "scale(1.15)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "pop-in": "pop-in 150ms ease-out",
         "rise-in": "rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both",
         flicker: "flicker 1.8s ease-in-out infinite",
+        "podium-rise": "podium-rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        "score-pop": "score-pop 400ms cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },
