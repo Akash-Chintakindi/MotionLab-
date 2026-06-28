@@ -36,92 +36,104 @@ export default function DashboardPage() {
 
   return (
     <AppShell streak={streak?.currentStreak ?? 0} freezes={streak?.freezes ?? 0}>
-      <div className="lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <section className="mb-6 lg:mb-0">
+      <div className="space-y-6">
+        <header>
           <p className="font-display text-xs font-semibold uppercase tracking-[0.22em] text-accent-600">
             {course.title}
           </p>
           <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
             Welcome back, {firstName}.
           </h1>
+        </header>
 
-        <div className="mt-4">
+        {/* Engagement band: gauge beside the daily question + progress + stats so
+            these widgets spread horizontally instead of stacking down the page. */}
+        <div className="grid gap-4 md:grid-cols-2 md:items-start">
           <MomentumGauge streak={streak} />
-        </div>
 
-        <div className="mt-3">
-          <DailyQuestionCard streak={streak} />
-        </div>
+          <div className="flex flex-col gap-4">
+            <DailyQuestionCard streak={streak} />
 
-        <div className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium text-slate-700">Course progress</span>
-            <span className="text-slate-500">
-              {completedCount} / {total} lessons
-            </span>
-          </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
+            <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-700">Course progress</span>
+                <span className="text-slate-500">
+                  {completedCount} / {total} lessons
+                </span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
 
-        <MasteryPanel quizScores={courseProgress?.quizScores} />
-
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <MiniStat
-            label="Longest streak"
-            value={`${streak?.longestStreak ?? 0}`}
-            emoji="🏅"
-          />
-          <MiniStat label="Lessons done" value={`${completedCount}`} emoji="✅" />
-        </div>
-
-        {(streak?.milestoneIds.length ?? 0) > 0 && (
-          <div className="mt-3" data-testid="milestones">
-            <h2 className="mb-2 text-sm font-semibold text-slate-600">
-              Milestones
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {streak!.milestoneIds.map((id) => {
-                const m = getMilestone(id);
-                if (!m) return null;
-                return (
-                  <span
-                    key={id}
-                    className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900 ring-1 ring-amber-200"
-                  >
-                    <span aria-hidden>{m.emoji}</span>
-                    {m.label}
-                  </span>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-3">
+              <MiniStat
+                label="Longest streak"
+                value={`${streak?.longestStreak ?? 0}`}
+                emoji="🏅"
+              />
+              <MiniStat
+                label="Lessons done"
+                value={`${completedCount}`}
+                emoji="✅"
+              />
             </div>
           </div>
-        )}
-        </section>
+        </div>
 
-        <section
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
-          aria-label="Lessons"
-        >
-          {course.lessons.map((lesson) => {
-            const prereq = getLessonByOrder(lesson.order - 1);
-            return (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                status={statusOf(lesson.id)}
-                unlocked={isUnlocked(lesson.id)}
-                mastery={courseProgress?.masteryByLesson[lesson.id]}
-                quizBest={courseProgress?.quizScores?.[lesson.id]}
-                prerequisiteTitle={prereq?.title}
-              />
-            );
-          })}
-        </section>
+        {/* Main: lessons take the wide column; topic mastery + milestones sit in a
+            sidebar so the tall mastery list runs alongside the lessons. */}
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
+          <section
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            aria-label="Lessons"
+          >
+            {course.lessons.map((lesson) => {
+              const prereq = getLessonByOrder(lesson.order - 1);
+              return (
+                <LessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  status={statusOf(lesson.id)}
+                  unlocked={isUnlocked(lesson.id)}
+                  mastery={courseProgress?.masteryByLesson[lesson.id]}
+                  quizBest={courseProgress?.quizScores?.[lesson.id]}
+                  prerequisiteTitle={prereq?.title}
+                />
+              );
+            })}
+          </section>
+
+          <aside className="mt-6 lg:mt-0">
+            <MasteryPanel quizScores={courseProgress?.quizScores} />
+
+            {(streak?.milestoneIds.length ?? 0) > 0 && (
+              <div className="mt-3" data-testid="milestones">
+                <h2 className="mb-2 text-sm font-semibold text-slate-600">
+                  Milestones
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {streak!.milestoneIds.map((id) => {
+                    const m = getMilestone(id);
+                    if (!m) return null;
+                    return (
+                      <span
+                        key={id}
+                        className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900 ring-1 ring-amber-200"
+                      >
+                        <span aria-hidden>{m.emoji}</span>
+                        {m.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
     </AppShell>
   );
