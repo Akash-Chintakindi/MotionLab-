@@ -35,6 +35,7 @@ import type {
   UserProfile,
 } from "../types/progress";
 import type { TopicMasteryEntry } from "../lib/srs";
+import type { WeaponTier } from "../games/arcade/boss/bossTypes";
 
 const nowMs = () => Date.now();
 
@@ -325,6 +326,59 @@ export async function recordQuizScore(
     { merge: true },
   );
   return best;
+}
+
+/**
+ * Records a Boss Fight outcome into the course-progress doc, keeping the BEST
+ * result per boss (key = lessonId for mini-bosses, or "finale"). `defeated` is
+ * sticky (once true it stays true) and the best score and stars are preserved,
+ * mirroring the read-then-write-max merge of {@link recordQuizScore}.
+ */
+export async function recordBossResult(
+  uid: string,
+  bossId: string,
+  result: {
+    score: number;
+    defeated: boolean;
+    stars?: 1 | 2 | 3;
+    weaponTierUsed?: WeaponTier;
+  },
+  fdb?: Firestore,
+): Promise<void> {
+  const current = await getCourseProgress(uid, fdb);
+  const prev = current?.bossDefeats?.[bossId];
+
+  const score = Math.round(result.score);
+  const bestScore = Math.max(prev?.bestScore ?? 0, score);
+  const defeated = (prev?.defeated ?? false) || result.defeated;
+
+  const prevStars = prev?.stars ?? 0;
+  const newStars = result.stars ?? 0;
+  const bestStars = Math.max(prevStars, newStars);
+
+  const merged: NonNullable<CourseProgress["bossDefeats"]>[string] = {
+    defeated,
+    bestScore,
+  };
+  if (bestStars > 0) {
+    merged.stars = bestStars as 1 | 2 | 3;
+  }
+  if (result.weaponTierUsed !== undefined) {
+    merged.weaponTierUsed = result.weaponTierUsed;
+  } else if (prev?.weaponTierUsed !== undefined) {
+    merged.weaponTierUsed = prev.weaponTierUsed;
+  }
+  if (defeated) {
+    merged.defeatedAt = prev?.defeatedAt ?? nowMs();
+  } else if (prev?.defeatedAt !== undefined) {
+    merged.defeatedAt = prev.defeatedAt;
+  }
+
+  await setDoc(
+    courseDoc(uid, fdb),
+    { bossDefeats: { [bossId]: merged }, updatedAt: nowMs() },
+    { merge: true },
+  );
 }
 
 /**

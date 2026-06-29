@@ -845,9 +845,9 @@ export function BasketballGame(props: ArcadeGameProps) {
             >
               {actionLabel}
             </button>
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-slate-400 dark:text-slate-500">
               Tap, click the court, or press{" "}
-              <kbd className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] text-slate-700">
+              <kbd className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                 Space
               </kbd>{" "}
               — first to lock the aim arc, then to set the power.

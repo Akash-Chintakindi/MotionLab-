@@ -16,7 +16,7 @@ export const lesson7: Lesson = {
   id: "lesson-7-mastery-challenge",
   title: "Kinematics Mastery Challenge",
   subtitle: "Combine graphs, equations, derivatives, and 2D reasoning.",
-  order: 7,
+  order: 10,
   estimatedMinutes: 12,
   coreIdea:
     "Combine graphs, equations, derivatives, integrals, and 2D reasoning.",

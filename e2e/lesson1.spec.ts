@@ -12,7 +12,7 @@ async function signUp(page: Page, displayName = "Bob") {
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByRole("heading", { name: new RegExp(`Hi ${displayName}`) }),
+    page.getByRole("heading", { name: new RegExp(`Welcome back, ${displayName}`) }),
   ).toBeVisible();
 }
 
@@ -111,7 +111,7 @@ test("Bob completes Lesson 1 end to end and unlocks Lesson 2", async ({
   await expect(page.getByTestId("step-counter")).toContainText("Step 13");
   await page.getByLabel("Numeric answer").fill("-4");
   await page.getByRole("button", { name: "Check answer" }).click();
-  await expect(page.getByText("Correct")).toBeVisible();
+  await expect(page.getByText("Correct", { exact: true })).toBeVisible();
   await continueStep(page);
 
   // Completion + chained next step (Quiz for lesson 1).

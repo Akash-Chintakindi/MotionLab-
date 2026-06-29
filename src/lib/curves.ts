@@ -32,6 +32,13 @@ const CURVES: Record<CurvePreset, Curve> = {
     x: (t) => 12 - 1.5 * t,
     v: () => -1.5,
   },
+  // Simple harmonic motion: x(t) = A·cos(ωt) with A = 2 m and ω = 1 rad/s.
+  // Velocity is its derivative, v(t) = −Aω·sin(ωt) = −2·sin(t). Oscillates
+  // about zero, so use symmetric y-bounds (e.g. xMin = −3, xMax = 3).
+  cosineWave: {
+    x: (t) => 2 * Math.cos(t),
+    v: (t) => -2 * Math.sin(t),
+  },
 };
 
 export function getCurve(preset: CurvePreset): Curve {

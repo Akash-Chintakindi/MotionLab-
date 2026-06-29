@@ -4,7 +4,7 @@ import { course } from "../../content/course";
 
 const lesson1Id = "lesson-1-position-velocity";
 const lesson2Id = course.lessons[1].id;
-const lastLessonId = course.lessons[6].id;
+const lastLessonId = course.lessons[course.lessons.length - 1].id;
 
 describe("nextDestination", () => {
   it("sends lesson 1 learn straight to its quiz", () => {

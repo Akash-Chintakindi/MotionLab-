@@ -38,14 +38,23 @@ const GAMES: GameCard[] = [
     gradient: "from-sky-600 to-indigo-800",
     testid: "game-card-cannon",
   },
+  {
+    to: "/games/bosses",
+    emoji: "⚔️",
+    title: "Boss Tower",
+    blurb:
+      "Beat each lesson's quiz to unlock a Punch-Out!!-style boss. Dodge, block, and counter your way up all ten Forces to The Singularity.",
+    gradient: "from-fuchsia-600 to-purple-900",
+    testid: "game-card-bosses",
+  },
 ];
 
 export default function GamesPage() {
   return (
     <AppShell>
       <section data-testid="games-page" className="mx-auto w-full max-w-5xl py-2">
-        <h1 className="text-3xl font-bold tracking-tight text-ink">Games</h1>
-        <p className="mt-2 text-base text-slate-600">
+        <h1 className="text-3xl font-bold tracking-tight text-ink dark:text-slate-100">Games</h1>
+        <p className="mt-2 text-base text-slate-600 dark:text-slate-300">
           Arcade challenges that make you use the physics you've learned.
         </p>
 

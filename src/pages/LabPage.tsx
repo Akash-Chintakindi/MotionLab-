@@ -118,8 +118,8 @@ export default function LabPage() {
             {(lab.phase === "question" || lab.phase === "feedback") &&
               lab.question && (
                 <div className="space-y-4">
-                  <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-                    <p className="text-base font-medium text-slate-800">
+                  <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+                    <p className="text-base font-medium text-slate-800 dark:text-slate-100">
                       <RichText>{lab.question.prompt}</RichText>
                     </p>
 
@@ -167,7 +167,7 @@ export default function LabPage() {
         <div className="mt-6 text-center">
           <Link
             to="/"
-            className="text-sm font-medium text-slate-500 hover:text-slate-700"
+            className="text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ← Back to course
           </Link>
@@ -204,13 +204,13 @@ function ModeMenu({
   return (
     <div data-testid="lab-menu">
       <header className="mb-6 text-center">
-        <h1 className="font-display text-4xl font-bold tracking-tight text-ink">
+        <h1 className="font-display text-4xl font-bold tracking-tight text-ink dark:text-slate-100">
           Lab
         </h1>
-        <p className="mt-1.5 text-base text-slate-500">
+        <p className="mt-1.5 text-base text-slate-500 dark:text-slate-400">
           Adaptive AP Physics drills that get harder as you do. Pick a mode.
         </p>
-        <p className="mt-1 text-sm font-medium text-slate-400">
+        <p className="mt-1 text-sm font-medium text-slate-400 dark:text-slate-500">
           Personal best {best}
         </p>
       </header>
@@ -235,10 +235,10 @@ function ModeMenu({
       </div>
 
       {selected === "time" && (
-        <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+        <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
           <label
             htmlFor="lab-minutes"
-            className="block text-sm font-semibold text-slate-700"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
           >
             How many minutes? ({MIN_TIME_MINUTES}–{MAX_TIME_MINUTES})
           </label>
@@ -251,9 +251,9 @@ function ModeMenu({
               max={MAX_TIME_MINUTES}
               value={Number.isNaN(minutes) ? "" : minutes}
               onChange={(e) => setMinutes(Math.floor(Number(e.target.value)))}
-              className="w-24 rounded-xl border border-slate-200 px-4 py-2.5 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+              className="w-24 rounded-xl border border-slate-200 px-4 py-2.5 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700/70 dark:text-slate-100"
             />
-            <span className="text-base text-slate-500">minutes</span>
+            <span className="text-base text-slate-500 dark:text-slate-400">minutes</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {[3, 5, 10, 15].map((m) => (
@@ -265,7 +265,7 @@ function ModeMenu({
                   "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                   minutes === m
                     ? "bg-brand-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700",
                 ].join(" ")}
               >
                 {m}m
@@ -317,17 +317,17 @@ function ModeCard({
       className={[
         "flex flex-col rounded-2xl border p-5 text-left transition",
         active
-          ? "border-brand-500 bg-brand-50 ring-2 ring-brand-500"
-          : "border-slate-200 bg-white hover:border-slate-300",
+          ? "border-brand-500 bg-brand-50 ring-2 ring-brand-500 dark:bg-brand-500/10"
+          : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:hover:border-slate-600",
       ].join(" ")}
     >
       <span className="text-3xl" aria-hidden>
         {emoji}
       </span>
-      <span className="mt-2 font-display text-xl font-bold text-ink">
+      <span className="mt-2 font-display text-xl font-bold text-ink dark:text-slate-100">
         {title}
       </span>
-      <span className="mt-1 text-sm leading-relaxed text-slate-500">
+      <span className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
         {blurb}
       </span>
     </button>
@@ -362,7 +362,7 @@ function Countdown({ onDone }: { onDone: () => void }) {
       data-testid="lab-countdown"
       className="flex min-h-[55vh] flex-col items-center justify-center"
     >
-      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
+      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
         Get ready
       </p>
       <div
@@ -401,10 +401,10 @@ function Hud({
     <header className="mb-5">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Lab
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {isTime ? "Time Attack — beat the clock" : "Survival — how far can you go?"}
           </p>
         </div>
@@ -415,7 +415,7 @@ function Hud({
           >
             {score}
           </div>
-          <div className="text-xs font-medium text-slate-400">Best {best}</div>
+          <div className="text-xs font-medium text-slate-400 dark:text-slate-500">Best {best}</div>
         </div>
       </div>
 
@@ -425,8 +425,8 @@ function Hud({
             className={[
               "flex items-center gap-2 rounded-xl px-3 py-1.5 text-lg font-bold tabular-nums transition",
               lowTime
-                ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200"
-                : "bg-slate-100 text-slate-700",
+                ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30"
+                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
             ].join(" ")}
             role="timer"
             aria-label="Time remaining"
@@ -451,8 +451,8 @@ function Hud({
                   className={[
                     "flex h-9 w-9 items-center justify-center rounded-xl border text-lg font-bold transition",
                     used
-                      ? "border-rose-300 bg-rose-50 text-rose-600"
-                      : "border-slate-200 bg-white text-slate-300",
+                      ? "border-rose-300 bg-rose-50 text-rose-600 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300"
+                      : "border-slate-200 bg-white text-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-600",
                   ].join(" ")}
                 >
                   {used ? "✕" : ""}
@@ -463,7 +463,7 @@ function Hud({
         )}
 
         {showStatus && (
-          <span className="rounded-full bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700">
+          <span className="rounded-full bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
             {DIFFICULTY_LABEL[difficulty]}
           </span>
         )}
@@ -496,8 +496,8 @@ function AnswerForm({
                 className={[
                   "block w-full rounded-xl border px-4 py-3 text-left text-base transition",
                   active
-                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500 dark:bg-brand-500/10 dark:text-brand-300"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600",
                 ].join(" ")}
               >
                 <RichText>{opt.label}</RichText>
@@ -534,10 +534,10 @@ function AnswerForm({
           onChange={(e) => setSelected(e.target.value)}
           aria-label="Your numeric answer"
           placeholder="Your answer"
-          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700/70 dark:text-slate-100"
         />
         {question.unit && (
-          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600">
+          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <RichText>{question.unit}</RichText>
           </span>
         )}
@@ -574,8 +574,8 @@ function AnswerFeedback({
         className={[
           "rounded-xl px-4 py-3 text-base font-semibold",
           correct
-            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
-            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200",
+            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30",
         ].join(" ")}
         role="status"
         aria-live="polite"
@@ -584,13 +584,13 @@ function AnswerFeedback({
       </div>
 
       {!correct && correctAnswer && (
-        <p className="mt-3 text-base text-slate-700">
-          <span className="font-semibold text-slate-800">Answer: </span>
+        <p className="mt-3 text-base text-slate-700 dark:text-slate-200">
+          <span className="font-semibold text-slate-800 dark:text-slate-100">Answer: </span>
           <RichText>{correctAnswer}</RichText>
         </p>
       )}
 
-      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700">
+      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
         <RichText>{question.explanation}</RichText>
       </div>
 
@@ -607,8 +607,8 @@ function AnswerFeedback({
 
 function ReviewBanner({ topicId, title }: { topicId: string; title: string }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-200 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-base font-medium text-sky-900">
+    <div className="flex flex-col gap-3 rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-200 sm:flex-row sm:items-center sm:justify-between dark:bg-sky-500/10 dark:ring-sky-500/30">
+      <p className="text-base font-medium text-sky-900 dark:text-sky-200">
         Stuck on the basics? Review <span className="font-semibold">{title}</span>.
       </p>
       <Link
@@ -644,14 +644,14 @@ function GameOver({
 
   return (
     <div className="space-y-4" data-testid="lab-game-over">
-      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200">
+      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-500">
           {mode === "time" ? "Time's up" : "Game over"}
         </p>
-        <div className="mt-2 font-display text-5xl font-bold tabular-nums text-ink">
+        <div className="mt-2 font-display text-5xl font-bold tabular-nums text-ink dark:text-slate-100">
           {score}
         </div>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {newBest ? "New personal best! 🎉" : `Personal best ${best}`}
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -667,7 +667,7 @@ function GameOver({
             type="button"
             data-testid="lab-change-mode"
             onClick={onChangeMode}
-            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-200"
+            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             Change mode
           </button>
@@ -689,28 +689,28 @@ function ImprovementReport({
   topicTitle: (id: string) => string;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-      <h2 className="text-base font-bold text-slate-800">How to improve</h2>
+    <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+      <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">How to improve</h2>
       {report.length === 0 ? (
-        <p className="mt-1.5 text-sm text-slate-500">
+        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
           No misses to review — clean run. Push for an even higher score!
         </p>
       ) : (
         <>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
             Topics to revisit, by where you slipped up:
           </p>
           <ul className="mt-3 space-y-2.5">
             {report.map((area) => (
               <li
                 key={area.topicId}
-                className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-xl bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between dark:bg-slate-800/60"
               >
                 <div className="min-w-0">
-                  <div className="truncate font-semibold text-slate-800">
+                  <div className="truncate font-semibold text-slate-800 dark:text-slate-100">
                     {topicTitle(area.topicId)}
                   </div>
-                  <div className="mt-0.5 text-sm text-slate-500">
+                  <div className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                     Missed {area.missed} of {area.total} ·{" "}
                     {area.difficulties
                       .map((d) => DIFFICULTY_LABEL[d])

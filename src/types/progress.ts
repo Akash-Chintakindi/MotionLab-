@@ -1,6 +1,7 @@
 // Firestore document shapes. These mirror the collections in the PRD data model.
 
 import type { TopicMasteryEntry } from "../lib/srs";
+import type { WeaponTier } from "../games/arcade/boss/bossTypes";
 
 export type LessonStatus = "not_started" | "in_progress" | "completed";
 
@@ -36,6 +37,17 @@ export interface CourseProgress {
    * docs created before this feature.
    */
   topicMastery?: Record<string, TopicMasteryEntry>;
+  /** Boss Fight Mode: per-boss outcome. Key = lessonId (mini-boss) or "finale". */
+  bossDefeats?: Record<
+    string,
+    {
+      defeated: boolean;
+      bestScore: number;
+      stars?: 1 | 2 | 3;
+      weaponTierUsed?: WeaponTier;
+      defeatedAt?: number;
+    }
+  >;
   updatedAt: number;
 }
 

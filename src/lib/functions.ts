@@ -5,13 +5,15 @@ export type PlotPreset =
   | "vConstantPos" // v = 4
   | "vAccelPos" // v = 1 + 1.5t  (positive v, positive a -> speeding up)
   | "vDecelToNeg" // v = 8 - 2t   (crosses zero at t=4)
-  | "vTriangleUp"; // v = 2t
+  | "vTriangleUp" // v = 2t
+  | "vSineOsc"; // v = -2*sin(t): velocity of the x = 2*cos(t) oscillation
 
 const PLOTS: Record<PlotPreset, (t: number) => number> = {
   vConstantPos: () => 4,
   vAccelPos: (t) => 1 + 1.5 * t,
   vDecelToNeg: (t) => 8 - 2 * t,
   vTriangleUp: (t) => 2 * t,
+  vSineOsc: (t) => -2 * Math.sin(t),
 };
 
 export function getPlotFn(preset: PlotPreset): (t: number) => number {

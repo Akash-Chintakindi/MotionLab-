@@ -1887,6 +1887,278 @@ const BANK: BankQuestion[] = [
     explanation:
       "Total flight time t = 2v₀/g, so v₀ = g·t/2 = 9.8 × 4 / 2 = 19.6 m/s.",
   },
+
+  // ===========================================================================
+  // NEW LESSONS — free fall (8), relative motion (9), oscillations (10).
+  // Self-contained; numeric answers hand-verified. g = 9.8 m/s².
+  // ===========================================================================
+
+  // --- Lesson 8 — free fall ---------------------------------------------------
+  {
+    id: "bank-8-easy-1",
+    topicId: "lesson-8-free-fall",
+    difficulty: "easy",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A ball is dropped from rest. Using g = 9.8 m/s², what is its speed after 2 s?",
+    value: 19.6,
+    tolerance: 0.2,
+    unit: "m/s",
+    explanation: "Dropped from rest, v = g·t = 9.8 × 2 = 19.6 m/s.",
+  },
+  {
+    id: "bank-8-easy-2",
+    topicId: "lesson-8-free-fall",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "Ignoring air resistance, the acceleration of an object in free fall is:",
+    options: [
+      { id: "a", label: "A constant 9.8 m/s² downward" },
+      { id: "b", label: "Zero" },
+      { id: "c", label: "Greater for heavier objects" },
+      { id: "d", label: "Zero at the highest point of a throw" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "Gravity gives every object a constant 9.8 m/s² downward, regardless of mass or where it is in the flight.",
+  },
+  {
+    id: "bank-8-medium-1",
+    topicId: "lesson-8-free-fall",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "How far does an object dropped from rest fall in 3 s? (g = 9.8 m/s²)",
+    value: 44.1,
+    tolerance: 0.2,
+    unit: "m",
+    explanation: "y = ½·g·t² = ½ × 9.8 × 3² = ½ × 9.8 × 9 = 44.1 m.",
+  },
+  {
+    id: "bank-8-medium-2",
+    topicId: "lesson-8-free-fall",
+    difficulty: "medium",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "A ball is thrown straight up. At its highest point, its velocity and acceleration are:",
+    options: [
+      { id: "a", label: "Velocity zero; acceleration 9.8 m/s² downward" },
+      { id: "b", label: "Both zero" },
+      { id: "c", label: "Both 9.8 m/s² downward" },
+      { id: "d", label: "Velocity maximum; acceleration zero" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "At the peak the velocity is momentarily zero, but gravity still acts, so the acceleration is 9.8 m/s² downward.",
+  },
+  {
+    id: "bank-8-hard-1",
+    topicId: "lesson-8-free-fall",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A ball is thrown straight up at 24.5 m/s (g = 9.8 m/s²). What maximum height does it reach above the launch point?",
+    value: 30.6,
+    tolerance: 0.3,
+    unit: "m",
+    explanation:
+      "At the peak v = 0: h = v₀²/(2g) = 24.5² / 19.6 = 600.25 / 19.6 ≈ 30.6 m.",
+  },
+  {
+    id: "bank-8-hard-2",
+    topicId: "lesson-8-free-fall",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A stone dropped from rest strikes the ground at 28 m/s (g = 9.8 m/s²). From what height was it dropped?",
+    value: 40,
+    tolerance: 0.5,
+    unit: "m",
+    explanation: "v² = 2gh → h = v²/(2g) = 28² / 19.6 = 784 / 19.6 = 40 m.",
+  },
+
+  // --- Lesson 9 — relative motion & reference frames -------------------------
+  {
+    id: "bank-9-easy-1",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt: "An object's velocity is always measured relative to:",
+    options: [
+      { id: "a", label: "A chosen reference frame" },
+      { id: "b", label: "The Sun" },
+      { id: "c", label: "Its own starting point only" },
+      { id: "d", label: "Nothing — velocity is absolute" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "Velocity is meaningful only relative to a reference frame; different observers measure different velocities for the same motion.",
+  },
+  {
+    id: "bank-9-easy-2",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "easy",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "On a straight road, car A moves at +30 m/s and car B at +20 m/s (same direction). What is the velocity of A relative to B?",
+    value: 10,
+    tolerance: 0.1,
+    unit: "m/s",
+    explanation: "v_AB = v_A − v_B = 30 − 20 = +10 m/s.",
+  },
+  {
+    id: "bank-9-medium-1",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A boat points straight across a river at 3 m/s relative to the water; the current is 4 m/s downstream. What is the boat's speed relative to the ground?",
+    value: 5,
+    tolerance: 0.1,
+    unit: "m/s",
+    explanation:
+      "The across and downstream velocities are perpendicular: v = √(3² + 4²) = √25 = 5 m/s.",
+  },
+  {
+    id: "bank-9-medium-2",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A boat heads straight across a 60 m wide river at 6 m/s relative to the water (current 8 m/s downstream). How long does it take to cross?",
+    value: 10,
+    tolerance: 0.1,
+    unit: "s",
+    explanation:
+      "Only the across velocity covers the width: t = 60 / 6 = 10 s. The current does not change the crossing time.",
+  },
+  {
+    id: "bank-9-hard-1",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A swimmer heads straight across a 30 m wide river at 1.5 m/s relative to the water; the current is 2 m/s downstream. How far downstream do they land?",
+    value: 40,
+    tolerance: 0.5,
+    unit: "m",
+    explanation:
+      "Crossing time = 30 / 1.5 = 20 s; downstream drift = 2 × 20 = 40 m.",
+  },
+  {
+    id: "bank-9-hard-2",
+    topicId: "lesson-9-relative-motion",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A plane flies due north at 200 m/s while a wind blows due east at 30 m/s. What is the plane's speed relative to the ground?",
+    value: 202.2,
+    tolerance: 0.5,
+    unit: "m/s",
+    explanation:
+      "|v| = √(200² + 30²) = √40900 ≈ 202.2 m/s.",
+  },
+
+  // --- Lesson 10 — oscillations (simple harmonic motion) ---------------------
+  {
+    id: "bank-10-easy-1",
+    topicId: "lesson-10-oscillations",
+    difficulty: "easy",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt: "The relationship that defines simple harmonic motion is:",
+    options: [
+      { id: "a", label: "a = −ω²·x" },
+      { id: "b", label: "a = ω²·x" },
+      { id: "c", label: "v = ω·x" },
+      { id: "d", label: "a = constant" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "In SHM the acceleration is proportional to displacement and oppositely directed: a = −ω²·x (a restoring acceleration).",
+  },
+  {
+    id: "bank-10-easy-2",
+    topicId: "lesson-10-oscillations",
+    difficulty: "easy",
+    type: "numeric",
+    category: "calculation",
+    prompt: "An oscillator has angular frequency ω = 5 rad/s. What is its period?",
+    value: 1.26,
+    tolerance: 0.05,
+    unit: "s",
+    explanation: "T = 2π/ω = 2π/5 ≈ 1.26 s.",
+  },
+  {
+    id: "bank-10-medium-1",
+    topicId: "lesson-10-oscillations",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "A mass oscillates as x(t) = 0.2·cos(5t) (SI units). What is its maximum speed?",
+    value: 1,
+    tolerance: 0.05,
+    unit: "m/s",
+    explanation: "Maximum speed = Aω = 0.2 × 5 = 1.0 m/s.",
+  },
+  {
+    id: "bank-10-medium-2",
+    topicId: "lesson-10-oscillations",
+    difficulty: "medium",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "An object oscillates as x(t) = 0.1·cos(4t) (SI units). What is its maximum acceleration?",
+    value: 1.6,
+    tolerance: 0.05,
+    unit: "m/s²",
+    explanation: "Maximum acceleration = Aω² = 0.1 × 4² = 0.1 × 16 = 1.6 m/s².",
+  },
+  {
+    id: "bank-10-hard-1",
+    topicId: "lesson-10-oscillations",
+    difficulty: "hard",
+    type: "numeric",
+    category: "calculation",
+    prompt:
+      "An object oscillates as x(t) = 0.05·cos(10t) (SI units). What is the magnitude of its maximum acceleration?",
+    value: 5,
+    tolerance: 0.1,
+    unit: "m/s²",
+    explanation: "Maximum acceleration = Aω² = 0.05 × 10² = 0.05 × 100 = 5 m/s².",
+  },
+  {
+    id: "bank-10-hard-2",
+    topicId: "lesson-10-oscillations",
+    difficulty: "hard",
+    type: "multipleChoice",
+    category: "conceptual",
+    prompt:
+      "For a simple harmonic oscillator x = A·cos(ωt), the object moves fastest:",
+    options: [
+      { id: "a", label: "As it passes through the center (x = 0)" },
+      { id: "b", label: "At the extremes (x = ±A)" },
+      { id: "c", label: "At constant speed everywhere" },
+      { id: "d", label: "Only at the very start of the motion" },
+    ],
+    correctOptionId: "a",
+    explanation:
+      "Speed |v| = Aω·|sin(ωt)| peaks at the center crossings and falls to zero at the turning points (x = ±A).",
+  },
 ];
 
 export function bankQuestions(): BankQuestion[] {

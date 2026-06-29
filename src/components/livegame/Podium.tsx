@@ -39,11 +39,11 @@ export function Podium({
             >
               {MEDALS[place]}
             </div>
-            <p className="mb-1 max-w-full truncate text-center text-sm font-semibold text-ink">
+            <p className="mb-1 max-w-full truncate text-center text-sm font-semibold text-ink dark:text-slate-100">
               {player!.name}
               {isMe && <span className="text-brand-600"> (you)</span>}
             </p>
-            <p className="mb-2 font-display text-lg font-bold tabular-nums text-ink">
+            <p className="mb-2 font-display text-lg font-bold tabular-nums text-ink dark:text-slate-100">
               {player!.score.toLocaleString()}
             </p>
             <div

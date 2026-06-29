@@ -51,12 +51,12 @@ export function MultipleChoiceStep({
               className={[
                 "rounded-xl border px-4 py-3 text-left text-base transition",
                 showCorrect
-                  ? "border-emerald-400 bg-emerald-50"
+                  ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
                   : isSelected
                     ? submittedWrong
-                      ? "border-red-300 bg-red-50"
-                      : "border-brand-400 bg-brand-50"
-                    : "border-slate-200 bg-white hover:border-brand-300",
+                      ? "border-red-300 bg-red-50 dark:bg-red-500/10"
+                      : "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                    : "border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700/70 dark:bg-slate-900",
               ].join(" ")}
             >
               {opt.label}

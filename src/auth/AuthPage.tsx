@@ -67,20 +67,20 @@ export default function AuthPage({
         <div className="mb-8 text-center">
           <Link
             to="/"
-            className="mb-2 inline-block font-display text-3xl font-bold tracking-tight text-ink"
+            className="mb-2 inline-block font-display text-3xl font-bold tracking-tight text-ink dark:text-slate-100"
           >
             Motion<span className="text-brand-600">Lab</span>
           </Link>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             AP Physics C Kinematics, learned by doing.
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
           <h1 className="mb-1 text-lg font-semibold">
             {isSignUp ? "Create your account" : "Welcome back"}
           </h1>
-          <p className="mb-5 text-sm text-slate-500">
+          <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
             {isSignUp
               ? "Track your progress and pick up where you left off."
               : "Sign in to continue your course."}
@@ -121,7 +121,7 @@ export default function AuthPage({
             {error && (
               <p
                 role="alert"
-                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300"
               >
                 {error}
               </p>
@@ -140,7 +140,7 @@ export default function AuthPage({
             </button>
           </form>
 
-          <div className="mt-5 text-center text-sm text-slate-500">
+          <div className="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
             {isSignUp ? "Already have an account?" : "New to MotionLab?"}{" "}
             <Link
               to={isSignUp ? "/signin" : "/signup"}
@@ -176,11 +176,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">
+      <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
         {label}
       </span>
       <input
-        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-base outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:border-slate-600"
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}

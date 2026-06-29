@@ -12,9 +12,12 @@ import {
   completeLesson5,
   completeLesson6,
   completeLesson7,
+  completeLesson8,
+  completeLesson9,
+  completeLesson10,
 } from "./helpers";
 
-test("a learner can complete the entire 7-lesson course in order", async ({
+test("a learner can complete the entire 10-lesson course in order", async ({
   page,
 }) => {
   test.slow(); // long sequential journey
@@ -65,11 +68,36 @@ test("a learner can complete the entire 7-lesson course in order", async ({
   await passQuiz(page, "lesson-6-projectile-motion");
   await backToCourse(page);
 
+  // Order 7: Free Fall (new kinematics lesson).
+  await openLesson(page, /Free Fall and Motion Under Gravity/);
+  await completeLesson8(page);
+  await backToCourse(page);
+  await openQuiz(page, /Free Fall and Motion Under Gravity/);
+  await passQuiz(page, "lesson-8-free-fall");
+  await backToCourse(page);
+
+  // Order 8: Relative Motion (new kinematics lesson).
+  await openLesson(page, /Relative Motion and Reference Frames/);
+  await completeLesson9(page);
+  await backToCourse(page);
+  await openQuiz(page, /Relative Motion and Reference Frames/);
+  await passQuiz(page, "lesson-9-relative-motion");
+  await backToCourse(page);
+
+  // Order 9: the Oscillations bridge lesson (a forward-looking detour).
+  await openLesson(page, /Oscillations: Motion That Repeats/);
+  await completeLesson10(page);
+  await backToCourse(page);
+  await openQuiz(page, /Oscillations: Motion That Repeats/);
+  await passQuiz(page, "lesson-10-oscillations");
+  await backToCourse(page);
+
+  // Order 10: the Kinematics Mastery Challenge capstone — the finale.
   await openLesson(page, /Kinematics Mastery Challenge/);
   await completeLesson7(page);
 
-  // Final lesson: completion chains into Lesson 7's own Quiz (practice is woven
-  // into Learn now; there is no further lesson after the quiz).
+  // Final lesson: completion chains into its own Quiz (practice is woven into
+  // Learn now; there is no further lesson after the quiz).
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
   await expect(page.getByTestId("next-step")).toHaveAttribute(
     "href",

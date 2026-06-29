@@ -6,7 +6,7 @@ import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-900">
       <Nav />
       <main>
         <Hero />
@@ -30,13 +30,13 @@ function Wordmark({ className = "" }: { className?: string }) {
 function Nav() {
   return (
     <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-      <Link to="/" className="text-2xl text-ink">
+      <Link to="/" className="text-2xl text-ink dark:text-slate-100">
         <Wordmark />
       </Link>
       <nav className="flex items-center gap-1 sm:gap-3">
         <Link
           to="/signin"
-          className="rounded-lg px-3 py-2 text-base font-semibold text-slate-600 transition hover:text-ink"
+          className="rounded-lg px-3 py-2 text-base font-semibold text-slate-600 transition hover:text-ink dark:text-slate-300 dark:hover:text-slate-100"
         >
           Sign in
         </Link>
@@ -55,15 +55,15 @@ function Hero() {
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-6 sm:px-8 sm:pb-24 sm:pt-12 lg:grid-cols-[1.05fr_1fr]">
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-widest text-slate-500">
+        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-widest text-slate-500 dark:border-slate-700/70 dark:text-slate-400">
           AP Physics C · Kinematics
         </span>
-        <h1 className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl">
+        <h1 className="mt-6 font-display text-4xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl dark:text-slate-100">
           Motion you can
           <br />
           <span className="text-brand-600">actually feel.</span>
         </h1>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600">
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-300">
           Master AP Physics C kinematics with interactive graphs, simulations,
           and instant feedback.
         </p>
@@ -76,12 +76,12 @@ function Hero() {
           </Link>
           <Link
             to="/signin"
-            className="rounded-xl border border-slate-300 px-6 py-3.5 text-center text-base font-semibold text-slate-700 transition hover:border-slate-400"
+            className="rounded-xl border border-slate-300 px-6 py-3.5 text-center text-base font-semibold text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500"
           >
             I already have an account
           </Link>
         </div>
-        <p className="mt-4 font-mono text-xs text-slate-400">
+        <p className="mt-4 font-mono text-xs text-slate-400 dark:text-slate-500">
           7 lessons · derivatives, integrals &amp; 2D motion · built for the AP
           exam
         </p>
@@ -311,13 +311,13 @@ function HeroMotionDemo() {
 
 function Path() {
   return (
-    <section className="border-y border-slate-200 bg-slate-50/60 py-14 sm:py-20">
+    <section className="border-y border-slate-200 bg-slate-50/60 py-14 sm:py-20 dark:border-slate-700/70 dark:bg-slate-800/60">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="mb-10 max-w-2xl">
-          <h2 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl dark:text-slate-100">
             One path, start to mastery
           </h2>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">
             Each lesson unlocks the next, so concepts build instead of piling
             up. Your progress saves automatically — leave any time and pick up
             exactly where you stopped.
@@ -328,23 +328,23 @@ function Path() {
           {course.lessons.map((lesson, i) => (
             <li
               key={lesson.id}
-              className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5"
+              className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700/70 dark:bg-slate-900"
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold ${
                   i === 0
                     ? "bg-brand-600 text-white"
-                    : "bg-slate-100 text-slate-500"
+                    : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                 }`}
               >
                 {String(lesson.order).padStart(2, "0")}
               </span>
               <div className="min-w-0">
-                <h3 className="font-display font-semibold leading-snug text-ink">
+                <h3 className="font-display font-semibold leading-snug text-ink dark:text-slate-100">
                   {lesson.title}
                 </h3>
                 {lesson.subtitle && (
-                  <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                     {lesson.subtitle}
                   </p>
                 )}
@@ -384,14 +384,14 @@ function Why() {
     <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
       <div className="grid gap-8 sm:grid-cols-3">
         {items.map((it) => (
-          <div key={it.k} className="border-t-2 border-ink pt-5">
+          <div key={it.k} className="border-t-2 border-ink pt-5 dark:border-slate-100">
             <span className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-600">
               {it.k}
             </span>
-            <h3 className="mt-3 font-display text-xl font-semibold text-ink">
+            <h3 className="mt-3 font-display text-xl font-semibold text-ink dark:text-slate-100">
               {it.title}
             </h3>
-            <p className="mt-2 leading-relaxed text-slate-600">{it.body}</p>
+            <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">{it.body}</p>
           </div>
         ))}
       </div>
@@ -442,9 +442,9 @@ function BottomCta() {
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-200 py-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-sm text-slate-500 sm:flex-row sm:px-8">
-        <Wordmark className="text-base text-ink" />
+    <footer className="border-t border-slate-200 py-8 dark:border-slate-700/70">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-sm text-slate-500 sm:flex-row sm:px-8 dark:text-slate-400">
+        <Wordmark className="text-base text-ink dark:text-slate-100" />
         <span className="font-mono text-xs">
           AP Physics C Kinematics, learned by doing.
         </span>

@@ -63,7 +63,7 @@ export function QuestionStage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
+      <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400">
         <span>
           Question {questionNumber} / {totalQuestions}
         </span>
@@ -76,22 +76,22 @@ export function QuestionStage({
 
       {!isReveal && (
         <>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
             <div
               className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-[width] duration-500 ease-linear"
               style={{ width: `${pctLeft}%` }}
             />
           </div>
           {role === "player" && !answered && (
-            <p className="text-center text-xs font-medium text-slate-400">
+            <p className="text-center text-xs font-medium text-slate-400 dark:text-slate-500">
               Answer fast — up to 1000 points, less as the clock runs.
             </p>
           )}
         </>
       )}
 
-      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
-        <p className="text-xl font-medium leading-snug text-slate-800">
+      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70">
+        <p className="text-xl font-medium leading-snug text-slate-800 dark:text-slate-100">
           <RichText>{question.prompt}</RichText>
         </p>
 
@@ -102,13 +102,13 @@ export function QuestionStage({
               const isMine = selected === opt.id;
               const tone = isReveal
                 ? isCorrect
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500"
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-300"
                   : isMine
-                    ? "border-rose-400 bg-rose-50 text-rose-700"
-                    : "border-slate-200 bg-white text-slate-500"
+                    ? "border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+                    : "border-slate-200 bg-white text-slate-500 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-400"
                 : isMine
-                  ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300";
+                  ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500 dark:bg-brand-500/10 dark:text-brand-300"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600";
               const interactive = role === "player" && !answered && !isReveal;
               return (
                 <button
@@ -144,7 +144,7 @@ export function QuestionStage({
         {/* Player status line */}
         {role === "player" && !isReveal && answered && (
           <p
-            className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-600"
+            className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-600 dark:bg-slate-800/60 dark:text-slate-300"
             data-testid="live-answer-locked"
           >
             Answer locked in — hang tight…
@@ -153,7 +153,7 @@ export function QuestionStage({
 
         {/* Host status line */}
         {role === "host" && !isReveal && (
-          <p className="mt-4 text-center text-sm font-semibold text-slate-500">
+          <p className="mt-4 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
             {answeredCount} / {totalPlayers} answered
           </p>
         )}
@@ -166,8 +166,8 @@ export function QuestionStage({
               className={[
                 "rounded-2xl px-4 py-3 text-center text-base font-bold",
                 myCorrect
-                  ? "animate-score-pop bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                  : "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+                  ? "animate-score-pop bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+                  : "bg-rose-50 text-rose-700 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30",
               ].join(" ")}
             >
               {myCorrect
@@ -176,11 +176,11 @@ export function QuestionStage({
             </div>
           )}
           {role === "player" && myCorrect === null && (
-            <div className="rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-500">
+            <div className="rounded-2xl bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
               You didn't answer in time.
             </div>
           )}
-          <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
+          <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70">
             <Leaderboard players={players} meUid={meUid} count={5} />
           </div>
         </>
@@ -233,12 +233,12 @@ function NumericAnswer({
 
   if (isReveal) {
     return (
-      <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-emerald-800 ring-1 ring-emerald-200">
+      <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
         <span className="font-semibold">Answer: </span>
         {question.value}
         {question.unit ? ` ${question.unit}` : ""}
         {role === "player" && selected !== "" && (
-          <span className="ml-2 text-sm text-slate-500">(you said {selected})</span>
+          <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">(you said {selected})</span>
         )}
       </div>
     );
@@ -246,7 +246,7 @@ function NumericAnswer({
 
   if (role === "host") {
     return (
-      <p className="mt-4 text-sm text-slate-400">
+      <p className="mt-4 text-sm text-slate-400 dark:text-slate-500">
         Players are entering a numeric answer…
       </p>
     );
@@ -271,10 +271,10 @@ function NumericAnswer({
           aria-label="Your numeric answer"
           placeholder="Your answer"
           data-testid="live-numeric"
-          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-slate-50"
+          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-slate-50 dark:border-slate-700/70 dark:disabled:bg-slate-800/60"
         />
         {question.unit && (
-          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600">
+          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <RichText>{question.unit}</RichText>
           </span>
         )}

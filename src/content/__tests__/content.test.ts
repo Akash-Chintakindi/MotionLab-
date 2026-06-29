@@ -13,10 +13,10 @@ import type {
 } from "../../types/content";
 
 describe("course structure", () => {
-  it("has exactly 7 lessons with unique sequential orders", () => {
-    expect(course.lessons).toHaveLength(7);
+  it("has exactly 10 lessons with unique sequential orders", () => {
+    expect(course.lessons).toHaveLength(10);
     const orders = course.lessons.map((l) => l.order);
-    expect(orders).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(orders).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
   it("has globally unique lesson ids", () => {
@@ -26,7 +26,7 @@ describe("course structure", () => {
 
   it("links lessons in order and ends with null", () => {
     expect(getNextLessonId(course.lessons[0].id)).toBe(course.lessons[1].id);
-    expect(getNextLessonId(course.lessons[6].id)).toBeNull();
+    expect(getNextLessonId(course.lessons[course.lessons.length - 1].id)).toBeNull();
   });
 
   it("lesson 1 is fully authored", () => {
@@ -35,7 +35,7 @@ describe("course structure", () => {
     expect(l1!.steps.length).toBeGreaterThanOrEqual(8);
   });
 
-  it("all 7 lessons are fully authored", () => {
+  it("all 10 lessons are fully authored", () => {
     for (const lesson of course.lessons) {
       expect(lesson.steps.length).toBeGreaterThanOrEqual(6);
     }

@@ -1,4 +1,5 @@
 import type { CourseProgress } from "../types/progress";
+import type { WeaponTier } from "../games/arcade/boss/bossTypes";
 
 /**
  * Progression thresholds (see "Learning Science.txt").
@@ -28,4 +29,43 @@ export function modesUnlocked(course: MasterySource, lessonId: string): boolean 
 /** Whether a quiz score (0–100) is high enough to advance to the next topic. */
 export function quizPassed(scorePct: number): boolean {
   return scorePct >= QUIZ_PASS_PERCENT;
+}
+
+// ---- Boss Fight Mode gating ------------------------------------------------
+
+type QuizSource = Pick<CourseProgress, "quizScores"> | null | undefined;
+type BossSource = Pick<CourseProgress, "bossDefeats"> | null | undefined;
+
+/** Maps a best quiz score to a weapon tier, or null if the quiz isn't passed. */
+export function weaponTierFor(scorePct: number): WeaponTier | null {
+  if (scorePct >= 100) return 5;
+  if (scorePct >= 90) return 4;
+  if (scorePct >= 85) return 3;
+  if (scorePct >= 80) return 2;
+  if (scorePct >= QUIZ_PASS_PERCENT) return 1; // 70-79
+  return null;
+}
+
+/** A mini-boss is unlocked once its lesson's quiz is passed (>=70%). */
+export function bossUnlocked(cp: QuizSource, lessonId: string): boolean {
+  return quizPassed(cp?.quizScores?.[lessonId] ?? 0);
+}
+
+/** True once every mini-boss lesson has a defeated entry. */
+export function allMiniBossesDefeated(
+  cp: BossSource,
+  miniBossLessonIds: string[],
+): boolean {
+  if (miniBossLessonIds.length === 0) return false;
+  return miniBossLessonIds.every(
+    (lessonId) => cp?.bossDefeats?.[lessonId]?.defeated === true,
+  );
+}
+
+/** The finale unlocks when all mini-bosses are defeated. */
+export function finaleUnlocked(
+  cp: BossSource,
+  miniBossLessonIds: string[],
+): boolean {
+  return allMiniBossesDefeated(cp, miniBossLessonIds);
 }

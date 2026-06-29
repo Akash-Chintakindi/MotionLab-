@@ -44,13 +44,13 @@ export function SortStep({
               className={[
                 "rounded-xl border p-3",
                 isRight
-                  ? "border-emerald-300 bg-emerald-50"
+                  ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10"
                   : isWrong
-                    ? "border-red-300 bg-red-50"
-                    : "border-slate-200 bg-white",
+                    ? "border-red-300 bg-red-50 dark:bg-red-500/10"
+                    : "border-slate-200 bg-white dark:border-slate-700/70 dark:bg-slate-900",
               ].join(" ")}
             >
-              <div className="mb-2 text-sm font-medium text-slate-700">
+              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">
                 {item.label}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -63,8 +63,8 @@ export function SortStep({
                     className={[
                       "rounded-lg border px-3 py-1.5 text-sm transition",
                       chosen === b.id
-                        ? "border-brand-400 bg-brand-50 font-medium"
-                        : "border-slate-200 bg-white hover:border-brand-300",
+                        ? "border-brand-400 bg-brand-50 font-medium dark:bg-brand-500/10"
+                        : "border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700/70 dark:bg-slate-900",
                     ].join(" ")}
                   >
                     {b.label}

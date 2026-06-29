@@ -17,11 +17,11 @@ export function Leaderboard({
 
   return (
     <div data-testid="live-leaderboard">
-      <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600">
+      <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600 dark:text-accent-300">
         {title}
       </p>
       {top.length === 0 ? (
-        <p className="text-sm text-slate-500">No scores yet.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">No scores yet.</p>
       ) : (
         <ol className="space-y-2">
           {top.map((p, i) => {
@@ -32,7 +32,7 @@ export function Leaderboard({
                 key={p.uid}
                 className={[
                   "relative overflow-hidden rounded-2xl p-3 ring-1 transition-all",
-                  isMe ? "ring-brand-400" : "ring-slate-200",
+                  isMe ? "ring-brand-400 dark:ring-brand-500/30" : "ring-slate-200 dark:ring-slate-700/70",
                 ].join(" ")}
               >
                 <div
@@ -45,17 +45,17 @@ export function Leaderboard({
                     className={[
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-display text-sm font-bold",
                       i === 0
-                        ? "bg-amber-100 text-amber-700"
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                         : i === 1
-                          ? "bg-slate-200 text-slate-700"
+                          ? "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
                           : i === 2
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-slate-100 text-slate-500",
+                            ? "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300"
+                            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
                     ].join(" ")}
                   >
                     {i + 1}
                   </span>
-                  <span className="min-w-0 flex-1 truncate font-semibold text-ink">
+                  <span className="min-w-0 flex-1 truncate font-semibold text-ink dark:text-slate-100">
                     {p.name}
                     {isMe && (
                       <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
@@ -63,7 +63,7 @@ export function Leaderboard({
                       </span>
                     )}
                   </span>
-                  <span className="font-display text-lg font-bold tabular-nums text-ink">
+                  <span className="font-display text-lg font-bold tabular-nums text-ink dark:text-slate-100">
                     {p.score.toLocaleString()}
                   </span>
                 </div>

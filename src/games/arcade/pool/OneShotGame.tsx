@@ -607,7 +607,7 @@ export function OneShotGame(props: ArcadeGameProps & { onBack: () => void }) {
           {inputError && (
             <p className="mt-2 text-sm font-semibold text-rose-300">{inputError}</p>
           )}
-          <p className="mt-2 text-xs text-slate-400">{level.hint}</p>
+          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">{level.hint}</p>
         </div>
       )}
 

@@ -16,6 +16,8 @@ const GamesPage = lazy(() => import("./pages/GamesPage"));
 const PoolGamePage = lazy(() => import("./pages/PoolGamePage"));
 const BasketballGamePage = lazy(() => import("./pages/BasketballGamePage"));
 const CannonGamePage = lazy(() => import("./pages/CannonGamePage"));
+const BossMapPage = lazy(() => import("./pages/BossMapPage"));
+const BossFightPage = lazy(() => import("./pages/BossFightPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const SquadPage = lazy(() => import("./pages/SquadPage"));
 
@@ -123,6 +125,22 @@ export default function App() {
               element={
                 <RequireAuth>
                   <CannonGamePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games/bosses"
+              element={
+                <RequireAuth>
+                  <BossMapPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/games/boss/:bossId"
+              element={
+                <RequireAuth>
+                  <BossFightPage />
                 </RequireAuth>
               }
             />

@@ -14,11 +14,11 @@ export function WorkedExampleStep({ step }: StepComponentProps) {
   const cfg = step.interactionConfig as WorkedExampleConfig;
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-brand-50 p-4 ring-1 ring-brand-100">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+      <div className="rounded-xl bg-brand-50 p-4 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:ring-brand-500/30">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
           Worked example
         </p>
-        <p className="mt-1 text-[15px] leading-relaxed text-slate-800">
+        <p className="mt-1 text-[15px] leading-relaxed text-slate-800 dark:text-slate-100">
           <RichText>{cfg.problem}</RichText>
         </p>
       </div>
@@ -34,11 +34,11 @@ export function WorkedExampleStep({ step }: StepComponentProps) {
             </span>
             <div className="min-w-0 flex-1">
               {line.label && (
-                <p className="text-sm font-semibold text-ink">
+                <p className="text-sm font-semibold text-ink dark:text-slate-100">
                   <RichText>{line.label}</RichText>
                 </p>
               )}
-              <p className="text-[15px] leading-relaxed text-slate-700">
+              <p className="text-[15px] leading-relaxed text-slate-700 dark:text-slate-200">
                 <RichText>{line.detail}</RichText>
               </p>
               {line.formula && (
@@ -54,9 +54,9 @@ export function WorkedExampleStep({ step }: StepComponentProps) {
       </ol>
 
       {cfg.takeaway && (
-        <div className="rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
-          <p className="text-sm font-semibold text-amber-900">Takeaway</p>
-          <p className="mt-0.5 text-[15px] leading-relaxed text-amber-900">
+        <div className="rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30">
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">Takeaway</p>
+          <p className="mt-0.5 text-[15px] leading-relaxed text-amber-900 dark:text-amber-300">
             <RichText>{cfg.takeaway}</RichText>
           </p>
         </div>

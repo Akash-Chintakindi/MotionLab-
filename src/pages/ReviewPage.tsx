@@ -132,14 +132,14 @@ export default function ReviewPage() {
         <header className="mb-5">
           <Link
             to="/"
-            className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+            className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ← Course
           </Link>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Review
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             Spaced practice on the topics you most need — answers update your
             mastery.
           </p>
@@ -151,7 +151,7 @@ export default function ReviewPage() {
 
         {phase !== "empty" && phase !== "done" && (
           <p
-            className="mb-3 text-sm font-medium text-slate-500"
+            className="mb-3 text-sm font-medium text-slate-500 dark:text-slate-400"
             data-testid="review-progress"
           >
             Topic {Math.min(index + 1, queue.length)} of {queue.length}
@@ -166,8 +166,8 @@ export default function ReviewPage() {
         )}
 
         {(phase === "question" || phase === "feedback") && question && (
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200" data-testid="review-card">
-            <p className="text-base font-medium text-slate-800">
+          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70" data-testid="review-card">
+            <p className="text-base font-medium text-slate-800 dark:text-slate-100">
               <RichText>{question.prompt}</RichText>
             </p>
             {phase === "question" ? (
@@ -216,8 +216,8 @@ function AnswerForm({
                 className={[
                   "block w-full rounded-xl border px-4 py-3 text-left text-base transition",
                   active
-                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500 dark:bg-brand-500/10 dark:text-brand-300"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600",
                 ].join(" ")}
               >
                 <RichText>{opt.label}</RichText>
@@ -256,10 +256,10 @@ function AnswerForm({
           aria-label="Your numeric answer"
           placeholder="Your answer"
           data-testid="review-numeric"
-          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700/70 dark:text-slate-100"
         />
         {question.unit && (
-          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600">
+          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <RichText>{question.unit}</RichText>
           </span>
         )}
@@ -293,15 +293,15 @@ function Feedback({
         className={[
           "rounded-xl px-4 py-3 text-base font-semibold",
           correct
-            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
-            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200",
+            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30",
         ].join(" ")}
         role="status"
         aria-live="polite"
       >
         {correct ? "Correct!" : "Not quite."}
       </div>
-      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700">
+      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
         <RichText>{question.explanation}</RichText>
       </div>
       <button
@@ -319,16 +319,16 @@ function Feedback({
 function EmptyState() {
   return (
     <div
-      className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200"
+      className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70"
       data-testid="review-empty"
     >
       <div className="text-4xl" aria-hidden>
         ✅
       </div>
-      <h2 className="mt-2 font-display text-xl font-bold text-ink">
+      <h2 className="mt-2 font-display text-xl font-bold text-ink dark:text-slate-100">
         Nothing to review yet
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Play the Lab or a game to build up your topic mastery — then come back
         for spaced review.
       </p>
@@ -345,16 +345,16 @@ function EmptyState() {
 function DoneState({ correct, total }: { correct: number; total: number }) {
   return (
     <div
-      className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200"
+      className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70"
       data-testid="review-done"
     >
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-500">
         Review complete
       </p>
-      <div className="mt-2 font-display text-5xl font-bold tabular-nums text-ink">
+      <div className="mt-2 font-display text-5xl font-bold tabular-nums text-ink dark:text-slate-100">
         {correct}/{total}
       </div>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Mastery and review schedule updated.
       </p>
       <Link

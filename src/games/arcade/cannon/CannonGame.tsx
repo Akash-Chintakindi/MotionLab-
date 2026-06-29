@@ -1017,7 +1017,7 @@ export function CannonGame(props: ArcadeGameProps) {
         )}
 
         {screen === "play" && (
-          <p className="mt-2 text-center text-xs text-slate-400">
+          <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
             {playerTurnUi
               ? ammoUi > 0
                 ? "Drag back from your cannon, release to fire."

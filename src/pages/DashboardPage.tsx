@@ -41,7 +41,7 @@ export default function DashboardPage() {
           <p className="font-display text-xs font-semibold uppercase tracking-[0.22em] text-accent-600">
             {course.title}
           </p>
-          <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-ink">
+          <h1 className="mt-1 font-display text-[1.75rem] font-bold leading-tight tracking-tight text-ink dark:text-slate-100">
             Welcome back, {firstName}.
           </h1>
         </header>
@@ -54,14 +54,14 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-4">
             <DailyQuestionCard streak={streak} />
 
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+            <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
               <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="font-medium text-slate-700">Course progress</span>
-                <span className="text-slate-500">
+                <span className="font-medium text-slate-700 dark:text-slate-200">Course progress</span>
+                <span className="text-slate-500 dark:text-slate-400">
                   {completedCount} / {total} lessons
                 </span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all"
                   style={{ width: `${pct}%` }}
@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
             {(streak?.milestoneIds.length ?? 0) > 0 && (
               <div className="mt-3" data-testid="milestones">
-                <h2 className="mb-2 text-sm font-semibold text-slate-600">
+                <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
                   Milestones
                 </h2>
                 <div className="flex flex-wrap gap-2">
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                     return (
                       <span
                         key={id}
-                        className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900 ring-1 ring-amber-200"
+                        className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/30"
                       >
                         <span aria-hidden>{m.emoji}</span>
                         {m.label}
@@ -149,14 +149,14 @@ function MiniStat({
   emoji: string;
 }) {
   return (
-    <div className="rounded-xl bg-white px-3 py-2.5 text-center ring-1 ring-slate-200">
-      <div className="font-display text-xl font-bold tabular-nums text-ink">
+    <div className="rounded-xl bg-white px-3 py-2.5 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+      <div className="font-display text-xl font-bold tabular-nums text-ink dark:text-slate-100">
         <span aria-hidden className="mr-0.5">
           {emoji}
         </span>
         {value}
       </div>
-      <div className="mt-0.5 text-xs text-slate-500">{label}</div>
+      <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   );
 }

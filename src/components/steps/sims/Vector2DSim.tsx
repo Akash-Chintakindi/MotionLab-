@@ -97,7 +97,7 @@ function Legend({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center justify-center gap-1.5">
       <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-      <span className="text-slate-600">{label}</span>
+      <span className="text-slate-600 dark:text-slate-300">{label}</span>
     </div>
   );
 }
@@ -114,8 +114,8 @@ function Component({
   testid: string;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 px-2 py-2" data-testid={testid}>
-      <div className="text-[11px] text-slate-500">{label}</div>
+    <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-800/60" data-testid={testid}>
+      <div className="text-[11px] text-slate-500 dark:text-slate-400">{label}</div>
       <div className="font-mono text-xs">
         x: {x}
         <br />y: {y}

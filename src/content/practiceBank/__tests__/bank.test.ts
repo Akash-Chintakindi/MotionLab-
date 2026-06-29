@@ -16,6 +16,9 @@ const TOPIC_IDS = [
   "lesson-5-two-dimensions",
   "lesson-6-projectile-motion",
   "lesson-7-mastery-challenge",
+  "lesson-8-free-fall",
+  "lesson-9-relative-motion",
+  "lesson-10-oscillations",
 ] as const;
 
 const DIFFICULTIES: BankDifficulty[] = ["easy", "medium", "hard"];
@@ -139,7 +142,7 @@ describe("practice bank — distribution", () => {
     }
   });
 
-  it("includes all 7 topics", () => {
+  it("includes all 10 topics", () => {
     const present = new Set(bank.map((q) => q.topicId));
     for (const t of TOPIC_IDS) {
       expect(present.has(t)).toBe(true);

@@ -43,13 +43,13 @@ export function LabEndLeaderboard({ score }: { score: number }) {
 
   if (status === "ask") {
     return (
-      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200">
-        <p className="text-base font-semibold text-slate-800">
+      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+        <p className="text-base font-semibold text-slate-800 dark:text-slate-100">
           Add your score to the leaderboard?
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Posting as{" "}
-          <span className="font-semibold text-slate-700">{playerName}</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{playerName}</span>
         </p>
         <div className="mt-4 flex justify-center gap-2.5">
           <button
@@ -64,7 +64,7 @@ export function LabEndLeaderboard({ score }: { score: number }) {
             type="button"
             data-testid="lab-decline-leaderboard"
             onClick={() => setStatus("declined")}
-            className="rounded-xl bg-slate-100 px-4 py-2.5 text-base font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95"
+            className="rounded-xl bg-slate-100 px-4 py-2.5 text-base font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             No thanks
           </button>
@@ -76,7 +76,7 @@ export function LabEndLeaderboard({ score }: { score: number }) {
   if (status === "saving") {
     return (
       <p
-        className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 ring-1 ring-slate-200"
+        className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-700/70"
         role="status"
         aria-live="polite"
       >
@@ -87,8 +87,8 @@ export function LabEndLeaderboard({ score }: { score: number }) {
 
   if (status === "error") {
     return (
-      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200">
-        <p className="text-sm font-medium text-rose-700" role="status">
+      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+        <p className="text-sm font-medium text-rose-700 dark:text-rose-300" role="status">
           Couldn’t reach the leaderboard. Check your connection.
         </p>
         <button
@@ -104,10 +104,10 @@ export function LabEndLeaderboard({ score }: { score: number }) {
 
   return (
     <div
-      className="rounded-2xl bg-white p-5 ring-1 ring-slate-200"
+      className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70"
       data-testid="lab-end-leaderboard"
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
         Leaderboard
       </p>
       <ol className="mt-3 space-y-1.5">
@@ -119,18 +119,18 @@ export function LabEndLeaderboard({ score }: { score: number }) {
               className={[
                 "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm",
                 me
-                  ? "bg-brand-50 ring-1 ring-brand-300"
-                  : "bg-slate-50",
+                  ? "bg-brand-50 ring-1 ring-brand-300 dark:bg-brand-500/10 dark:ring-brand-500/30"
+                  : "bg-slate-50 dark:bg-slate-800/60",
               ].join(" ")}
             >
-              <span className="w-5 shrink-0 text-xs font-bold text-slate-400">
+              <span className="w-5 shrink-0 text-xs font-bold text-slate-400 dark:text-slate-500">
                 {i + 1}
               </span>
-              <span className="min-w-0 flex-1 truncate text-left font-medium text-slate-700">
+              <span className="min-w-0 flex-1 truncate text-left font-medium text-slate-700 dark:text-slate-200">
                 {r.name}
                 {me && <span className="text-brand-600"> (you)</span>}
               </span>
-              <span className="font-bold tabular-nums text-slate-900">
+              <span className="font-bold tabular-nums text-slate-900 dark:text-slate-100">
                 {r.score}
               </span>
             </li>

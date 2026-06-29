@@ -60,13 +60,13 @@ export function QuizRunner({
   return (
     <div>
       <div className="mb-4">
-        <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+        <div className="mb-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span className="font-semibold uppercase tracking-wide">Quiz</span>
           <span data-testid="quiz-counter">
             Question {q.index + 1} of {q.total}
           </span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
           <div
             className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${(q.index / q.total) * 100}%` }}
@@ -121,9 +121,9 @@ function QuestionCard({
     question.type === "multipleChoice" ? selected !== null : value.trim() !== "";
 
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:p-5">
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-700/70">
       <div className="mb-3">
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-brand-600">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
           {question.category}
         </span>
       </div>
@@ -159,12 +159,12 @@ function QuestionCard({
                   className={[
                     "rounded-xl border px-4 py-3 text-left text-base transition",
                     showCorrect
-                      ? "border-emerald-400 bg-emerald-50"
+                      ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
                       : showWrong
-                        ? "border-red-300 bg-red-50"
+                        ? "border-red-300 bg-red-50 dark:bg-red-500/10"
                         : isSelected
-                          ? "border-brand-400 bg-brand-50"
-                          : "border-slate-200 bg-white hover:border-brand-300",
+                          ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                          : "border-slate-200 bg-white hover:border-brand-300 dark:border-slate-700/70 dark:bg-slate-900",
                   ].join(" ")}
                 >
                   {opt.label}
@@ -186,10 +186,10 @@ function QuestionCard({
               }}
               placeholder={question.placeholder ?? "Your answer"}
               aria-label="Numeric answer"
-              className="w-40 rounded-xl border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+              className="w-40 rounded-xl border border-slate-300 px-3 py-2.5 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 dark:border-slate-700"
             />
             {question.unit && (
-              <span className="text-slate-600">{question.unit}</span>
+              <span className="text-slate-600 dark:text-slate-300">{question.unit}</span>
             )}
           </div>
         )}
@@ -245,27 +245,27 @@ function ScoreScreen({
   const showNext = passed && Boolean(next);
   const tone =
     scorePct >= 80
-      ? "text-emerald-500"
+      ? "text-emerald-500 dark:text-emerald-400"
       : scorePct >= 50
-        ? "text-amber-500"
-        : "text-rose-500";
+        ? "text-amber-500 dark:text-amber-400"
+        : "text-rose-500 dark:text-rose-400";
 
   return (
     <div data-testid="quiz-results">
-      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200 sm:p-6">
-        <p className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-600">
+      <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-700/70">
+        <p className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
           Quiz complete
         </p>
         <div className={`mt-2 font-display text-5xl font-bold ${tone}`}>
           {scorePct}%
         </div>
-        <p className="mt-1 text-slate-500">
+        <p className="mt-1 text-slate-500 dark:text-slate-400">
           {correctCount} of {total} correct
         </p>
         {!passed && passThreshold > 0 && (
           <p
             data-testid="quiz-retry-notice"
-            className="mx-auto mt-4 max-w-sm rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200"
+            className="mx-auto mt-4 max-w-sm rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30"
           >
             You need <span className="font-semibold">{passThreshold}%</span> to
             move on. Review the explanations below and retake the quiz.
@@ -287,7 +287,7 @@ function ScoreScreen({
             onClick={onRetry}
             className={
               showNext
-                ? "rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400"
+                ? "rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600"
                 : "rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white transition hover:bg-brand-700"
             }
           >
@@ -295,22 +295,22 @@ function ScoreScreen({
           </button>
           <Link
             to="/"
-            className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400"
+            className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600"
           >
             Back to course
           </Link>
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-        <h2 className="mb-3 text-sm font-semibold text-slate-600">Review</h2>
+      <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+        <h2 className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Review</h2>
         <ul className="space-y-2">
           {quiz.questions.map((question, i) => {
             const correct = resultById.get(question.id) ?? false;
             return (
               <li
                 key={question.id}
-                className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/60"
               >
                 <span
                   className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
@@ -321,10 +321,10 @@ function ScoreScreen({
                   {correct ? "✓" : "✗"}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium leading-snug text-ink">
+                  <p className="text-sm font-medium leading-snug text-ink dark:text-slate-100">
                     {i + 1}. <RichText>{question.prompt}</RichText>
                   </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                     <RichText>{question.explanation}</RichText>
                   </p>
                 </div>

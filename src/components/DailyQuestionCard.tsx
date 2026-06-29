@@ -145,14 +145,14 @@ function DailyQuestionModal({
         aria-label="Question of the day"
         data-testid="daily-question-modal"
         onClick={(e) => e.stopPropagation()}
-        className="animate-rise-in w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 sm:p-8"
+        className="animate-rise-in w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-200 sm:p-8 dark:bg-slate-900 dark:ring-slate-700/70"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
               Question of the day
             </p>
-            <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+            <div className="mt-1 flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
               {topicTitle && <span className="truncate">{topicTitle}</span>}
               <span aria-hidden>·</span>
               <span>{DIFF_LABEL[question.difficulty] ?? question.difficulty}</span>
@@ -160,7 +160,7 @@ function DailyQuestionModal({
           </div>
           <div className="flex items-center gap-2">
             <span
-              className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200/70"
+              className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30"
               title="Daily-question streak — consecutive days answered"
             >
               <span aria-hidden>🔥</span>
@@ -171,14 +171,14 @@ function DailyQuestionModal({
               onClick={onClose}
               data-testid="daily-question-close"
               aria-label="Close"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             >
               ✕
             </button>
           </div>
         </div>
 
-        <p className="mt-5 text-xl font-medium leading-relaxed text-slate-800">
+        <p className="mt-5 text-xl font-medium leading-relaxed text-slate-800 dark:text-slate-100">
           <RichText>{question.prompt}</RichText>
         </p>
 
@@ -207,14 +207,14 @@ function ResultPanel({
         className={[
           "rounded-xl px-4 py-3 text-base font-semibold",
           correct
-            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
-            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200",
+            ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+            : "bg-rose-50 text-rose-800 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/30",
         ].join(" ")}
         role="status"
       >
         {correct ? "Correct — see you tomorrow!" : "Not quite — back tomorrow!"}
       </div>
-      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700">
+      <div className="mt-3 rounded-xl bg-slate-50 p-4 text-base leading-relaxed text-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
         <RichText>{question.explanation}</RichText>
       </div>
       <button
@@ -260,8 +260,8 @@ function AnswerForm({
                 className={[
                   "block w-full rounded-xl border px-4 py-3 text-left text-base transition",
                   active
-                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                    ? "border-brand-500 bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500 dark:bg-brand-500/10 dark:text-brand-300"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700/70 dark:bg-slate-900 dark:text-slate-200",
                 ].join(" ")}
               >
                 <RichText>{opt.label}</RichText>
@@ -301,10 +301,10 @@ function AnswerForm({
           placeholder="Your answer"
           data-testid="daily-numeric"
           autoFocus
-          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+          className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-800 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700/70 dark:text-slate-100"
         />
         {question.unit && (
-          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600">
+          <span className="flex items-center rounded-xl bg-slate-100 px-3 text-base font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             <RichText>{question.unit}</RichText>
           </span>
         )}

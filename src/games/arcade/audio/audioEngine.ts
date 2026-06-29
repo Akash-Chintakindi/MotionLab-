@@ -120,7 +120,23 @@ export type SfxName =
   | "click"
   | "correct"
   | "wrong"
-  | "countdown";
+  | "countdown"
+  // boss fight (Punch-Out!! duel)
+  | "strike"
+  | "heavy"
+  | "dodge"
+  | "block"
+  | "stagger"
+  | "bossHit"
+  | "telegraph"
+  | "bossPhase"
+  | "bossVictory"
+  | "bossDefeat"
+  // brawler (Shadow Fight 2-style movement + KO)
+  | "swing"
+  | "jump"
+  | "land"
+  | "ko";
 
 export function playSfx(name: SfxName): void {
   if (muted) return;
@@ -203,6 +219,86 @@ export function playSfx(name: SfxName): void {
     case "countdown":
       tone(520, 0.1, "square", 0.25);
       break;
+    case "strike":
+      // Fast light punch/slash: a crisp high-passed snap with a quick down-chirp.
+      noise(0.04, 0.45, 5000, true);
+      tone(520, 0.05, "square", 0.22, 260);
+      break;
+    case "heavy":
+      // Weighty heavy-hit thud: thicker noise body + dropping low-end.
+      noise(0.1, 0.55, 1600);
+      tone(120, 0.18, "sawtooth", 0.4, 50);
+      tone(240, 0.07, "square", 0.2, 90);
+      break;
+    case "dodge":
+      // Quick whoosh: a swept band of high-passed air.
+      noise(0.14, 0.32, 1200, true);
+      tone(900, 0.1, "sine", 0.1, 2200);
+      break;
+    case "block":
+      // Metallic guard clink: two bright detuned partials over a tiny tick.
+      noise(0.03, 0.25, 6000, true);
+      tone(1180, 0.1, "square", 0.22, 880);
+      tone(1570, 0.08, "triangle", 0.14, 1200);
+      break;
+    case "stagger":
+      // Boss staggered: a crunchy break plus a descending, woozy tone.
+      noise(0.2, 0.5, 2200);
+      tone(360, 0.32, "sawtooth", 0.32, 90);
+      tone(540, 0.16, "square", 0.18, 180);
+      break;
+    case "bossHit":
+      // Boss takes damage: bright hit transient + short tonal ring.
+      noise(0.05, 0.4, 4200, true);
+      tone(680, 0.12, "triangle", 0.28, 420);
+      tone(1020, 0.08, "sine", 0.16, 760);
+      break;
+    case "telegraph":
+      // Attack wind-up warning: a short rising blip.
+      tone(440, 0.12, "square", 0.26, 720);
+      break;
+    case "bossPhase":
+      // Finale phase shift: an ominous low-to-high riser.
+      tone(70, 0.7, "sawtooth", 0.34, 280);
+      tone(140, 0.7, "triangle", 0.2, 560);
+      noise(0.5, 0.16, 600);
+      break;
+    case "bossVictory":
+      // Triumphant little fanfare: ascending square tones.
+      tone(523.25, 0.14, "square", 0.3);
+      tone(659.25, 0.14, "square", 0.3);
+      tone(783.99, 0.14, "square", 0.3);
+      tone(1046.5, 0.3, "square", 0.34);
+      break;
+    case "bossDefeat":
+      // Downbeat loss sting: a sinking minor fall.
+      tone(392, 0.28, "sawtooth", 0.3, 196);
+      tone(311.13, 0.36, "sawtooth", 0.3, 130);
+      tone(196, 0.5, "sawtooth", 0.3, 80);
+      break;
+    case "swing":
+      // Fast whoosh as a strike begins: a short airy high-passed swish with a
+      // quick rising flutter, so the attack reads before contact lands.
+      noise(0.08, 0.3, 1800, true);
+      tone(620, 0.07, "sine", 0.08, 1700);
+      break;
+    case "jump":
+      // Light upward "boost" blip as a fighter leaps off the ground.
+      tone(300, 0.12, "triangle", 0.24, 720);
+      tone(900, 0.05, "sine", 0.08, 1320);
+      break;
+    case "land":
+      // Soft thud as a fighter lands: low-end body noise plus a short low tone.
+      noise(0.09, 0.4, 520);
+      tone(110, 0.1, "sine", 0.32, 60);
+      break;
+    case "ko":
+      // Knockout: a punchy low boom, a gritty crunch, and a brief ring-out.
+      tone(90, 0.42, "sine", 0.5, 36);
+      noise(0.18, 0.6, 2000);
+      noise(0.05, 0.4, 5200, true);
+      tone(640, 0.3, "triangle", 0.2, 320);
+      break;
   }
 }
 
@@ -277,6 +373,8 @@ const N = {
   C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.0, A3: 220.0, B3: 246.94,
   C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.0, A4: 440.0, B4: 493.88,
   C5: 523.25, D5: 587.33, E5: 659.25,
+  // boss/finale accidentals (E-minor + C-minor tensions)
+  Fs2: 92.5, Fs4: 369.99, Ab2: 103.83, Eb3: 155.56, Eb4: 311.13, Ab4: 415.3,
 };
 
 /** Pool: cool, loungey walking-bass groove. */
@@ -351,5 +449,66 @@ export const CANNON_TRACK: MusicTrack = {
     { step: 16, freq: N.G4, len: 3, type: "triangle", gain: 0.16 },
     { step: 22, freq: N.F4, len: 2, type: "triangle", gain: 0.16 },
     { step: 26, freq: N.D4, len: 4, type: "triangle", gain: 0.18 },
+  ],
+};
+
+/** Boss fight: tense, driving, menacing arcade duel loop (E-minor). */
+export const BOSS_TRACK: MusicTrack = {
+  name: "boss",
+  bpm: 152,
+  steps: 16,
+  notes: [
+    // pulsing low-end pedal that drives the fight forward
+    { step: 0, freq: N.E2, len: 1, type: "sawtooth", gain: 0.34 },
+    { step: 2, freq: N.E2, len: 1, type: "sawtooth", gain: 0.3 },
+    { step: 4, freq: N.E2, len: 1, type: "sawtooth", gain: 0.34 },
+    { step: 6, freq: N.G2, len: 1, type: "sawtooth", gain: 0.3 },
+    { step: 8, freq: N.E2, len: 1, type: "sawtooth", gain: 0.34 },
+    { step: 10, freq: N.E2, len: 1, type: "sawtooth", gain: 0.3 },
+    { step: 12, freq: N.Fs2, len: 1, type: "sawtooth", gain: 0.32 }, // leading-tone tension
+    { step: 14, freq: N.G2, len: 1, type: "sawtooth", gain: 0.3 },
+    // gritty offbeat drive (snare-ish stabs)
+    { step: 1, freq: N.E3, len: 1, type: "square", gain: 0.12 },
+    { step: 5, freq: N.E3, len: 1, type: "square", gain: 0.12 },
+    { step: 9, freq: N.E3, len: 1, type: "square", gain: 0.12 },
+    { step: 13, freq: N.E3, len: 1, type: "square", gain: 0.12 },
+    // tense lead motif
+    { step: 0, freq: N.E4, len: 2, type: "square", gain: 0.16 },
+    { step: 4, freq: N.G4, len: 1, type: "square", gain: 0.15 },
+    { step: 6, freq: N.Fs4, len: 1, type: "square", gain: 0.15 },
+    { step: 8, freq: N.B4, len: 2, type: "square", gain: 0.17 },
+    { step: 12, freq: N.A4, len: 1, type: "square", gain: 0.15 },
+    { step: 14, freq: N.G4, len: 1, type: "square", gain: 0.15 },
+  ],
+};
+
+/** Finale "Singularity / black hole": slow, heavy, ominous, grand (C-minor). */
+export const FINALE_TRACK: MusicTrack = {
+  name: "finale",
+  bpm: 84,
+  steps: 32,
+  notes: [
+    // crushing low pedal that swings to the dread-laden dominant
+    { step: 0, freq: N.C2, len: 4, type: "sawtooth", gain: 0.36 },
+    { step: 8, freq: N.C2, len: 4, type: "sawtooth", gain: 0.34 },
+    { step: 16, freq: N.Ab2, len: 4, type: "sawtooth", gain: 0.34 },
+    { step: 24, freq: N.G2, len: 4, type: "sawtooth", gain: 0.36 },
+    // heavy sub reinforcement under each downbeat
+    { step: 0, freq: N.C2, len: 2, type: "triangle", gain: 0.24 },
+    { step: 8, freq: N.C2, len: 2, type: "triangle", gain: 0.22 },
+    { step: 16, freq: N.Ab2, len: 2, type: "triangle", gain: 0.22 },
+    { step: 24, freq: N.G2, len: 2, type: "triangle", gain: 0.24 },
+    // tolling, bell-like dread
+    { step: 4, freq: N.C3, len: 2, type: "sine", gain: 0.16 },
+    { step: 12, freq: N.Eb3, len: 2, type: "sine", gain: 0.16 },
+    { step: 20, freq: N.C3, len: 2, type: "sine", gain: 0.16 },
+    { step: 28, freq: N.G3, len: 2, type: "sine", gain: 0.16 },
+    // slow, grand lead that swells toward grandeur then sinks back to dread
+    { step: 0, freq: N.C4, len: 6, type: "triangle", gain: 0.2 },
+    { step: 8, freq: N.Eb4, len: 4, type: "triangle", gain: 0.19 },
+    { step: 14, freq: N.D4, len: 2, type: "triangle", gain: 0.17 },
+    { step: 16, freq: N.Eb4, len: 6, type: "triangle", gain: 0.2 },
+    { step: 24, freq: N.G4, len: 3, type: "triangle", gain: 0.21 },
+    { step: 28, freq: N.Ab4, len: 4, type: "triangle", gain: 0.2 },
   ],
 };

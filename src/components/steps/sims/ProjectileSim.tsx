@@ -96,7 +96,7 @@ export function ProjectileSim({ config }: { config: SliderSimulationConfig }) {
         <Slider label="Launch angle" value={angle} min={10} max={80} step={1} unit="°" onChange={setAngle} />
         <Slider label="Launch speed" value={speed} min={5} max={25} step={1} unit="m/s" onChange={setSpeed} />
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
         Drag either slider — the trajectory updates live. Using g = {G} m/s²; air resistance is ignored.
       </p>
     </div>
@@ -113,8 +113,8 @@ function Stat({
   testid: string;
 }) {
   return (
-    <div className="rounded-xl bg-slate-100 px-2 py-2 text-center" data-testid={testid}>
-      <div className="text-[11px] text-slate-600">{label}</div>
+    <div className="rounded-xl bg-slate-100 px-2 py-2 text-center dark:bg-slate-800" data-testid={testid}>
+      <div className="text-[11px] text-slate-600 dark:text-slate-300">{label}</div>
       <div className="text-sm font-bold">{value}</div>
     </div>
   );

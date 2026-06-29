@@ -29,11 +29,11 @@ export function MomentumGauge({ streak }: { streak: StreakData | null }) {
 
   return (
     <div
-      className="animate-rise-in overflow-hidden rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80"
+      className="animate-rise-in overflow-hidden rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70"
       data-testid="momentum-gauge"
     >
       <div className="flex items-center justify-between">
-        <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600">
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600 dark:text-accent-400">
           Today's momentum
         </p>
         <FreezeChips count={freezes} />
@@ -82,26 +82,26 @@ export function MomentumGauge({ streak }: { streak: StreakData | null }) {
               🔥
             </span>
             <span
-              className="mt-1 font-display text-2xl font-bold leading-none tabular-nums text-ink"
+              className="mt-1 font-display text-2xl font-bold leading-none tabular-nums text-ink dark:text-slate-100"
               data-testid="streak-day-count"
             >
               {data.currentStreak}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
               day streak
             </span>
           </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-display text-2xl font-bold tabular-nums text-ink">
+          <p className="font-display text-2xl font-bold tabular-nums text-ink dark:text-slate-100">
             {count}
-            <span className="text-slate-400"> / {goal}</span>
-            <span className="ml-1.5 text-sm font-semibold text-slate-500">
+            <span className="text-slate-400 dark:text-slate-500"> / {goal}</span>
+            <span className="ml-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400">
               solved
             </span>
           </p>
-          <p className="mt-1 text-sm leading-snug text-slate-600">
+          <p className="mt-1 text-sm leading-snug text-slate-600 dark:text-slate-300">
             {metGoal ? (
               <>
                 Goal hit. Your streak is safe
@@ -109,12 +109,12 @@ export function MomentumGauge({ streak }: { streak: StreakData | null }) {
               </>
             ) : data.currentStreak > 0 ? (
               <>
-                <span className="font-semibold text-ink">{remaining} more</span> to
+                <span className="font-semibold text-ink dark:text-slate-100">{remaining} more</span> to
                 keep your {data.currentStreak}-day streak alive.
               </>
             ) : (
               <>
-                Solve <span className="font-semibold text-ink">{remaining}</span> to
+                Solve <span className="font-semibold text-ink dark:text-slate-100">{remaining}</span> to
                 start a streak.
               </>
             )}
@@ -136,7 +136,7 @@ function FreezeChips({ count }: { count: number }) {
   if (count <= 0) {
     return (
       <span
-        className="text-xs font-medium text-slate-400"
+        className="text-xs font-medium text-slate-400 dark:text-slate-500"
         title="Hit your daily goal to bank a streak freeze"
       >
         no freezes yet
@@ -145,12 +145,12 @@ function FreezeChips({ count }: { count: number }) {
   }
   return (
     <span
-      className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100"
+      className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/30"
       title="Streak freezes — each one saves your streak through one missed day"
     >
       <span aria-hidden>❄️</span>
       <span data-testid="freeze-count">{count}</span>
-      <span className="text-brand-400">banked</span>
+      <span className="text-brand-400 dark:text-brand-300">banked</span>
     </span>
   );
 }

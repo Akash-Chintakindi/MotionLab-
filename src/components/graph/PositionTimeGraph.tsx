@@ -331,8 +331,8 @@ export function PositionTimeGraph({
             </span>
           </Readout>
           {showDeltaTControl && (
-            <label className="block rounded-xl bg-slate-50 px-3 py-2 text-sm">
-              <span className="mb-1 block font-medium text-slate-600">
+            <label className="block rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800/60">
+              <span className="mb-1 block font-medium text-slate-600 dark:text-slate-300">
                 Shrink the interval Δt → 0
               </span>
               <input
@@ -345,7 +345,7 @@ export function PositionTimeGraph({
                 className="w-full accent-brand-600"
                 aria-label="Delta t"
               />
-              <span className="mt-1 block text-xs text-slate-500">
+              <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
                 As Δt shrinks, average velocity approaches the instantaneous
                 velocity v({roundTo(t1, 1)}) = {v1} m/s.
               </span>
@@ -431,7 +431,7 @@ function PointMarker({
 
 function Readout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
       {children}
     </div>
   );

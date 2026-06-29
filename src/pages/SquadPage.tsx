@@ -75,10 +75,10 @@ export default function SquadPage() {
     return (
       <AppShell>
         <section data-testid="squad-page" className="mx-auto w-full max-w-2xl py-2">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink dark:text-slate-100">
             Squad Clash
           </h1>
-          <p className="mt-2 text-base text-slate-600">
+          <p className="mt-2 text-base text-slate-600 dark:text-slate-300">
             Host a live quiz and battle your class in real time — everyone gets the
             same questions, 1000 points each, fastest to the top.
           </p>
@@ -104,13 +104,13 @@ export default function SquadPage() {
     <AppShell>
       <section className="mx-auto w-full max-w-2xl py-2">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Squad Clash
           </h1>
           <button
             type="button"
             onClick={exit}
-            className="text-sm font-medium text-slate-400 transition hover:text-rose-600"
+            className="text-sm font-medium text-slate-400 transition hover:text-rose-600 dark:text-slate-500"
           >
             Exit
           </button>
@@ -181,8 +181,8 @@ function ActiveQuestion({
 
   if (!question) {
     return (
-      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200">
-        <p className="text-slate-600">Loading question…</p>
+      <div className="rounded-2xl bg-white p-6 text-center ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+        <p className="text-slate-600 dark:text-slate-300">Loading question…</p>
       </div>
     );
   }
@@ -231,17 +231,17 @@ function EndScreen({
 }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-gradient-to-b from-brand-50 to-white p-6 ring-1 ring-slate-200/80">
-        <p className="text-center font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600">
+      <div className="rounded-3xl bg-gradient-to-b from-brand-50 to-white p-6 ring-1 ring-slate-200/80 dark:from-brand-500/10 dark:to-slate-900 dark:ring-slate-700/70">
+        <p className="text-center font-display text-xs font-semibold uppercase tracking-[0.2em] text-accent-600 dark:text-accent-300">
           Final results
         </p>
-        <h2 className="mb-6 mt-1 text-center font-display text-2xl font-bold text-ink">
+        <h2 className="mb-6 mt-1 text-center font-display text-2xl font-bold text-ink dark:text-slate-100">
           🏆 Podium
         </h2>
         <Podium players={players} meUid={meUid} />
       </div>
 
-      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
+      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70">
         <Leaderboard players={players} meUid={meUid} count={5} title="Top 5" />
       </div>
 
@@ -308,15 +308,15 @@ function GameMenu({
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700"
+          className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
         >
           {error}
         </p>
       )}
 
-      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
-        <h2 className="font-display text-lg font-bold text-ink">Host a game</h2>
-        <p className="mt-1 text-sm text-slate-500">
+      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70">
+        <h2 className="font-display text-lg font-bold text-ink dark:text-slate-100">Host a game</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Get a PIN, share it with your class, and run the quiz live.
         </p>
         <button
@@ -330,9 +330,9 @@ function GameMenu({
         </button>
       </div>
 
-      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">
-        <h2 className="font-display text-lg font-bold text-ink">Join a game</h2>
-        <p className="mt-1 text-sm text-slate-500">
+      <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-slate-900 dark:ring-slate-700/70">
+        <h2 className="font-display text-lg font-bold text-ink dark:text-slate-100">Join a game</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Enter the 6-digit PIN your host shared.
         </p>
         <div className="mt-3 flex gap-2">
@@ -343,7 +343,7 @@ function GameMenu({
             onChange={(e) => setJoinPin(normalizeGamePin(e.target.value))}
             placeholder="123456"
             data-testid="live-join-pin"
-            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-center font-display text-xl tabular-nums tracking-[0.3em] outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-center font-display text-xl tabular-nums tracking-[0.3em] outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700/70"
           />
           <button
             type="button"

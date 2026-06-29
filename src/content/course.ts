@@ -6,6 +6,9 @@ import { lesson4 } from "./lessons/lesson-4-acceleration-to-position";
 import { lesson5 } from "./lessons/lesson-5-two-dimensions";
 import { lesson6 } from "./lessons/lesson-6-projectile-motion";
 import { lesson7 } from "./lessons/lesson-7-mastery-challenge";
+import { lesson8 } from "./lessons/lesson-8-free-fall";
+import { lesson9 } from "./lessons/lesson-9-relative-motion";
+import { lesson10 } from "./lessons/lesson-10-oscillations";
 
 export const COURSE_ID = "kinematics";
 
@@ -14,9 +17,23 @@ export const course: Course = {
   title: "AP Physics C Kinematics",
   description:
     "Learn position, velocity, acceleration, derivatives, integrals, and 2D motion by doing.",
-  lessons: [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7].sort(
-    (a, b) => a.order - b.order,
-  ),
+  // Linear path order (the `order` field): 1–6 core, 7 free fall, 8 relative
+  // motion, 9 the oscillations bridge, 10 the kinematics mastery challenge as
+  // the finale. The mastery challenge keeps its stable id
+  // (`lesson-7-mastery-challenge`) but sits at order 10 so the capstone closes
+  // the course; oscillations is a forward-looking detour just before it.
+  lessons: [
+    lesson1,
+    lesson2,
+    lesson3,
+    lesson4,
+    lesson5,
+    lesson6,
+    lesson7,
+    lesson8,
+    lesson9,
+    lesson10,
+  ].sort((a, b) => a.order - b.order),
 };
 
 export function getLesson(lessonId: string): Lesson | undefined {

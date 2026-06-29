@@ -6,8 +6,24 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#f5f7fb" />
     <title>MotionLab — AP Physics C Kinematics</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a flash of light/dark.
+      (function () {
+        try {
+          var t = localStorage.getItem("motionlab.theme");
+          var dark =
+            t === "dark" ||
+            ((!t || t === "system") &&
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var root = document.documentElement;
+          if (dark) root.classList.add("dark");
+          root.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

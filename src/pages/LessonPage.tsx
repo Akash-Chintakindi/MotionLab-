@@ -47,7 +47,7 @@ export default function LessonPage() {
     return (
       <AppShell>
         <Empty title="This lesson is locked">
-          <p className="mb-4 text-slate-500">
+          <p className="mb-4 text-slate-500 dark:text-slate-400">
             Finish the earlier lessons to unlock it.
           </p>
           <Link to="/" className="font-semibold text-brand-600">
@@ -62,7 +62,7 @@ export default function LessonPage() {
     return (
       <AppShell>
         <Empty title={lesson.title}>
-          <p className="mb-4 text-slate-500">
+          <p className="mb-4 text-slate-500 dark:text-slate-400">
             This lesson's interactive steps are coming soon.
           </p>
           <Link to="/" className="font-semibold text-brand-600">
@@ -117,15 +117,15 @@ export default function LessonPage() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mb-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+            className="mb-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ← Course
           </button>
-        <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+        <div className="mb-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-2 font-semibold uppercase tracking-wide">
             {lesson.title}
             {reviewing && (
-              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
+              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
                 Review
               </span>
             )}
@@ -134,7 +134,7 @@ export default function LessonPage() {
             Step {engine.index + 1} of {steps.length}
           </span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
           <div
             className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${engine.progressPct}%` }}
@@ -142,13 +142,13 @@ export default function LessonPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:p-5">
+      <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:p-5 dark:bg-slate-900 dark:ring-slate-700/70">
         {engine.canGoBack && (
           <button
             type="button"
             data-testid="back-button"
             onClick={engine.onBack}
-            className="mb-3 inline-flex items-center text-sm font-medium text-slate-500 transition hover:text-slate-700"
+            className="mb-3 inline-flex items-center text-sm font-medium text-slate-500 transition hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             ← Previous step
           </button>
@@ -180,12 +180,12 @@ export default function LessonPage() {
           {engine.scaffold && (
             <div
               data-testid="step-scaffold"
-              className="animate-pop-in rounded-xl bg-sky-50 px-4 py-3 text-[15px] ring-1 ring-sky-200"
+              className="animate-pop-in rounded-xl bg-sky-50 px-4 py-3 text-[15px] ring-1 ring-sky-200 dark:bg-sky-500/10 dark:ring-sky-500/30"
             >
-              <p className="text-sm font-semibold text-sky-900">
+              <p className="text-sm font-semibold text-sky-900 dark:text-sky-200">
                 Let's break it down
               </p>
-              <p className="mt-1 leading-relaxed text-sky-900">
+              <p className="mt-1 leading-relaxed text-sky-900 dark:text-sky-200">
                 <RichText>{engine.scaffold}</RichText>
               </p>
             </div>
@@ -194,12 +194,12 @@ export default function LessonPage() {
           {engine.reveal && (
             <div
               data-testid="step-reveal"
-              className="animate-pop-in rounded-xl bg-slate-50 px-4 py-3 text-[15px] ring-1 ring-slate-200"
+              className="animate-pop-in rounded-xl bg-slate-50 px-4 py-3 text-[15px] ring-1 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700/70"
             >
-              <p className="text-sm font-semibold text-slate-700">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 Here's the full solution
               </p>
-              <p className="mt-1 leading-relaxed text-slate-700">
+              <p className="mt-1 leading-relaxed text-slate-700 dark:text-slate-200">
                 <RichText>{engine.reveal}</RichText>
               </p>
               {engine.reviewToStepId && (
@@ -207,7 +207,7 @@ export default function LessonPage() {
                   type="button"
                   data-testid="review-step-button"
                   onClick={() => engine.onJumpToStep(engine.reviewToStepId!)}
-                  className="mt-3 inline-flex items-center rounded-lg bg-amber-100 px-3.5 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-200"
+                  className="mt-3 inline-flex items-center rounded-lg bg-amber-100 px-3.5 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-200 dark:hover:bg-amber-500/30"
                 >
                   ↩ Review this part of the lesson
                 </button>
@@ -276,16 +276,16 @@ function SummaryScreen({
     <div data-testid="lesson-summary" className="mx-auto w-full max-w-3xl">
       <Link
         to="/"
-        className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+        className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       >
         ← Course
       </Link>
 
-      <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
+      <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6 dark:bg-slate-900 dark:ring-slate-700/70">
         <p className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-600">
           Lesson complete
         </p>
-        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
           {lessonTitle}
         </h1>
 
@@ -294,15 +294,15 @@ function SummaryScreen({
           <div className="space-y-1.5 text-sm">
             <div className="flex items-center gap-2">
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-ink">{firstTryCount}</span>
-              <span className="text-slate-500">solved first try</span>
+              <span className="font-semibold text-ink dark:text-slate-100">{firstTryCount}</span>
+              <span className="text-slate-500 dark:text-slate-400">solved first try</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" />
-              <span className="font-semibold text-ink">{retriedCount}</span>
-              <span className="text-slate-500">took a few tries</span>
+              <span className="font-semibold text-ink dark:text-slate-100">{retriedCount}</span>
+              <span className="text-slate-500 dark:text-slate-400">took a few tries</span>
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-slate-400 dark:text-slate-500">
               {totalGradable} graded {totalGradable === 1 ? "step" : "steps"}
             </div>
           </div>
@@ -310,8 +310,8 @@ function SummaryScreen({
       </div>
 
       {totalGradable > 0 && (
-        <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-          <h2 className="mb-3 text-sm font-semibold text-slate-600">
+        <div className="mt-4 rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+          <h2 className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
             How you did
           </h2>
           <ul className="space-y-2">
@@ -320,7 +320,7 @@ function SummaryScreen({
               .map((s) => (
                 <li
                   key={s.id}
-                  className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-2.5"
+                  className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/60"
                 >
                   <span
                     className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
@@ -333,10 +333,10 @@ function SummaryScreen({
                     {s.outcome === "first-try" ? "✓" : "↻"}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm leading-snug text-ink">
+                    <p className="text-sm leading-snug text-ink dark:text-slate-100">
                       <RichText>{s.prompt}</RichText>
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
                       {s.outcome === "first-try"
                         ? "Nailed it first try"
                         : `Solved after ${s.attempts} attempts`}
@@ -361,7 +361,7 @@ function SummaryScreen({
           type="button"
           data-testid="restart-button"
           onClick={onRestart}
-          className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:border-slate-400"
+          className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600"
         >
           Restart lesson
         </button>
@@ -369,7 +369,7 @@ function SummaryScreen({
 
       <Link
         to="/"
-        className="mt-5 block text-center text-sm font-semibold text-slate-500 hover:text-slate-700"
+        className="mt-5 block text-center text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       >
         Back to course
       </Link>
@@ -407,8 +407,8 @@ function MasteryDial({ pct, colorClass }: { pct: number; colorClass: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-xl font-bold text-ink">{pct}%</span>
-        <span className="text-[10px] font-medium uppercase text-slate-400">
+        <span className="font-display text-xl font-bold text-ink dark:text-slate-100">{pct}%</span>
+        <span className="text-[10px] font-medium uppercase text-slate-400 dark:text-slate-500">
           mastery
         </span>
       </div>
@@ -447,7 +447,7 @@ function CompletionScreen({
       <h1 className="text-2xl font-bold">
         {unlocked ? "Lesson complete!" : "Almost there!"}
       </h1>
-      <p className="mt-1 text-slate-500">{lessonTitle}</p>
+      <p className="mt-1 text-slate-500 dark:text-slate-400">{lessonTitle}</p>
 
       <div className="mt-6 flex gap-3">
         <Stat label="Mastery" value={`${masteryPct}%`} />
@@ -459,7 +459,7 @@ function CompletionScreen({
           data-testid="earned-milestones"
           className="mt-6 w-full max-w-sm space-y-2"
         >
-          <p className="text-sm font-semibold text-slate-600">
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
             New milestone{result.earnedMilestones.length > 1 ? "s" : ""}!
           </p>
           {result.earnedMilestones.map((id) => {
@@ -468,12 +468,12 @@ function CompletionScreen({
             return (
               <div
                 key={id}
-                className="flex animate-pop-in items-center gap-3 rounded-xl bg-amber-50 px-4 py-2.5 text-left ring-1 ring-amber-200"
+                className="flex animate-pop-in items-center gap-3 rounded-xl bg-amber-50 px-4 py-2.5 text-left ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-500/30"
               >
                 <span className="text-2xl" aria-hidden>
                   {m.emoji}
                 </span>
-                <span className="font-medium text-amber-900">{m.label}</span>
+                <span className="font-medium text-amber-900 dark:text-amber-200">{m.label}</span>
               </div>
             );
           })}
@@ -484,7 +484,7 @@ function CompletionScreen({
         destination && (
           <div className="mt-8 w-full max-w-sm">
             {nextTitle && result.unlockedLessonId && (
-              <p className="mb-3 text-sm text-brand-800">
+              <p className="mb-3 text-sm text-brand-800 dark:text-brand-300">
                 Unlocked next lesson:{" "}
                 <span className="font-semibold">{nextTitle}</span>
               </p>
@@ -503,7 +503,7 @@ function CompletionScreen({
           data-testid="mastery-locked"
           className="mt-8 w-full max-w-sm space-y-3"
         >
-          <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/30">
             Score <span className="font-semibold">80%+</span> to unlock this
             topic's Quiz. Review what you missed and give it another go.
           </p>
@@ -519,7 +519,7 @@ function CompletionScreen({
             type="button"
             data-testid="restart-button"
             onClick={onRestart}
-            className="block w-full rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:border-slate-400"
+            className="block w-full rounded-xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600"
           >
             Redo lesson
           </button>
@@ -528,7 +528,7 @@ function CompletionScreen({
 
       <Link
         to="/"
-        className="mt-6 text-sm font-semibold text-slate-500 hover:text-slate-700"
+        className="mt-6 text-sm font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       >
         Back to course
       </Link>
@@ -538,9 +538,9 @@ function CompletionScreen({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white px-5 py-3 ring-1 ring-slate-200">
+    <div className="rounded-xl bg-white px-5 py-3 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
       <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   );
 }

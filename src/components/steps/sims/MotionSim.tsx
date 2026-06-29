@@ -72,11 +72,11 @@ export function MotionSim({ config }: { config: SliderSimulationConfig }) {
       />
 
       {/* 1D motion track */}
-      <div className="rounded-xl bg-slate-50 p-3">
-        <div className="mb-2 text-xs font-medium text-slate-500">
+      <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+        <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
           Object on a track
         </div>
-        <div className="relative h-10 rounded-lg bg-white ring-1 ring-slate-200">
+        <div className="relative h-10 rounded-lg bg-white ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
           <div
             className="absolute top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-brand-500 transition-[left] duration-75"
             style={{ left: `calc(${dotPct}% - 12px)` }}
@@ -86,7 +86,7 @@ export function MotionSim({ config }: { config: SliderSimulationConfig }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800/60">
         <span>
           v = <b>{roundTo(vNow, 1)} m/s</b>
         </span>
@@ -98,10 +98,10 @@ export function MotionSim({ config }: { config: SliderSimulationConfig }) {
           className={[
             "rounded-full px-2.5 py-0.5 text-xs font-semibold",
             motion === "speeding up"
-              ? "bg-red-100 text-red-700"
+              ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
               : motion === "slowing down"
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-slate-200 text-slate-700",
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
           ].join(" ")}
         >
           {motion}

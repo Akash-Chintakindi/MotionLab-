@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useProgress } from "../hooks/useProgress";
@@ -25,9 +25,12 @@ export default function QuizPage() {
   const quiz = getQuiz(lessonId);
   const next = nextDestination(lessonId, "quiz") ?? undefined;
   const masteryReady = modesUnlocked(courseProgress, lessonId);
+  // Set once the quiz finishes so a passing run can surface the boss CTA.
+  const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const onComplete = useCallback(
     async (scorePct: number) => {
+      setFinalScore(scorePct);
       if (!user) return;
       await recordQuizScore(user.uid, lessonId, scorePct);
       await recordDailyActivity(user.uid);
@@ -56,7 +59,7 @@ export default function QuizPage() {
     return (
       <Frame>
         <Empty title="Quiz coming soon">
-          <p className="mb-4 text-slate-500">
+          <p className="mb-4 text-slate-500 dark:text-slate-400">
             This lesson doesn't have a quiz yet.
           </p>
           <BackLink />
@@ -79,7 +82,7 @@ export default function QuizPage() {
     return (
       <Frame>
         <Empty title="This quiz is locked">
-          <p className="mb-4 text-slate-500">
+          <p className="mb-4 text-slate-500 dark:text-slate-400">
             Finish the earlier lessons to unlock it.
           </p>
           <BackLink />
@@ -92,7 +95,7 @@ export default function QuizPage() {
     return (
       <Frame>
         <Empty title="Master the lesson first">
-          <p className="mb-4 text-slate-500">
+          <p className="mb-4 text-slate-500 dark:text-slate-400">
             Score 80%+ on the Learn section to unlock this quiz.
           </p>
           <Link
@@ -111,15 +114,40 @@ export default function QuizPage() {
       <div className="mb-4">
         <Link
           to="/"
-          className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+          className="mb-3 inline-block text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         >
           ← Course
         </Link>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink">
+        <h1 className="font-display text-xl font-bold tracking-tight text-ink dark:text-slate-100">
           {lesson.title}
         </h1>
-        <p className="text-sm text-slate-500">Quiz · {quiz.questions.length} questions</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Quiz · {quiz.questions.length} questions</p>
       </div>
+      {finalScore !== null && quizPassed(finalScore) && (
+        <Link
+          to={`/games/boss/${lessonId}`}
+          data-testid="challenge-boss-cta"
+          className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-900 p-4 text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+        >
+          <span className="flex items-center gap-3">
+            <span className="text-3xl" aria-hidden>
+              ⚔️
+            </span>
+            <span>
+              <span className="block font-display text-lg font-bold">
+                Challenge the Boss
+              </span>
+              <span className="block text-sm text-white/85">
+                You passed — a themed boss is now unlocked. Put your mastery to
+                the test.
+              </span>
+            </span>
+          </span>
+          <span aria-hidden className="shrink-0 text-xl">
+            →
+          </span>
+        </Link>
+      )}
       <QuizRunner
         quiz={quiz}
         onComplete={onComplete}

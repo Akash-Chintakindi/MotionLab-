@@ -21,7 +21,8 @@ export type CurvePreset =
   | "parabolaDown" // x(t) = 6t - t^2: + velocity, then 0, then - velocity
   | "accelerating" // x(t) = 0.25*t^2: speeding up the whole time
   | "linearUp" // x(t) = 1.5t: constant positive velocity
-  | "linearDown"; // x(t) = 12 - 1.5t: constant negative velocity
+  | "linearDown" // x(t) = 12 - 1.5t: constant negative velocity
+  | "cosineWave"; // x(t) = 2*cos(t): simple harmonic oscillation about 0
 
 export interface ConceptConfig {
   /** Optional rich body paragraphs shown under the prompt. */

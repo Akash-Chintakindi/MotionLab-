@@ -18,11 +18,11 @@ const TIER_BAR: Record<MasteryTier, string> = {
 };
 
 const TIER_TEXT: Record<MasteryTier, string> = {
-  new: "text-slate-400",
-  learning: "text-rose-600",
-  familiar: "text-amber-600",
-  strong: "text-sky-600",
-  mastered: "text-emerald-600",
+  new: "text-slate-400 dark:text-slate-500",
+  learning: "text-rose-600 dark:text-rose-400",
+  familiar: "text-amber-600 dark:text-amber-400",
+  strong: "text-sky-600 dark:text-sky-400",
+  mastered: "text-emerald-600 dark:text-emerald-400",
 };
 
 /**
@@ -57,8 +57,8 @@ export function MasteryPanel({
         className={[
           "flex items-center justify-between rounded-2xl px-4 py-3 ring-1 transition",
           dueCount > 0
-            ? "bg-brand-50 text-brand-900 ring-brand-200 hover:bg-brand-100"
-            : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50",
+            ? "bg-brand-50 text-brand-900 ring-brand-200 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-200 dark:ring-brand-500/30 dark:hover:bg-brand-500/20"
+            : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700/70 dark:hover:bg-slate-800/60",
         ].join(" ")}
       >
         <span className="flex items-center gap-2">
@@ -76,8 +76,8 @@ export function MasteryPanel({
         </span>
       </Link>
 
-      <div className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-        <h2 className="mb-2 text-sm font-semibold text-slate-600">
+      <div className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70">
+        <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
           Topic mastery
         </h2>
         <ul className="space-y-2.5">
@@ -96,7 +96,7 @@ export function MasteryPanel({
             return (
               <li key={lesson.id}>
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="truncate text-xs font-medium text-slate-700">
+                  <span className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">
                     {lesson.title}
                   </span>
                   <span
@@ -111,7 +111,7 @@ export function MasteryPanel({
                     {MASTERY_TIER_LABEL[tier]}
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
                     className={`h-full rounded-full transition-all ${TIER_BAR[tier]}`}
                     style={{ width: `${pct}%` }}

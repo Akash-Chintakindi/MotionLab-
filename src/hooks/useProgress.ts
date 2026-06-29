@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import {
   getAllLessonProgress,
   getCourseProgress,
   getStreak,
 } from "../services/progressService";
+import { course } from "../content/course";
+import {
+  bossUnlocked as bossUnlockedFor,
+  finaleUnlocked as finaleUnlockedFor,
+} from "../lib/gating";
 import type {
   CourseProgress,
   LessonProgress,
@@ -20,6 +25,12 @@ export interface ProgressState {
   refresh: () => Promise<void>;
   isUnlocked: (lessonId: string) => boolean;
   statusOf: (lessonId: string) => LessonStatus;
+  /** Boss Fight Mode: a mini-boss is unlocked once its quiz is passed (>=70%). */
+  bossUnlocked: (lessonId: string) => boolean;
+  /** Boss Fight Mode: whether a boss (lessonId or "finale") has been defeated. */
+  bossDefeated: (bossId: string) => boolean;
+  /** Boss Fight Mode: the finale unlocks once all mini-bosses are defeated. */
+  finaleUnlocked: () => boolean;
 }
 
 export function useProgress(): ProgressState {
@@ -69,6 +80,27 @@ export function useProgress(): ProgressState {
     [courseProgress, lessonProgress],
   );
 
+  const miniBossLessonIds = useMemo(
+    () => course.lessons.map((l) => l.id),
+    [],
+  );
+
+  const bossUnlocked = useCallback(
+    (lessonId: string) => bossUnlockedFor(courseProgress, lessonId),
+    [courseProgress],
+  );
+
+  const bossDefeated = useCallback(
+    (bossId: string) =>
+      courseProgress?.bossDefeats?.[bossId]?.defeated ?? false,
+    [courseProgress],
+  );
+
+  const finaleUnlocked = useCallback(
+    () => finaleUnlockedFor(courseProgress, miniBossLessonIds),
+    [courseProgress, miniBossLessonIds],
+  );
+
   return {
     loading,
     courseProgress,
@@ -77,5 +109,8 @@ export function useProgress(): ProgressState {
     refresh,
     isUnlocked,
     statusOf,
+    bossUnlocked,
+    bossDefeated,
+    finaleUnlocked,
   };
 }

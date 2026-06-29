@@ -4,6 +4,7 @@ import { useProgress } from "../hooks/useProgress";
 import { course } from "../content/course";
 import { AppShell } from "../components/AppShell";
 import { AiToggle } from "../components/AiToggle";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { Spinner } from "../components/Spinner";
 import { milestoneCatalog, type Milestone } from "../lib/milestones";
 
@@ -48,22 +49,22 @@ export default function ProfilePage() {
       <div className="mx-auto w-full max-w-5xl">
         <Link
           to="/"
-          className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700"
+          className="mb-4 inline-block text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         >
           ← Course
         </Link>
 
         {/* Identity card */}
-        <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
+        <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700/70 sm:p-6">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-600 font-display text-2xl font-bold text-white">
             {initial}
           </div>
           <div className="min-w-0">
-            <h1 className="truncate font-display text-2xl font-bold tracking-tight text-ink">
+            <h1 className="truncate font-display text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
               {displayName}
             </h1>
-            <p className="truncate text-sm text-slate-500">{email}</p>
+            <p className="truncate text-sm text-slate-500 dark:text-slate-400">{email}</p>
           </div>
         </div>
 
@@ -77,26 +78,29 @@ export default function ProfilePage() {
 
       {/* Settings */}
       <section className="mt-6">
-        <h2 className="mb-1 font-display text-lg font-bold text-ink">
+        <h2 className="mb-1 font-display text-lg font-bold text-ink dark:text-slate-100">
           Settings
         </h2>
-        <p className="mb-4 text-sm text-slate-500">
-          Choose where practice questions come from.
+        <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+          Personalize your appearance and where practice questions come from.
         </p>
-        <AiToggle variant="full" />
+        <div className="space-y-3">
+          <ThemeToggle variant="full" />
+          <AiToggle variant="full" />
+        </div>
       </section>
 
       {/* Badges */}
       <section className="mt-6">
-        <h2 className="mb-1 font-display text-lg font-bold text-ink">Badges</h2>
-        <p className="mb-4 text-sm text-slate-500">
+        <h2 className="mb-1 font-display text-lg font-bold text-ink dark:text-slate-100">Badges</h2>
+        <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
           {earnedBadges} of {totalBadges} earned. Keep going to unlock the rest.
         </p>
 
         <div className="space-y-6">
           {catalog.map((group) => (
             <div key={group.title}>
-              <h3 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-slate-400">
+              <h3 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {group.title}
               </h3>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -119,9 +123,9 @@ export default function ProfilePage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center">
-      <div className="font-display text-xl font-bold text-ink">{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+    <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-center dark:bg-slate-800/60">
+      <div className="font-display text-xl font-bold text-ink dark:text-slate-100">{value}</div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
     </div>
   );
 }
@@ -137,18 +141,18 @@ function BadgeCard({
 
   if (!earned) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 opacity-80">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-xl grayscale">
+      <div className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 opacity-80 dark:border-slate-700 dark:bg-slate-800/50">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-200 text-xl grayscale dark:bg-slate-700">
           <span aria-hidden>{milestone.emoji}</span>
         </div>
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 font-semibold text-slate-500">
+          <p className="flex items-center gap-1.5 font-semibold text-slate-500 dark:text-slate-400">
             {milestone.label}
             <span aria-hidden className="text-xs">
               🔒
             </span>
           </p>
-          <p className="text-xs leading-snug text-slate-400">
+          <p className="text-xs leading-snug text-slate-400 dark:text-slate-500">
             {milestone.description}
           </p>
         </div>
@@ -158,16 +162,16 @@ function BadgeCard({
 
   const frame =
     rarity === "legendary"
-      ? "bg-gradient-to-tr from-amber-50 to-yellow-100 ring-2 ring-amber-400"
+      ? "bg-gradient-to-tr from-amber-50 to-yellow-100 ring-2 ring-amber-400 dark:from-amber-500/15 dark:to-yellow-500/10 dark:ring-amber-400/70"
       : rarity === "rare"
-        ? "bg-gradient-to-tr from-indigo-50 to-cyan-50 ring-2 ring-cyan-300"
-        : "bg-white ring-amber-200";
+        ? "bg-gradient-to-tr from-indigo-50 to-cyan-50 ring-2 ring-cyan-300 dark:from-indigo-500/15 dark:to-cyan-500/10 dark:ring-cyan-400/60"
+        : "bg-white ring-amber-200 dark:bg-slate-900 dark:ring-amber-400/40";
   const iconFrame =
     rarity === "legendary"
-      ? "bg-white shadow-sm ring-1 ring-amber-300"
+      ? "bg-white shadow-sm ring-1 ring-amber-300 dark:bg-slate-800 dark:ring-amber-400/50"
       : rarity === "rare"
-        ? "bg-white shadow-sm ring-1 ring-cyan-200"
-        : "bg-amber-50 ring-1 ring-amber-200";
+        ? "bg-white shadow-sm ring-1 ring-cyan-200 dark:bg-slate-800 dark:ring-cyan-400/50"
+        : "bg-amber-50 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-400/40";
   const tag =
     rarity === "legendary"
       ? { text: "Legendary", cls: "bg-amber-500 text-white" }
@@ -192,7 +196,7 @@ function BadgeCard({
         <span aria-hidden>{milestone.emoji}</span>
       </div>
       <div className="min-w-0">
-        <p className="flex items-center gap-1.5 font-semibold text-ink">
+        <p className="flex items-center gap-1.5 font-semibold text-ink dark:text-slate-100">
           {milestone.label}
           {tag && (
             <span
@@ -202,7 +206,7 @@ function BadgeCard({
             </span>
           )}
         </p>
-        <p className="text-xs leading-snug text-slate-500">
+        <p className="text-xs leading-snug text-slate-500 dark:text-slate-300">
           {milestone.description}
         </p>
       </div>

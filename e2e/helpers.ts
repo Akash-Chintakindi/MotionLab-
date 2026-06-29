@@ -12,7 +12,7 @@ export async function signUp(page: Page, displayName = "Bob") {
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByRole("heading", { name: new RegExp(`Hi ${displayName}`) }),
+    page.getByRole("heading", { name: new RegExp(`Welcome back, ${displayName}`) }),
   ).toBeVisible();
 }
 
@@ -297,5 +297,84 @@ export async function completeLesson7(page: Page) {
   await continueStep(page); // 12 independent challenge
   await mcAnswer(page, /^Constant$/);
   await continueStep(page); // 13 final -> finish
+  await expect(page.getByTestId("lesson-complete")).toBeVisible();
+}
+
+export async function completeLesson8(page: Page) {
+  await mcAnswer(page, /directed downward/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 kinematics sim
+  await continueStep(page); // 5 peak concept
+  await mcAnswer(page, /Velocity zero/);
+  await continueStep(page); // 6 peak misconception
+  await continueStep(page); // 7 worked example
+  await numericAnswer(page, 29.4);
+  await continueStep(page); // 8 faded speed
+  await numericAnswer(page, 19.6);
+  await continueStep(page); // 9 faded distance
+  await sortPick(page, "The velocity", "Becomes zero");
+  await sortPick(page, "The speed", "Becomes zero");
+  await sortPick(page, "The acceleration", "Stays nonzero");
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await continueStep(page); // 10 sort
+  await mcAnswer(page, /They are equal/);
+  await continueStep(page); // 11 symmetry
+  await numericAnswer(page, 19.6);
+  await continueStep(page); // 12 independent -> finish
+  await expect(page.getByTestId("lesson-complete")).toBeVisible();
+}
+
+export async function completeLesson9(page: Page) {
+  await mcAnswer(page, /√/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 vectors sim
+  await continueStep(page); // 5 frame concept
+  await mcAnswer(page, /\+10 m\/s/);
+  await continueStep(page); // 6 1D relative velocity
+  await continueStep(page); // 7 worked example
+  await numericAnswer(page, 10);
+  await continueStep(page); // 8 faded (resultant speed)
+  await numericAnswer(page, 10);
+  await continueStep(page); // 9 crossing time
+  await sortPick(page, "An object's velocity", "Depends on the frame");
+  await sortPick(page, "An object's position", "Depends on the frame");
+  await sortPick(page, "An object's acceleration", "Same in every inertial frame");
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await continueStep(page); // 10 sort
+  await mcAnswer(page, /−4 m\/s/);
+  await continueStep(page); // 11 reverse relative velocity
+  await numericAnswer(page, 40);
+  await continueStep(page); // 12 independent -> finish
+  await expect(page.getByTestId("lesson-complete")).toBeVisible();
+}
+
+export async function completeLesson10(page: Page) {
+  await mcAnswer(page, /Differentiate it/);
+  await continueStep(page); // 1 retrieval opener
+  await continueStep(page); // 2 bridge
+  await continueStep(page); // 3 concept
+  await continueStep(page); // 4 explore (cosine graph)
+  await continueStep(page); // 5 derivatives concept
+  await mcAnswer(page, /passes through the center/);
+  await continueStep(page); // 6 fastest
+  await continueStep(page); // 7 worked example
+  await numericAnswer(page, 1.26);
+  await continueStep(page); // 8 period
+  await numericAnswer(page, 0.4);
+  await continueStep(page); // 9 max speed
+  await sortPick(page, "The speed is maximum", "At the center (x = 0)");
+  await sortPick(page, "The speed is zero", "At the extremes (x = ±A)");
+  await sortPick(page, "The acceleration is maximum", "At the extremes (x = ±A)");
+  await sortPick(page, "The acceleration is zero", "At the center (x = 0)");
+  await page.getByRole("button", { name: "Check answer" }).click();
+  await continueStep(page); // 10 sort
+  await mcAnswer(page, /Back toward the center/);
+  await continueStep(page); // 11 restoring direction
+  await numericAnswer(page, 5);
+  await continueStep(page); // 12 independent -> finish
   await expect(page.getByTestId("lesson-complete")).toBeVisible();
 }

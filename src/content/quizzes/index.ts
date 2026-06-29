@@ -6,6 +6,9 @@ import { quiz4 } from "./quiz-4-acceleration-to-position";
 import { quiz5 } from "./quiz-5-two-dimensions";
 import { quiz6 } from "./quiz-6-projectile-motion";
 import { quiz7 } from "./quiz-7-mastery-challenge";
+import { quiz8 } from "./quiz-8-free-fall";
+import { quiz9 } from "./quiz-9-relative-motion";
+import { quiz10 } from "./quiz-10-oscillations";
 
 const QUIZZES: Record<string, Quiz> = {
   [quiz1.lessonId]: quiz1,
@@ -15,6 +18,9 @@ const QUIZZES: Record<string, Quiz> = {
   [quiz5.lessonId]: quiz5,
   [quiz6.lessonId]: quiz6,
   [quiz7.lessonId]: quiz7,
+  [quiz8.lessonId]: quiz8,
+  [quiz9.lessonId]: quiz9,
+  [quiz10.lessonId]: quiz10,
 };
 
 export function getQuiz(lessonId: string): Quiz | undefined {
